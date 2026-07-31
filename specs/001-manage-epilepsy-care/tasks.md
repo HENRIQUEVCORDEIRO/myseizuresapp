@@ -18,7 +18,7 @@
 
 **Purpose**: Create the minimal mobile/API workspace and shared quality tooling.
 
-- [ ] T001 Create npm workspace, `mobile/` Expo app, and `api/` JavaScript service structure in `package.json`, `mobile/package.json`, and `api/package.json`; completion: both workspaces install successfully.
+- [X] T001 Create npm workspace, `mobile/` Expo app, and `api/` JavaScript service structure in `package.json`, `mobile/package.json`, and `api/package.json`; completion: both workspaces install successfully.
 - [ ] T002 [P] Configure Expo Router entry points and route groups in `mobile/app/_layout.js` and `mobile/app/(auth)/`; completion: the app opens a placeholder authentication route.
 - [ ] T003 [P] Configure ESLint, Prettier, Jest, and shared test commands in `eslint.config.js`, `prettier.config.js`, and `package.json`; completion: lint and empty test suites run successfully.
 - [ ] T004 [P] Add environment templates and runtime configuration boundaries in `.env.example`, `mobile/src/composition/config.js`, and `api/src/config.js`; completion: no secret is committed and missing required configuration fails clearly.
