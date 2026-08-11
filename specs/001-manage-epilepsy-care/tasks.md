@@ -54,7 +54,7 @@
 
 ### Tests for User Story 1
 
-- [ ] T017 [P] [US1] Add unit tests for seizure/trigger validation, non-future timestamps, and patient ownership in `mobile/tests/unit/domain/clinicalRecords.test.js`; completion: valid and invalid boundaries are covered.
+- [X] T017 [P] [US1] Add unit tests for seizure/trigger validation, non-future timestamps, and patient ownership in `mobile/tests/unit/domain/clinicalRecords.test.js`; completion: valid and invalid boundaries are covered.
 - [ ] T018 [P] [US1] Add repository integration tests for offline create/read and chronological filtering in `mobile/tests/integration/clinicalRecordRepository.test.js`; completion: persisted records survive provider reinitialization.
 - [ ] T019 [P] [US1] Add screen-flow tests for patient seizure and trigger entry in `mobile/tests/presentation/clinicalRecords.test.js`; completion: required-field errors and successful saves are observable.
 
