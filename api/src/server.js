@@ -1,7 +1,10 @@
-import app from './app.js';
+import { createApp } from './app.js';
 import { getApiConfig } from './config.js';
+import { AuthService } from './services/AuthService.js';
 
-const { port } = getApiConfig();
+const { port, tokenSecret } = getApiConfig();
+const authService = new AuthService({ tokenSecret });
+const app = createApp({ authService });
 
 const server = app.listen(port, () => {
   console.log(`MySeizures API listening on port ${port}.`);
