@@ -55,17 +55,17 @@
 ### Tests for User Story 1
 
 - [X] T017 [P] [US1] Add unit tests for seizure/trigger validation, non-future timestamps, and patient ownership in `mobile/tests/unit/domain/clinicalRecords.test.js`; completion: valid and invalid boundaries are covered.
-- [ ] T018 [P] [US1] Add repository integration tests for offline create/read and chronological filtering in `mobile/tests/integration/clinicalRecordRepository.test.js`; completion: persisted records survive provider reinitialization.
-- [ ] T019 [P] [US1] Add screen-flow tests for patient seizure and trigger entry in `mobile/tests/presentation/clinicalRecords.test.js`; completion: required-field errors and successful saves are observable.
+- [X] T018 [P] [US1] Add repository integration tests for offline create/read and chronological filtering in `mobile/tests/integration/clinicalRecordRepository.test.js`; completion: persisted records survive provider reinitialization.
+- [X] T019 [P] [US1] Add screen-flow tests for patient seizure and trigger entry in `mobile/tests/presentation/clinicalRecords.test.js`; completion: required-field errors and successful saves are observable.
 
 ### Implementation for User Story 1
 
-- [ ] T020 [P] [US1] Implement seizure and trigger SQLite repositories in `mobile/src/infrastructure/persistence/repositories/SeizureRepository.js` and `mobile/src/infrastructure/persistence/repositories/TriggerRepository.js`; completion: CRUD operations retain all required fields.
-- [ ] T021 [US1] Implement `RecordSeizure`, `RecordTrigger`, and `ListChronologicalEvents` use cases in `mobile/src/application/use-cases/clinical/`; completion: each validates input and scopes results to the active patient.
-- [ ] T022 [P] [US1] Create reusable accessible date/time, select, and form-feedback controls in `mobile/src/presentation/components/forms/`; completion: controls have labels, validation messages, and keyboard-friendly focus order.
-- [ ] T023 [US1] Build seizure and trigger entry screens in `mobile/app/(patient)/seizures/new.js` and `mobile/app/(patient)/triggers/new.js`; completion: valid records save locally and show a clear confirmation.
-- [ ] T024 [US1] Build the chronological calendar/history screen in `mobile/app/(patient)/calendar.js` and `mobile/src/presentation/features/calendar/`; completion: selected-period events are ordered and distinguish seizure from trigger.
-- [ ] T025 [US1] Validate the complete offline records journey and capture MVP evidence in `mobile/tests/integration/us1-offline-flow.test.js`; completion: the independent test passes with network access disabled.
+- [X] T020 [P] [US1] Implement seizure and trigger SQLite repositories in `mobile/src/infrastructure/persistence/repositories/SeizureRepository.js` and `mobile/src/infrastructure/persistence/repositories/TriggerRepository.js`; completion: CRUD operations retain all required fields.
+- [X] T021 [US1] Implement `RecordSeizure`, `RecordTrigger`, and `ListChronologicalEvents` use cases in `mobile/src/application/use-cases/clinical/`; completion: each validates input and scopes results to the active patient.
+- [X] T022 [P] [US1] Create reusable accessible date/time, select, and form-feedback controls in `mobile/src/presentation/components/forms/`; completion: controls have labels, validation messages, and keyboard-friendly focus order.
+- [X] T023 [US1] Build seizure and trigger entry screens in `mobile/app/(patient)/seizures/new.js` and `mobile/app/(patient)/triggers/new.js`; completion: valid records save locally and show a clear confirmation.
+- [X] T024 [US1] Build the chronological calendar/history screen in `mobile/app/(patient)/calendar.js` and `mobile/src/presentation/features/calendar/`; completion: selected-period events are ordered and distinguish seizure from trigger.
+- [X] T025 [US1] Validate the complete offline records journey and capture MVP evidence in `mobile/tests/integration/us1-offline-flow.test.js`; completion: the independent test passes with network access disabled.
 
 **Checkpoint**: The MVP supports offline patient seizure/trigger tracking and calendar review.
 

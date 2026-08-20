@@ -20,7 +20,11 @@ describe('mobile composition container', () => {
   test('composes the sign-in use case and database behind stable dependencies', () => {
     const authentication = createAuthentication();
     const sessionStore = createSessionStore();
-    const database = { initialize: jest.fn() };
+    const database = {
+      getDatabase: jest.fn(),
+      initialize: jest.fn(),
+      withTransaction: jest.fn(),
+    };
 
     const container = createContainer({
       environment: { apiBaseUrl: 'https://api.example.test' },
@@ -34,6 +38,11 @@ describe('mobile composition container', () => {
     expect(container.database).toBe(database);
     expect(container.signIn.authentication).toBe(authentication);
     expect(container.signIn.sessionStore).toBe(sessionStore);
+    const clinicalCommands = container.clinicalForPatient(7);
+    expect(clinicalCommands.recordSeizure.getActivePatientId()).toBe(7);
+    expect(clinicalCommands.recordTrigger.getActivePatientId()).toBe(7);
+    expect(clinicalCommands.listChronologicalEvents.getActivePatientId()).toBe(7);
+    expect(container.clinicalForPatient(7)).toBe(clinicalCommands);
     expect(container.config.apiBaseUrl).toBe('https://api.example.test');
     expect(Object.isFrozen(container)).toBe(true);
   });

@@ -8,8 +8,8 @@ function normalizeParameters(parameters) {
   return parameters;
 }
 
-export function createSQLiteTestDatabase() {
-  const connection = new DatabaseSync(':memory:');
+export function createSQLiteTestDatabase(databasePath = ':memory:') {
+  const connection = new DatabaseSync(databasePath);
 
   return {
     async execAsync(sql) {

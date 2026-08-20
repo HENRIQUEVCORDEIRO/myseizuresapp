@@ -3,4 +3,6 @@ export {
   PatientScopedRepository,
   PatientScopeError,
 } from './PatientScopedRepository.js';
+export { SeizureRepository } from './SeizureRepository.js';
 export { SQLiteRepository } from './SQLiteRepository.js';
+export { TriggerRepository } from './TriggerRepository.js';
