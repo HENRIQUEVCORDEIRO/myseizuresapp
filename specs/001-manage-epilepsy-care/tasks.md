@@ -79,9 +79,9 @@
 
 ### Tests for User Story 2
 
-- [ ] T026 [P] [US2] Add unit tests for treatment validation, reminder generation, idempotent confirmation, and adherence rate in `mobile/tests/unit/domain/treatmentRules.test.js`; completion: scheduling and boundary cases pass.
-- [ ] T027 [P] [US2] Add integration tests for atomic treatment/reminder persistence in `mobile/tests/integration/treatmentRepository.test.js`; completion: edits replace only future reminders and preserve confirmations.
-- [ ] T028 [P] [US2] Add notification-adapter tests with a fake scheduler in `mobile/tests/integration/reminderNotification.test.js`; completion: created/edited treatments schedule the expected local reminders.
+- [X] T026 [P] [US2] Add unit tests for treatment validation, reminder generation, idempotent confirmation, and adherence rate in `mobile/tests/unit/domain/treatmentRules.test.js`; completion: scheduling and boundary cases pass.
+- [X] T027 [P] [US2] Add integration tests for atomic treatment/reminder persistence in `mobile/tests/integration/treatmentRepository.test.js`; completion: edits replace only future reminders and preserve confirmations.
+- [X] T028 [P] [US2] Add notification-adapter tests with a fake scheduler in `mobile/tests/integration/reminderNotification.test.js`; completion: created/edited treatments schedule the expected local reminders.
 
 ### Implementation for User Story 2
 

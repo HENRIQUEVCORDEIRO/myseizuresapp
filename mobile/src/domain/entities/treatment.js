@@ -1,6 +1,7 @@
 import { ConsumptionStatus, ReminderStatus, TreatmentType } from '../value-objects/enums.js';
 import { DailyFrequency } from '../value-objects/DailyFrequency.js';
 import {
+  DomainValidationError,
   optionalEntityId,
   requireBoolean,
   requireClockTime,
@@ -12,13 +13,13 @@ import {
 
 function requireBaseTimes(baseTimes) {
   if (!Array.isArray(baseTimes) || baseTimes.length === 0) {
-    throw new TypeError('baseTimes must contain at least one scheduled time');
+    throw new DomainValidationError('baseTimes', 'must contain at least one scheduled time');
   }
 
   const normalized = baseTimes.map((time) => requireClockTime(time, 'baseTimes'));
 
   if (new Set(normalized).size !== normalized.length) {
-    throw new TypeError('baseTimes must not contain duplicates');
+    throw new DomainValidationError('baseTimes', 'must not contain duplicates');
   }
 
   return Object.freeze(normalized);
@@ -32,6 +33,10 @@ export class Treatment {
     this.name = requireString(name, 'name');
     this.dailyFrequency = new DailyFrequency(dailyFrequency);
     this.baseTimes = requireBaseTimes(baseTimes);
+
+    if (this.baseTimes.length !== this.dailyFrequency.value) {
+      throw new DomainValidationError('baseTimes', 'must match dailyFrequency');
+    }
     this.active = requireBoolean(active, 'active');
     Object.freeze(this);
   }
