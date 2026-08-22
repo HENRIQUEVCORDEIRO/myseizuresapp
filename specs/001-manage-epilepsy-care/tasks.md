@@ -85,7 +85,7 @@
 
 ### Implementation for User Story 2
 
-- [ ] T029 [P] [US2] Implement treatment, reminder, and adherence repositories in `mobile/src/infrastructure/persistence/repositories/`; completion: each enforces the relationships and one-final-confirmation rule.
+- [X] T029 [P] [US2] Implement treatment, reminder, and adherence repositories in `mobile/src/infrastructure/persistence/repositories/`; completion: each enforces the relationships and one-final-confirmation rule.
 - [ ] T030 [US2] Implement treatment management, reminder generation, and adherence use cases in `mobile/src/application/use-cases/treatment/`; completion: treatment changes atomically replace only future reminder rows.
 - [ ] T031 [US2] Implement the local-notification adapter and permission/overdue fallback in `mobile/src/infrastructure/notifications/ExpoNotificationService.js`; completion: a denied permission leaves an actionable in-app reminder list.
 - [ ] T032 [US2] Build treatment form, reminder list, and dose-confirmation screens in `mobile/app/(patient)/treatments/` and `mobile/app/(patient)/reminders.js`; completion: patient can create/edit treatment and make one final confirmation per reminder.
