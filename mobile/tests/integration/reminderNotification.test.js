@@ -167,4 +167,19 @@ describe('medication reminder notification adapter', () => {
     ).toThrow(/persisted Reminder/);
     expect(scheduler.scheduled.size).toBe(0);
   });
+
+  test('denied permission and overdue doses remain actionable in the app', async () => {
+    scheduler.getPermissionsAsync = jest.fn().mockResolvedValue({ status: 'denied' });
+    const reminders = persistGeneratedReminders(
+      generateReminderSchedule({ treatment: createTreatment(), from: NOW, days: 2 }),
+    );
+    const result = await service.deliverMedicationReminders({
+      treatmentName: 'Levetiracetam',
+      reminders,
+    });
+    expect(result.permissionStatus).toBe('denied');
+    expect(result.scheduled).toEqual([]);
+    expect(result.inApp).toEqual(reminders);
+    expect(scheduler.scheduled.size).toBe(0);
+  });
 });

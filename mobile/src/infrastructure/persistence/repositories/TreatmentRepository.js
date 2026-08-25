@@ -1,6 +1,7 @@
 import { Adherence, Reminder, Treatment } from '../../../domain/entities/index.js';
 import { ReminderStatus } from '../../../domain/value-objects/enums.js';
 import { requireTimestamp } from '../../../domain/value-objects/validation.js';
+import { generateReminderSchedule } from '../../../domain/rules/treatmentRules.js';
 import { PatientScopedRepository } from './PatientScopedRepository.js';
 
 function requirePositiveInteger(value, field) {
@@ -184,6 +185,79 @@ export class TreatmentRepository extends PatientScopedRepository {
     });
   }
 
+  async saveTreatmentWithReminders(value, { from, days = 7 } = {}) {
+    const treatment = requireTreatment(value);
+    const boundary = requireTimestamp(from, 'from');
+    const timestamp = requireTimestamp(this.now(), 'now');
+
+    return this.withTransaction(async (database) => {
+      let treatmentId = treatment.id;
+      if (treatmentId === null) {
+        const result = await database.runAsync(
+          `INSERT INTO treatments
+             (patient_id, type, name, daily_frequency, active, created_at, updated_at)
+           VALUES ($patientId, $type, $name, $dailyFrequency, $active, $createdAt, $updatedAt);`,
+          {
+            $patientId: treatment.patientId,
+            $type: treatment.type,
+            $name: treatment.name,
+            $dailyFrequency: treatment.dailyFrequency.value,
+            $active: treatment.active ? 1 : 0,
+            $createdAt: timestamp,
+            $updatedAt: timestamp,
+          },
+        );
+        treatmentId = Number(result.lastInsertRowId);
+      } else {
+        const result = await database.runAsync(
+          `UPDATE treatments SET type = $type, name = $name,
+             daily_frequency = $dailyFrequency, active = $active, updated_at = $updatedAt
+           WHERE id = $treatmentId AND patient_id = $patientId;`,
+          {
+            $treatmentId: treatmentId,
+            $patientId: treatment.patientId,
+            $type: treatment.type,
+            $name: treatment.name,
+            $dailyFrequency: treatment.dailyFrequency.value,
+            $active: treatment.active ? 1 : 0,
+            $updatedAt: timestamp,
+          },
+        );
+        if (result.changes === 0) throw new Error('Treatment was not found for this patient.');
+        await database.runAsync('DELETE FROM treatment_times WHERE treatment_id = $treatmentId;', {
+          $treatmentId: treatmentId,
+        });
+      }
+
+      await insertTreatmentTimes(database, treatmentId, treatment.baseTimes);
+      const savedTreatment = new Treatment({
+        ...treatment,
+        id: treatmentId,
+        dailyFrequency: treatment.dailyFrequency.value,
+      });
+      const generated = generateReminderSchedule({
+        treatment: savedTreatment,
+        from: boundary,
+        days,
+      });
+      await database.runAsync(
+        `DELETE FROM reminders WHERE treatment_id = $treatmentId
+         AND scheduled_at >= $from AND status = 'SCHEDULED';`,
+        { $treatmentId: treatmentId, $from: boundary },
+      );
+      const reminders = [];
+      for (const reminder of generated) {
+        const result = await database.runAsync(
+          `INSERT INTO reminders (treatment_id, scheduled_at, status)
+           VALUES ($treatmentId, $scheduledAt, 'SCHEDULED');`,
+          { $treatmentId: treatmentId, $scheduledAt: reminder.scheduledAt },
+        );
+        reminders.push(new Reminder({ ...reminder, id: Number(result.lastInsertRowId) }));
+      }
+      return Object.freeze({ treatment: savedTreatment, reminders: Object.freeze(reminders) });
+    });
+  }
+
   async findTreatmentById(patientId, treatmentId) {
     const safeTreatmentId = requirePositiveInteger(treatmentId, 'treatmentId');
     const row = await this.getFirstForPatient(
@@ -288,6 +362,20 @@ export class TreatmentRepository extends PatientScopedRepository {
     );
 
     return row ? toReminder(row) : null;
+  }
+
+  async listActionableReminders(patientId, { through } = {}) {
+    const boundary = through === undefined ? null : requireTimestamp(through, 'through');
+    const rows = await this.getAllForPatient(
+      patientId,
+      `SELECT r.id, r.treatment_id, r.scheduled_at, r.status
+       FROM reminders r INNER JOIN treatments t ON t.id = r.treatment_id
+       WHERE t.patient_id = $patientId AND r.status = 'SCHEDULED'
+         AND ($through IS NULL OR r.scheduled_at <= $through)
+       ORDER BY r.scheduled_at ASC, r.id ASC;`,
+      { $through: boundary },
+    );
+    return rows.map(toReminder);
   }
 
   async saveAdherence(patientId, value) {

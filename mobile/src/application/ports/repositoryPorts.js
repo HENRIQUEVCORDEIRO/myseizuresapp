@@ -12,10 +12,12 @@ export const ClinicalRecordRepositoryPort = definePort('ClinicalRecordRepository
 
 export const TreatmentRepositoryPort = definePort('TreatmentRepositoryPort', [
   'saveTreatment',
+  'saveTreatmentWithReminders',
   'findTreatmentById',
   'listTreatmentsByPatient',
   'replaceFutureReminders',
   'findReminderById',
+  'listActionableReminders',
   'saveAdherence',
   'listAdherenceByPeriod',
 ]);

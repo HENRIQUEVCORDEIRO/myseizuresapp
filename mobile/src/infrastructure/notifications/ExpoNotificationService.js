@@ -1,3 +1,5 @@
+import * as Notifications from 'expo-notifications';
+
 import { Reminder } from '../../domain/entities/index.js';
 
 const REQUIRED_SCHEDULER_METHODS = Object.freeze([
@@ -44,8 +46,10 @@ function requireNotificationId(value) {
 }
 
 export class ExpoNotificationService {
-  constructor({ scheduler } = {}) {
+  constructor({ scheduler = Notifications, now = () => new Date().toISOString() } = {}) {
     this.scheduler = requireScheduler(scheduler);
+    if (typeof now !== 'function') throw new TypeError('Notification clock must be a function.');
+    this.now = now;
   }
 
   async getPermissionStatus() {
@@ -78,5 +82,37 @@ export class ExpoNotificationService {
 
   cancelScheduledReminder(notificationId) {
     return this.scheduler.cancelScheduledNotificationAsync(requireNotificationId(notificationId));
+  }
+
+  async deliverMedicationReminders({ treatmentName, reminders }) {
+    if (!Array.isArray(reminders)) throw new TypeError('Medication reminders must be an array.');
+    const medicationName = requireTreatmentName(treatmentName);
+    let status = await this.getPermissionStatus();
+    if (status === 'undetermined') status = await this.requestPermission();
+
+    const now = this.now();
+    const inApp = [];
+    const scheduled = [];
+    for (const reminder of reminders) {
+      const item = requirePersistedReminder(reminder);
+      if (status !== 'granted' || item.scheduledAt <= now) {
+        inApp.push(item);
+        continue;
+      }
+      try {
+        const notificationId = await this.scheduleMedicationReminder({
+          reminder: item,
+          treatmentName: medicationName,
+        });
+        scheduled.push(Object.freeze({ reminder: item, notificationId }));
+      } catch {
+        inApp.push(item);
+      }
+    }
+    return Object.freeze({
+      permissionStatus: status,
+      scheduled: Object.freeze(scheduled),
+      inApp: Object.freeze(inApp),
+    });
   }
 }

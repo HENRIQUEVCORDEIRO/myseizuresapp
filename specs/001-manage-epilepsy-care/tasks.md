@@ -86,11 +86,11 @@
 ### Implementation for User Story 2
 
 - [X] T029 [P] [US2] Implement treatment, reminder, and adherence repositories in `mobile/src/infrastructure/persistence/repositories/`; completion: each enforces the relationships and one-final-confirmation rule.
-- [ ] T030 [US2] Implement treatment management, reminder generation, and adherence use cases in `mobile/src/application/use-cases/treatment/`; completion: treatment changes atomically replace only future reminder rows.
-- [ ] T031 [US2] Implement the local-notification adapter and permission/overdue fallback in `mobile/src/infrastructure/notifications/ExpoNotificationService.js`; completion: a denied permission leaves an actionable in-app reminder list.
-- [ ] T032 [US2] Build treatment form, reminder list, and dose-confirmation screens in `mobile/app/(patient)/treatments/` and `mobile/app/(patient)/reminders.js`; completion: patient can create/edit treatment and make one final confirmation per reminder.
-- [ ] T033 [US2] Connect notification responses to the confirmation route in `mobile/src/presentation/navigation/notificationDeepLink.js`; completion: tapping a reminder opens its matching dose action.
-- [ ] T034 [US2] Validate the treatment/adherence journey on a device or simulator in `mobile/tests/integration/us2-treatment-flow.test.js`; completion: the independent test and notification fallback scenario pass.
+- [X] T030 [US2] Implement treatment management, reminder generation, and adherence use cases in `mobile/src/application/use-cases/treatment/`; completion: treatment changes atomically replace only future reminder rows.
+- [X] T031 [US2] Implement the local-notification adapter and permission/overdue fallback in `mobile/src/infrastructure/notifications/ExpoNotificationService.js`; completion: a denied permission leaves an actionable in-app reminder list.
+- [X] T032 [US2] Build treatment form, reminder list, and dose-confirmation screens in `mobile/app/(patient)/treatments/` and `mobile/app/(patient)/reminders.js`; completion: patient can create/edit treatment and make one final confirmation per reminder.
+- [X] T033 [US2] Connect notification responses to the confirmation route in `mobile/src/presentation/navigation/notificationDeepLink.js`; completion: tapping a reminder opens its matching dose action.
+- [X] T034 [US2] Validate the treatment/adherence journey on a device or simulator in `mobile/tests/integration/us2-treatment-flow.test.js`; completion: the independent test and notification fallback scenario pass.
 
 **Checkpoint**: Patient medication planning, local reminders, and adherence tracking are demonstrable.
 
