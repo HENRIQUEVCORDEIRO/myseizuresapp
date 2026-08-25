@@ -104,9 +104,9 @@
 
 ### Tests for User Story 3
 
-- [ ] T035 [P] [US3] Add REST contract tests for grant creation, duplicate grant, revocation, and post-revocation access in `api/tests/integration/accessGrants.test.js`; completion: all outcomes match `contracts/rest-api.md`.
-- [ ] T036 [P] [US3] Add unit tests for report period selection, adherence aggregation, and alert threshold boundaries in `mobile/tests/unit/domain/reportingRules.test.js`; completion: empty periods and boundary patterns are covered.
-- [ ] T037 [P] [US3] Add presentation tests for role-based access and denied-state messaging in `mobile/tests/presentation/professionalAccess.test.js`; completion: unauthorized data is never rendered.
+- [X] T035 [P] [US3] Add REST contract tests for grant creation, duplicate grant, revocation, and post-revocation access in `api/tests/integration/accessGrants.test.js`; completion: all outcomes match `contracts/rest-api.md`.
+- [X] T036 [P] [US3] Add unit tests for report period selection, adherence aggregation, and alert threshold boundaries in `mobile/tests/unit/domain/reportingRules.test.js`; completion: empty periods and boundary patterns are covered.
+- [X] T037 [P] [US3] Add presentation tests for role-based access and denied-state messaging in `mobile/tests/presentation/professionalAccess.test.js`; completion: unauthorized data is never rendered.
 
 ### Implementation for User Story 3
 
