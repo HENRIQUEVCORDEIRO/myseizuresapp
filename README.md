@@ -32,15 +32,17 @@ partir da raiz.
    npm install
    ```
 
-2. Crie o arquivo de configuração local:
+2. Crie os arquivos de configuração locais da API e do aplicativo mobile:
 
    ```powershell
    Copy-Item .env.example .env
+   Copy-Item mobile/.env.example mobile/.env
    ```
 
-3. Ajuste `EXPO_PUBLIC_API_BASE_URL` para um endereço acessível pelo emulador/dispositivo e substitua
-   `API_TOKEN_SECRET` por um valor local longo. O arquivo `.env` é ignorado pelo Git e nunca deve
-   conter credenciais de produção.
+3. Em `mobile/.env`, ajuste `EXPO_PUBLIC_API_BASE_URL` para um endereço acessível pelo
+   emulador/dispositivo. No `.env` da raiz, substitua `API_TOKEN_SECRET` por um valor local longo.
+   Esses arquivos são ignorados pelo Git e nunca devem conter credenciais de produção. O segredo da
+   API não deve ser copiado para `mobile/.env` nem receber o prefixo `EXPO_PUBLIC_`.
 
 ## Execução
 
@@ -57,8 +59,20 @@ npm run android --workspace @myseizures/mobile
 npm run ios --workspace @myseizures/mobile
 ```
 
-O comando abaixo está reservado para a API e ficará operacional quando o servidor for implementado
-na tarefa T012:
+Para testar recursos nativos indisponíveis no Expo Go, como notificações push remotas no Android,
+conecte o dispositivo físico por USB, habilite a depuração USB e, em uma máquina com Android SDK e
+`adb` configurados, crie o development build:
+
+```powershell
+Set-Location mobile
+npx expo run:android --device
+```
+
+Depois que o development build estiver instalado, use `npx expo start --lan` no mesmo diretório.
+Sem o toolchain Android local, configure o projeto com `eas build:configure` e gere o APK de
+desenvolvimento com `eas build --platform android --profile development`.
+
+Inicie a API, que carrega `API_PORT` e `API_TOKEN_SECRET` do `.env` da raiz:
 
 ```powershell
 npm run dev:api

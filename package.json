@@ -20,6 +20,9 @@
     "test:mobile": "npm run test --workspace @myseizures/mobile",
     "test:api": "npm run test --workspace @myseizures/api"
   },
+  "dependencies": {
+    "react": "19.1.0"
+  },
   "devDependencies": {
     "@eslint/js": "^9.37.0",
     "eslint": "^9.37.0",

@@ -1,3 +1,9 @@
 {
-  "plugins": ["expo-sqlite", "expo-secure-store"]
+  "slug": "myseizures",
+  "plugins": [
+    "expo-sqlite",
+    "expo-secure-store",
+    "expo-asset",
+    "expo-notifications"
+  ]
 }
