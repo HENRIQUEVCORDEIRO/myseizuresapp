@@ -1,9 +1,16 @@
 import { SignIn } from '../application/use-cases/SignIn.js';
 import {
+  AuthorizePatientAccess,
+  GrantAccess,
+  ListAccessGrants,
+  RevokeAccess,
+} from '../application/use-cases/access/index.js';
+import {
   ListChronologicalEvents,
   RecordSeizure,
   RecordTrigger,
 } from '../application/use-cases/clinical/index.js';
+import { GenerateReport } from '../application/use-cases/reporting/index.js';
 import {
   ConfirmDose,
   GetTreatment,
@@ -12,6 +19,7 @@ import {
   ManageTreatment,
 } from '../application/use-cases/treatment/index.js';
 import { RestClient } from '../infrastructure/api/RestClient.js';
+import { AccessGrantClient } from '../infrastructure/api/AccessGrantClient.js';
 import { ExpoNotificationService } from '../infrastructure/notifications/ExpoNotificationService.js';
 import {
   SeizureRepository,
@@ -42,10 +50,14 @@ export function createContainer({
   const config = getMobileConfig(environment);
   const authenticationAdapter =
     authentication ?? new RestClient({ baseUrl: config.apiBaseUrl, fetchImpl });
+  const accessGrantClient = new AccessGrantClient({ baseUrl: config.apiBaseUrl, fetchImpl });
   const sessionStoreAdapter = sessionStore ?? new SessionStore({ secureStore });
   const notificationAdapter = notifications ?? new ExpoNotificationService();
   const clinicalCommands = new Map();
   const treatmentCommands = new Map();
+  const accessCommands = new Map();
+  const reportCommands = new Map();
+  const getSessionToken = async () => (await sessionStoreAdapter.loadSession())?.token;
 
   function clinicalForPatient(patientId) {
     if (!Number.isInteger(patientId) || patientId < 1) {
@@ -100,11 +112,62 @@ export function createContainer({
     return treatmentCommands.get(patientId);
   }
 
+  function accessForPatient(patientId) {
+    if (!Number.isInteger(patientId) || patientId < 1) {
+      throw new TypeError('Access commands require a positive patient id.');
+    }
+    if (!accessCommands.has(patientId)) {
+      const options = {
+        accessGrantClient,
+        getActivePatientId: () => patientId,
+        getSessionToken,
+      };
+      accessCommands.set(
+        patientId,
+        Object.freeze({
+          grantAccess: new GrantAccess(options),
+          listAccessGrants: new ListAccessGrants(options),
+          revokeAccess: new RevokeAccess(options),
+        }),
+      );
+    }
+    return accessCommands.get(patientId);
+  }
+
+  function reportForPatient(patientId) {
+    if (!Number.isInteger(patientId) || patientId < 1) {
+      throw new TypeError('Report commands require a positive patient id.');
+    }
+    if (!reportCommands.has(patientId)) {
+      reportCommands.set(
+        patientId,
+        Object.freeze({
+          generateReport: new GenerateReport({
+            seizureRepository: new SeizureRepository({ databaseProvider: database }),
+            triggerRepository: new TriggerRepository({ databaseProvider: database }),
+            treatmentRepository: new TreatmentRepository({ databaseProvider: database }),
+            authorizePatientAccess: new AuthorizePatientAccess({
+              accessGrantClient,
+              getSessionToken,
+            }),
+          }),
+        }),
+      );
+    }
+    return reportCommands.get(patientId);
+  }
+
   return Object.freeze({
+    accessForPatient,
+    authorizePatientAccess: new AuthorizePatientAccess({
+      accessGrantClient,
+      getSessionToken,
+    }),
     authentication: authenticationAdapter,
     clinicalForPatient,
     config,
     database: requireDatabase(database),
+    reportForPatient,
     sessionStore: sessionStoreAdapter,
     signIn: new SignIn({
       authentication: authenticationAdapter,

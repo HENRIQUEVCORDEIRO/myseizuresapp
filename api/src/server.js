@@ -1,10 +1,19 @@
 import { createApp } from './app.js';
 import { getApiConfig } from './config.js';
+import { AccessGrantRepository } from './repositories/AccessGrantRepository.js';
+import { createAccessGrantRoutes } from './routes/accessGrantRoutes.js';
+import { AccessGrantService } from './services/AccessGrantService.js';
 import { AuthService } from './services/AuthService.js';
 
 const { port, tokenSecret } = getApiConfig();
 const authService = new AuthService({ tokenSecret });
-const app = createApp({ authService });
+const accessGrantService = new AccessGrantService({ repository: new AccessGrantRepository() });
+const app = createApp({
+  authService,
+  registerRoutes(application) {
+    application.use(createAccessGrantRoutes({ authService, accessGrantService }));
+  },
+});
 
 const server = app.listen(port, () => {
   console.log(`MySeizures API listening on port ${port}.`);

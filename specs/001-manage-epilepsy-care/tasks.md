@@ -110,12 +110,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T038 [US3] Implement API access-grant repository, service, routes, and ownership checks in `api/src/repositories/AccessGrantRepository.js`, `api/src/services/AccessGrantService.js`, and `api/src/routes/accessGrantRoutes.js`; completion: grant endpoints enforce the REST contract.
-- [ ] T039 [US3] Implement mobile access-grant client and grant/revoke/authorize use cases in `mobile/src/infrastructure/api/AccessGrantClient.js` and `mobile/src/application/use-cases/access/`; completion: client maps API errors to safe application results.
-- [ ] T040 [P] [US3] Implement report aggregation and informational alert-rule services in `mobile/src/domain/rules/` and `mobile/src/application/use-cases/reporting/`; completion: reports derive records/trends and alert severity/reason without storing snapshots.
-- [ ] T041 [US3] Build patient sharing-management and professional patient-access screens in `mobile/app/(patient)/sharing.js` and `mobile/app/(professional)/patients/`; completion: grants can be created/revoked and active access is visible.
-- [ ] T042 [US3] Build professional report, chart, alert, and empty-period screens in `mobile/app/(professional)/reports/[patientId].js` and `mobile/src/presentation/features/reports/`; completion: only authorized users see selected-period summaries.
-- [ ] T043 [US3] Validate the grant-report-revoke journey in `mobile/tests/integration/us3-sharing-report-flow.test.js`; completion: revoked users cannot access report, alerts, or clinical details.
+- [X] T038 [US3] Implement API access-grant repository, service, routes, and ownership checks in `api/src/repositories/AccessGrantRepository.js`, `api/src/services/AccessGrantService.js`, and `api/src/routes/accessGrantRoutes.js`; completion: grant endpoints enforce the REST contract.
+- [X] T039 [US3] Implement mobile access-grant client and grant/revoke/authorize use cases in `mobile/src/infrastructure/api/AccessGrantClient.js` and `mobile/src/application/use-cases/access/`; completion: client maps API errors to safe application results.
+- [X] T040 [P] [US3] Implement report aggregation and informational alert-rule services in `mobile/src/domain/rules/` and `mobile/src/application/use-cases/reporting/`; completion: reports derive records/trends and alert severity/reason without storing snapshots.
+- [X] T041 [US3] Build patient sharing-management and professional patient-access screens in `mobile/app/(patient)/sharing.js` and `mobile/app/(professional)/patients/`; completion: grants can be created/revoked and active access is visible.
+- [X] T042 [US3] Build professional report, chart, alert, and empty-period screens in `mobile/app/(professional)/reports/[patientId].js` and `mobile/src/presentation/features/reports/`; completion: only authorized users see selected-period summaries.
+- [X] T043 [US3] Validate the grant-report-revoke journey in `mobile/tests/integration/us3-sharing-report-flow.test.js`; completion: revoked users cannot access report, alerts, or clinical details.
 
 **Checkpoint**: Controlled sharing, professional review, reports, and non-diagnostic alerts are demonstrable.
 
