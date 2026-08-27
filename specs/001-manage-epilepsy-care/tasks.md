@@ -129,8 +129,8 @@
 
 ### Tests for User Story 4
 
-- [ ] T044 [P] [US4] Add unit tests for RNDS/e-SUS mapping, format version, and field omission in `mobile/tests/unit/domain/exportMapping.test.js`; completion: every required contract field is validated.
-- [ ] T045 [P] [US4] Add integration tests for authorization and local-only export behavior in `mobile/tests/integration/exportReport.test.js`; completion: unauthorized export fails and no HTTP call is made.
+- [X] T044 [P] [US4] Add unit tests for RNDS/e-SUS mapping, format version, and field omission in `mobile/tests/unit/domain/exportMapping.test.js`; completion: every required contract field is validated.
+- [X] T045 [P] [US4] Add integration tests for authorization and local-only export behavior in `mobile/tests/integration/exportReport.test.js`; completion: unauthorized export fails and no HTTP call is made.
 
 ### Implementation for User Story 4
 
