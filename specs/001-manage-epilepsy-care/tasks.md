@@ -147,8 +147,8 @@
 
 **Purpose**: Verify the assembled prototype against its specification and prepare the academic handoff.
 
-- [ ] T050 [P] Add accessibility regression tests for labels, touch targets, contrast tokens, focus order, and non-colour status cues in `mobile/tests/presentation/accessibility.test.js`; completion: critical patient/professional screens pass defined assertions.
-- [ ] T051 [P] Add privacy/security regression tests for session handling, role checks, patient scoping, and JSON exclusion of secrets in `mobile/tests/integration/privacyAccess.test.js`; completion: denied paths expose no clinical data.
+- [X] T050 [P] Add accessibility regression tests for labels, touch targets, contrast tokens, focus order, and non-colour status cues in `mobile/tests/presentation/accessibility.test.js`; completion: critical patient/professional screens pass defined assertions.
+- [X] T051 [P] Add privacy/security regression tests for session handling, role checks, patient scoping, and JSON exclusion of secrets in `mobile/tests/integration/privacyAccess.test.js`; completion: denied paths expose no clinical data.
 - [ ] T052 [P] Update architecture, alert-rule limitations, data-flow, and decision records in `docs/architecture.md` and `docs/adr/`; completion: Clean Architecture boundaries and prototype constraints are documented.
 - [ ] T053 [P] Update installation, scripts, demo accounts, offline validation, and limitations in `README.md`; completion: it matches `quickstart.md` and contains no production-care claims.
 - [ ] T054 Run the complete quality suite and quickstart acceptance scenarios, recording results in `specs/001-manage-epilepsy-care/validation.md`; completion: unit, API, UI, offline, notification, sharing, and export evidence is linked.
