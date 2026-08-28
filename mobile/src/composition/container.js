@@ -10,6 +10,7 @@ import {
   RecordSeizure,
   RecordTrigger,
 } from '../application/use-cases/clinical/index.js';
+import { ExportReport } from '../application/use-cases/export/index.js';
 import { GenerateReport } from '../application/use-cases/reporting/index.js';
 import {
   ConfirmDose,
@@ -21,7 +22,9 @@ import {
 import { RestClient } from '../infrastructure/api/RestClient.js';
 import { AccessGrantClient } from '../infrastructure/api/AccessGrantClient.js';
 import { ExpoNotificationService } from '../infrastructure/notifications/ExpoNotificationService.js';
+import { ReportFileExporter, RndsExportMapper } from '../infrastructure/export/index.js';
 import {
+  PatientRepository,
   SeizureRepository,
   TreatmentRepository,
   TriggerRepository,
@@ -58,6 +61,10 @@ export function createContainer({
   const accessCommands = new Map();
   const reportCommands = new Map();
   const getSessionToken = async () => (await sessionStoreAdapter.loadSession())?.token;
+  const getActivePatientId = async () => {
+    const user = (await sessionStoreAdapter.loadSession())?.user;
+    return user?.role === 'PATIENT' ? (user.patientId ?? user.id) : null;
+  };
 
   function clinicalForPatient(patientId) {
     if (!Number.isInteger(patientId) || patientId < 1) {
@@ -139,18 +146,26 @@ export function createContainer({
       throw new TypeError('Report commands require a positive patient id.');
     }
     if (!reportCommands.has(patientId)) {
+      const generateReport = new GenerateReport({
+        seizureRepository: new SeizureRepository({ databaseProvider: database }),
+        triggerRepository: new TriggerRepository({ databaseProvider: database }),
+        treatmentRepository: new TreatmentRepository({ databaseProvider: database }),
+        authorizePatientAccess: new AuthorizePatientAccess({
+          accessGrantClient,
+          getSessionToken,
+        }),
+        getActivePatientId,
+      });
       reportCommands.set(
         patientId,
         Object.freeze({
-          generateReport: new GenerateReport({
-            seizureRepository: new SeizureRepository({ databaseProvider: database }),
-            triggerRepository: new TriggerRepository({ databaseProvider: database }),
-            treatmentRepository: new TreatmentRepository({ databaseProvider: database }),
-            authorizePatientAccess: new AuthorizePatientAccess({
-              accessGrantClient,
-              getSessionToken,
-            }),
+          exportReport: new ExportReport({
+            generateReport,
+            patientRepository: new PatientRepository({ databaseProvider: database }),
+            exportMapper: new RndsExportMapper(),
+            reportExporter: new ReportFileExporter(),
           }),
+          generateReport,
         }),
       );
     }

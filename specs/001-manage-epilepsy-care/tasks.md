@@ -134,10 +134,10 @@
 
 ### Implementation for User Story 4
 
-- [ ] T046 [US4] Implement the versioned report-to-JSON mapper and contract validation in `mobile/src/infrastructure/export/RndsExportMapper.js`; completion: output conforms to `contracts/export-json.md` and excludes secrets.
-- [ ] T047 [US4] Implement local file generation and share/save adapter in `mobile/src/infrastructure/export/ReportFileExporter.js`; completion: a valid report creates a local shareable JSON file with no transmission logic.
-- [ ] T048 [US4] Implement `ExportReport` authorization use case and export action in `mobile/src/application/use-cases/export/ExportReport.js` and `mobile/app/(shared)/report-export.js`; completion: patient/professional exports require authorized report access.
-- [ ] T049 [US4] Validate an authorized export and a denied export in `mobile/tests/integration/us4-export-flow.test.js`; completion: the independent test passes and the generated sample is redacted for TCC evidence.
+- [X] T046 [US4] Implement the versioned report-to-JSON mapper and contract validation in `mobile/src/infrastructure/export/RndsExportMapper.js`; completion: output conforms to `contracts/export-json.md` and excludes secrets.
+- [X] T047 [US4] Implement local file generation and share/save adapter in `mobile/src/infrastructure/export/ReportFileExporter.js`; completion: a valid report creates a local shareable JSON file with no transmission logic.
+- [X] T048 [US4] Implement `ExportReport` authorization use case and export action in `mobile/src/application/use-cases/export/ExportReport.js` and `mobile/app/(shared)/report-export.js`; completion: patient/professional exports require authorized report access.
+- [X] T049 [US4] Validate an authorized export and a denied export in `mobile/tests/integration/us4-export-flow.test.js`; completion: the independent test passes and the generated sample is redacted for TCC evidence.
 
 **Checkpoint**: The prototype demonstrates structured local report export without government-system integration.
 
