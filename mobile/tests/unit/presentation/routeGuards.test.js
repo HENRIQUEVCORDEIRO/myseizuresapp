@@ -1,4 +1,3 @@
-import React from 'react';
 import { act, create } from 'react-test-renderer';
 
 import { ProtectedRoute } from '../../../src/presentation/navigation/ProtectedRoute.js';

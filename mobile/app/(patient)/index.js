@@ -9,7 +9,9 @@ export default function PatientHomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.content}>
-        <Text accessibilityRole="header" style={styles.title}>Patient care</Text>
+        <Text accessibilityRole="header" style={styles.title}>
+          Patient care
+        </Text>
         <Text style={styles.description}>Welcome, {user?.name}. Your care tools are ready.</Text>
         <AccessibleButton
           accessibilityHint="Ends your session and returns to the sign-in screen"
