@@ -1,7 +1,20 @@
 {
   "expo": {
     "slug": "myseizures",
-    "plugins": ["expo-sqlite", "expo-secure-store", "expo-asset", "expo-notifications"],
+    "plugins": [
+      "expo-sqlite",
+      "expo-secure-store",
+      "expo-asset",
+      "expo-notifications",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "07fa9874-7c3b-4883-ab41-f23babeed5d8"

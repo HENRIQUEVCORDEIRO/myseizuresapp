@@ -213,6 +213,7 @@ These indicators do not diagnose, predict emergencies, or contact anyone.
 
 ## Project documentation
 
+- [Current Overview](docs/current-overview.md)
 - [Constitution](.specify/memory/constitution.md)
 - [Feature specification](specs/001-manage-epilepsy-care/spec.md)
 - [Implementation plan](specs/001-manage-epilepsy-care/plan.md)
