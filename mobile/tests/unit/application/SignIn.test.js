@@ -1,9 +1,20 @@
 import { SignIn, SignInInputError } from '../../../src/application/use-cases/SignIn.js';
 import { RestClientError } from '../../../src/infrastructure/api/RestClient.js';
 
+function tokenWithExpiration(exp = 2_000_000_000) {
+  const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
+  return `${encode({ alg: 'none' })}.${encode({ exp })}.signature`;
+}
+
 const validSession = {
-  token: 'signed-token',
+  token: tokenWithExpiration(),
   user: { id: 1, name: 'Demo Patient', role: 'PATIENT' },
+};
+
+const persistedSession = {
+  ...validSession,
+  tokenExpiresAt: 2_000_000_000,
+  user: { ...validSession.user, patientId: 1 },
 };
 
 function createAuthentication() {
@@ -30,9 +41,9 @@ describe('SignIn', () => {
 
     await expect(
       signIn.execute({ email: ' patient@example.com ', password: 'Patient123!' }),
-    ).resolves.toEqual(validSession);
+    ).resolves.toEqual(persistedSession);
     expect(authentication.authenticate).toHaveBeenCalledWith('patient@example.com', 'Patient123!');
-    expect(sessionStore.saveSession).toHaveBeenCalledWith(validSession);
+    expect(sessionStore.saveSession).toHaveBeenCalledWith(persistedSession);
   });
 
   test.each([
@@ -50,12 +61,15 @@ describe('SignIn', () => {
   test('restores a session only after the API validates its stored token', async () => {
     const authentication = createAuthentication();
     const sessionStore = createSessionStore();
-    sessionStore.loadSession.mockResolvedValue({ token: validSession.token });
+    sessionStore.loadSession.mockResolvedValue({
+      ...validSession,
+      tokenExpiresAt: 2_000_000_000,
+    });
     const signIn = new SignIn({ authentication, sessionStore });
 
-    await expect(signIn.restoreSession()).resolves.toEqual(validSession);
+    await expect(signIn.restoreSession()).resolves.toEqual(persistedSession);
     expect(authentication.getCurrentUser).toHaveBeenCalledWith(validSession.token);
-    expect(sessionStore.saveSession).toHaveBeenCalledWith(validSession);
+    expect(sessionStore.saveSession).toHaveBeenCalledWith(persistedSession);
   });
 
   test('clears a session when the API rejects its token', async () => {
@@ -68,14 +82,17 @@ describe('SignIn', () => {
       }),
     );
     const sessionStore = createSessionStore();
-    sessionStore.loadSession.mockResolvedValue({ token: validSession.token });
+    sessionStore.loadSession.mockResolvedValue({
+      ...validSession,
+      tokenExpiresAt: 2_000_000_000,
+    });
     const signIn = new SignIn({ authentication, sessionStore });
 
     await expect(signIn.restoreSession()).resolves.toBeNull();
     expect(sessionStore.clearSession).toHaveBeenCalledTimes(1);
   });
 
-  test('does not erase the token on a transient network failure', async () => {
+  test('restores an unexpired cached session when the profile request is offline', async () => {
     const authentication = createAuthentication();
     const networkError = new RestClientError({
       status: null,
@@ -84,11 +101,31 @@ describe('SignIn', () => {
     });
     authentication.getCurrentUser.mockRejectedValue(networkError);
     const sessionStore = createSessionStore();
-    sessionStore.loadSession.mockResolvedValue({ token: validSession.token });
+    const storedSession = {
+      ...validSession,
+      tokenExpiresAt: 2_000_000_000,
+      user: { ...validSession.user, patientId: 1 },
+    };
+    sessionStore.loadSession.mockResolvedValue(storedSession);
     const signIn = new SignIn({ authentication, sessionStore });
 
-    await expect(signIn.restoreSession()).rejects.toBe(networkError);
+    await expect(signIn.restoreSession()).resolves.toEqual(storedSession);
     expect(sessionStore.clearSession).not.toHaveBeenCalled();
+  });
+
+  test('clears an expired cached session without calling the API', async () => {
+    const authentication = createAuthentication();
+    const sessionStore = createSessionStore();
+    sessionStore.loadSession.mockResolvedValue({
+      ...validSession,
+      tokenExpiresAt: 1_000,
+      user: { ...validSession.user, patientId: 1 },
+    });
+    const signIn = new SignIn({ authentication, sessionStore, now: () => 1_000_000 });
+
+    await expect(signIn.restoreSession()).resolves.toBeNull();
+    expect(authentication.getCurrentUser).not.toHaveBeenCalled();
+    expect(sessionStore.clearSession).toHaveBeenCalledTimes(1);
   });
 
   test('sign-out clears local state even if the remote adapter fails', async () => {

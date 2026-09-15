@@ -115,27 +115,41 @@ describe('SessionStore secure adapter', () => {
     };
   }
 
-  test('implements the session port and stores only the token securely', async () => {
+  test('implements the session port and stores the token with its minimal cached identity securely', async () => {
     const secureStore = createSecureStore();
     const store = new SessionStore({ secureStore });
 
     expect(SessionStorePort.assert(store)).toBe(store);
     await store.saveSession({
       token: 'signed-token',
+      tokenExpiresAt: 2_000_000_000,
       user: { id: 1, name: 'Demo Patient', role: 'PATIENT' },
     });
 
-    expect(secureStore.setItemAsync).toHaveBeenCalledWith(SECURE_SESSION_KEY, 'signed-token', {
-      keychainAccessible: secureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
-    });
+    expect(secureStore.setItemAsync).toHaveBeenCalledWith(
+      SECURE_SESSION_KEY,
+      JSON.stringify({
+        token: 'signed-token',
+        tokenExpiresAt: 2_000_000_000,
+        user: { id: 1, name: 'Demo Patient', role: 'PATIENT' },
+      }),
+      {
+        keychainAccessible: secureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
+      },
+    );
   });
 
-  test('loads and clears the stored token', async () => {
+  test('loads and clears the stored session', async () => {
     const secureStore = createSecureStore();
-    secureStore.getItemAsync.mockResolvedValue('signed-token');
+    const session = {
+      token: 'signed-token',
+      tokenExpiresAt: 2_000_000_000,
+      user: { id: 1, name: 'Demo Patient', role: 'PATIENT' },
+    };
+    secureStore.getItemAsync.mockResolvedValue(JSON.stringify(session));
     const store = new SessionStore({ secureStore });
 
-    await expect(store.loadSession()).resolves.toEqual({ token: 'signed-token' });
+    await expect(store.loadSession()).resolves.toEqual(session);
     await store.clearSession();
 
     expect(secureStore.getItemAsync).toHaveBeenCalledWith(SECURE_SESSION_KEY);

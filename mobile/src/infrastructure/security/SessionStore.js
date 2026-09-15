@@ -20,13 +20,61 @@ function requireSessionToken(session) {
   return session.token;
 }
 
+function requireCachedUser(user) {
+  if (
+    !user ||
+    !Number.isInteger(user.id) ||
+    user.id < 1 ||
+    typeof user.name !== 'string' ||
+    !user.name.trim() ||
+    typeof user.role !== 'string' ||
+    !user.role.trim()
+  ) {
+    throw new TypeError('Session user must contain an id, name, and role.');
+  }
+
+  return {
+    id: user.id,
+    name: user.name.trim(),
+    role: user.role,
+  };
+}
+
+function requireTokenExpiration(session) {
+  if (!Number.isInteger(session?.tokenExpiresAt) || session.tokenExpiresAt < 1) {
+    throw new TypeError('Session token expiration must be a positive Unix timestamp.');
+  }
+
+  return session.tokenExpiresAt;
+}
+
+function parseSession(value) {
+  try {
+    const session = JSON.parse(value);
+
+    return {
+      token: requireSessionToken(session),
+      tokenExpiresAt: requireTokenExpiration(session),
+      user: requireCachedUser(session.user),
+    };
+  } catch {
+    return { token: value };
+  }
+}
+
 export class SessionStore {
   constructor({ secureStore = SecureStore } = {}) {
     this.secureStore = requireSecureStore(secureStore);
   }
 
   async saveSession(session) {
-    await this.secureStore.setItemAsync(SECURE_SESSION_KEY, requireSessionToken(session), {
+    const serializedSession = JSON.stringify({
+      token: requireSessionToken(session),
+      tokenExpiresAt: requireTokenExpiration(session),
+      user: requireCachedUser(session.user),
+    });
+
+    await this.secureStore.setItemAsync(SECURE_SESSION_KEY, serializedSession, {
       keychainAccessible: this.secureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
     });
   }
@@ -38,7 +86,7 @@ export class SessionStore {
       return null;
     }
 
-    return { token };
+    return parseSession(token);
   }
 
   async clearSession() {
