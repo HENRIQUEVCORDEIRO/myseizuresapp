@@ -5,9 +5,10 @@ import { getContainer } from '../../../src/composition/container.js';
 import { TriggerCause } from '../../../src/domain/value-objects/index.js';
 import {
   AccessibleButton,
-  DateTimeField,
   FormFeedback,
   FormField,
+  NativeDateTimeField,
+  RatingField,
   SelectField,
 } from '../../../src/presentation/components/index.js';
 import { useAuthSession } from '../../../src/presentation/navigation/index.js';
@@ -22,14 +23,10 @@ const CAUSE_OPTIONS = Object.freeze([
   { label: 'Other', value: TriggerCause.OTHER },
 ]);
 
-const RATING_OPTIONS = Object.freeze(
-  [1, 2, 3, 4, 5].map((value) => Object.freeze({ label: String(value), value })),
-);
-
 function requireFields({ commonCause, mood, otherDescription, recordedAt, sleepQuality }) {
   const errors = {};
 
-  if (!recordedAt.trim()) errors.recordedAt = 'Date and time is required.';
+  if (!recordedAt) errors.recordedAt = 'Date and time is required.';
   if (!commonCause) errors.commonCause = 'Cause is required.';
   if (sleepQuality === null) errors.sleepQuality = 'Sleep quality is required.';
   if (mood === null) errors.mood = 'Mood is required.';
@@ -41,7 +38,7 @@ function requireFields({ commonCause, mood, otherDescription, recordedAt, sleepQ
 }
 
 export function TriggerEntryForm({ patientId, recordTrigger }) {
-  const [recordedAt, setRecordedAt] = useState('');
+  const [recordedAt, setRecordedAt] = useState(null);
   const [commonCause, setCommonCause] = useState(null);
   const [otherDescription, setOtherDescription] = useState('');
   const [sleepQuality, setSleepQuality] = useState(null);
@@ -63,7 +60,7 @@ export function TriggerEntryForm({ patientId, recordTrigger }) {
     try {
       await recordTrigger.execute({
         patientId,
-        recordedAt: recordedAt.trim(),
+        recordedAt,
         commonCause,
         ...(commonCause === TriggerCause.OTHER
           ? { otherDescription: otherDescription.trim() }
@@ -94,11 +91,12 @@ export function TriggerEntryForm({ patientId, recordTrigger }) {
             this device.
           </Text>
         </View>
-        <DateTimeField
-          accessibilityHint="Enter when the possible trigger was recorded in UTC"
+        <NativeDateTimeField
+          accessibilityHint="Choose when the possible trigger occurred"
           error={errors.recordedAt}
           label="Trigger date and time"
-          onChangeText={setRecordedAt}
+          maximumDate={new Date()}
+          onValueChange={setRecordedAt}
           required
           value={recordedAt}
         />
@@ -114,27 +112,25 @@ export function TriggerEntryForm({ patientId, recordTrigger }) {
         {commonCause === TriggerCause.OTHER ? (
           <FormField
             accessibilityHint="Briefly describe the other possible cause"
-            error={errors.otherDescription}
+            error={errors.otherDescription ?? 'Describe the other cause.'}
             label="Other cause description"
             onChangeText={setOtherDescription}
             value={otherDescription}
           />
         ) : null}
-        <SelectField
+        <RatingField
           accessibilityHint="Rate sleep quality from 1, very poor, to 5, very good"
           error={errors.sleepQuality}
           label="Sleep quality"
           onValueChange={setSleepQuality}
-          options={RATING_OPTIONS}
           required
           value={sleepQuality}
         />
-        <SelectField
+        <RatingField
           accessibilityHint="Rate mood from 1, very low, to 5, very good"
           error={errors.mood}
           label="Mood"
           onValueChange={setMood}
-          options={RATING_OPTIONS}
           required
           value={mood}
         />
@@ -143,6 +139,7 @@ export function TriggerEntryForm({ patientId, recordTrigger }) {
           accessibilityHint="Validates and saves this trigger on the device"
           accessibilityLabel="Save trigger"
           busy={busy}
+          disabled={commonCause === TriggerCause.OTHER && !otherDescription.trim()}
           onPress={submit}
           title="Save trigger"
         />

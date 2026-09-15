@@ -5,8 +5,8 @@ import { getContainer } from '../../../src/composition/container.js';
 import { SeizureOccurrenceType } from '../../../src/domain/value-objects/index.js';
 import {
   AccessibleButton,
-  DateTimeField,
   FormFeedback,
+  NativeDateTimeField,
   SelectField,
 } from '../../../src/presentation/components/index.js';
 import { useAuthSession } from '../../../src/presentation/navigation/index.js';
@@ -21,19 +21,21 @@ const OCCURRENCE_OPTIONS = Object.freeze([
 function requireFields({ occurredAt, occurrenceType }) {
   const errors = {};
 
-  if (!occurredAt.trim()) {
+  if (!occurredAt) {
     errors.occurredAt = 'Date and time is required.';
   }
 
   if (!occurrenceType) {
     errors.occurrenceType = 'Occurrence type is required.';
+  } else if (!OCCURRENCE_OPTIONS.some((option) => option.value === occurrenceType)) {
+    errors.occurrenceType = 'Choose a valid occurrence type.';
   }
 
   return errors;
 }
 
 export function SeizureEntryForm({ patientId, recordSeizure }) {
-  const [occurredAt, setOccurredAt] = useState('');
+  const [occurredAt, setOccurredAt] = useState(null);
   const [occurrenceType, setOccurrenceType] = useState(null);
   const [errors, setErrors] = useState({});
   const [feedback, setFeedback] = useState(null);
@@ -51,7 +53,7 @@ export function SeizureEntryForm({ patientId, recordSeizure }) {
     setBusy(true);
 
     try {
-      await recordSeizure.execute({ patientId, occurredAt: occurredAt.trim(), occurrenceType });
+      await recordSeizure.execute({ patientId, occurredAt, occurrenceType });
       setFeedback({ message: 'Seizure saved.', variant: 'success' });
     } catch (error) {
       setFeedback({
@@ -74,11 +76,12 @@ export function SeizureEntryForm({ patientId, recordSeizure }) {
             Add the date, time, and occurrence type. This record is saved on this device.
           </Text>
         </View>
-        <DateTimeField
-          accessibilityHint="Enter when the seizure occurred in UTC"
+        <NativeDateTimeField
+          accessibilityHint="Choose when the seizure occurred"
           error={errors.occurredAt}
           label="Seizure date and time"
-          onChangeText={setOccurredAt}
+          maximumDate={new Date()}
+          onValueChange={setOccurredAt}
           required
           value={occurredAt}
         />

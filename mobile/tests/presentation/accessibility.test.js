@@ -72,7 +72,7 @@ describe('critical-screen accessibility regressions', () => {
       />,
     );
     const labels = labelledNodes(renderer);
-    const dateIndex = labels.indexOf('Seizure date and time');
+    const dateIndex = labels.indexOf('Select seizure date and time date');
     const typeIndex = labels.indexOf('Occurrence type');
     const saveIndex = labels.indexOf('Save seizure');
 
@@ -80,8 +80,13 @@ describe('critical-screen accessibility regressions', () => {
     expect(typeIndex).toBeGreaterThan(dateIndex);
     expect(saveIndex).toBeGreaterThan(typeIndex);
     expect(
-      renderer.root.findByProps({ accessibilityLabel: 'Seizure date and time' }).props,
-    ).toEqual(expect.objectContaining({ focusable: true, returnKeyType: 'done' }));
+      renderer.root.findByProps({ accessibilityLabel: 'Select seizure date and time date' }).props,
+    ).toEqual(
+      expect.objectContaining({
+        accessibilityHint: expect.stringMatching(/choose when the seizure occurred/i),
+        focusable: true,
+      }),
+    );
     expect(accessibleNode(renderer, 'Save seizure', 'button').props).toEqual(
       expect.objectContaining({
         accessibilityHint: expect.stringMatching(/saves this seizure on the device/i),

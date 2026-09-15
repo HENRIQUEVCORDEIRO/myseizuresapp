@@ -3,6 +3,13 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import SeizureEntryScreen from '../../app/(patient)/seizures/new.js';
 import TriggerEntryScreen from '../../app/(patient)/triggers/new.js';
 
+jest.mock('@react-native-community/datetimepicker', () => {
+  const ReactModule = require('react');
+  const { View } = require('react-native');
+
+  return ({ onChange, testID }) => ReactModule.createElement(View, { onChange, testID });
+});
+
 const PATIENT_ID = 7;
 
 function createCommand(result) {
@@ -22,9 +29,12 @@ describe('patient clinical-record entry flows', () => {
     expect(screen.getByText('Occurrence type is required.')).toBeOnTheScreen();
     expect(recordSeizure.execute).not.toHaveBeenCalled();
 
-    fireEvent.changeText(
-      screen.getByLabelText('Seizure date and time'),
-      '2026-07-10T08:30:00.000Z',
+    fireEvent.press(screen.getByRole('button', { name: 'Select seizure date and time date' }));
+    fireEvent(
+      screen.getByTestId('seizure-date-and-time-picker'),
+      'onChange',
+      { type: 'set' },
+      new Date('2026-07-10T08:30:00.000Z'),
     );
     fireEvent(screen.getByLabelText('Occurrence type'), 'valueChange', 'FOCAL');
     fireEvent.press(screen.getByRole('button', { name: 'Save seizure' }));
@@ -51,13 +61,16 @@ describe('patient clinical-record entry flows', () => {
     expect(screen.getByText('Mood is required.')).toBeOnTheScreen();
     expect(recordTrigger.execute).not.toHaveBeenCalled();
 
-    fireEvent.changeText(
-      screen.getByLabelText('Trigger date and time'),
-      '2026-07-10T09:00:00.000Z',
+    fireEvent.press(screen.getByRole('button', { name: 'Select trigger date and time date' }));
+    fireEvent(
+      screen.getByTestId('trigger-date-and-time-picker'),
+      'onChange',
+      { type: 'set' },
+      new Date('2026-07-10T09:00:00.000Z'),
     );
     fireEvent(screen.getByLabelText('Cause'), 'valueChange', 'SLEEP');
-    fireEvent(screen.getByLabelText('Sleep quality'), 'valueChange', 2);
-    fireEvent(screen.getByLabelText('Mood'), 'valueChange', 3);
+    fireEvent.press(screen.getByRole('radio', { name: 'Sleep quality 2' }));
+    fireEvent.press(screen.getByRole('radio', { name: 'Mood 3' }));
     fireEvent.press(screen.getByRole('button', { name: 'Save trigger' }));
 
     await waitFor(() =>
@@ -70,5 +83,17 @@ describe('patient clinical-record entry flows', () => {
       }),
     );
     expect(await screen.findByText('Trigger saved.')).toHaveProp('accessibilityRole', 'alert');
+  });
+
+  test('requires a description before an other trigger can be saved', () => {
+    const recordTrigger = createCommand({ id: 203 });
+    render(<TriggerEntryScreen patientId={PATIENT_ID} recordTrigger={recordTrigger} />);
+
+    fireEvent(screen.getByLabelText('Cause'), 'valueChange', 'OTHER');
+
+    expect(screen.getByText('Describe the other cause.')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Save trigger' })).toBeDisabled();
+    fireEvent.changeText(screen.getByLabelText('Other cause description'), 'Missed medication');
+    expect(screen.getByRole('button', { name: 'Save trigger' })).not.toBeDisabled();
   });
 });
