@@ -37,8 +37,8 @@ function requireFields({ commonCause, mood, otherDescription, recordedAt, sleepQ
   return errors;
 }
 
-export function TriggerEntryForm({ patientId, recordTrigger }) {
-  const [recordedAt, setRecordedAt] = useState(null);
+export function TriggerEntryForm({ initialRecordedAt = null, patientId, recordTrigger }) {
+  const [recordedAt, setRecordedAt] = useState(initialRecordedAt);
   const [commonCause, setCommonCause] = useState(null);
   const [otherDescription, setOtherDescription] = useState('');
   const [sleepQuality, setSleepQuality] = useState(null);

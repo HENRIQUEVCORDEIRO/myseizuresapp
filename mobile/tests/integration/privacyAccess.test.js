@@ -23,7 +23,21 @@ import {
 } from '../../src/presentation/navigation/routePolicy.js';
 import { createSQLiteTestDatabase } from '../unit/factories/sqliteTestDatabase.js';
 
-const PATIENT_TOKEN = 'signed-patient-token';
+const TOKEN_EXPIRATION_SECONDS = 1_800_000_000;
+
+/**
+ * The simulated API returns a signed JWT that carries an `exp` claim, so the test double must
+ * produce the same shape. The session layer decodes the expiration locally to decide whether a
+ * cached session can still be restored.
+ */
+function createSignedToken(expiresAtSeconds = TOKEN_EXPIRATION_SECONDS) {
+  const payload = Buffer.from(JSON.stringify({ exp: expiresAtSeconds }), 'utf8').toString(
+    'base64url',
+  );
+  return `header.${payload}.signature`;
+}
+
+const PATIENT_TOKEN = createSignedToken();
 
 function createSecureStore() {
   return {
@@ -55,7 +69,7 @@ function privateRepositories() {
 }
 
 describe('session and role privacy boundaries', () => {
-  test('persists only the token and clears a server-rejected session', async () => {
+  test('persists the token with a minimal identity envelope and clears a server-rejected session', async () => {
     const secureStore = createSecureStore();
     const sessionStore = new SessionStore({ secureStore });
     const authentication = createAuthentication();
@@ -67,12 +81,17 @@ describe('session and role privacy boundaries', () => {
     });
 
     expect(session.user).toMatchObject({ id: 1, role: 'PATIENT' });
-    expect(secureStore.setItemAsync).toHaveBeenCalledWith(SECURE_SESSION_KEY, PATIENT_TOKEN, {
-      keychainAccessible: secureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
-    });
-    expect(JSON.stringify(secureStore.setItemAsync.mock.calls)).not.toMatch(
-      /private-password|patient@example|Demo Patient/i,
-    );
+
+    const [storageKey, storedValue] = secureStore.setItemAsync.mock.calls[0];
+    expect(storageKey).toBe(SECURE_SESSION_KEY);
+
+    // The stored envelope holds the token, its expiration, and the minimal identity needed to
+    // restore the session offline. It must never hold a credential.
+    const envelope = JSON.parse(storedValue);
+    expect(envelope.token).toBe(PATIENT_TOKEN);
+    expect(envelope.tokenExpiresAt).toBe(TOKEN_EXPIRATION_SECONDS);
+    expect(envelope.user).toMatchObject({ id: 1, name: 'Demo Patient', role: 'PATIENT' });
+    expect(storedValue).not.toMatch(/private-password|patient@example|password|hash/i);
 
     secureStore.getItemAsync.mockResolvedValue(PATIENT_TOKEN);
     authentication.getCurrentUser.mockRejectedValue({

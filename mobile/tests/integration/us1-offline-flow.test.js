@@ -4,7 +4,7 @@ import { isAbsolute, join, relative, resolve } from 'node:path';
 
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/react-native';
 
-import CalendarScreen from '../../app/(patient)/calendar.js';
+import CalendarScreen from '../../app/(patient)/(tabs)/calendar.js';
 import SeizureEntryScreen from '../../app/(patient)/seizures/new.js';
 import TriggerEntryScreen from '../../app/(patient)/triggers/new.js';
 import {
@@ -102,11 +102,23 @@ function removeVerifiedTemporaryDirectory(directory) {
 
 function OfflineJourneyStage({ listChronologicalEvents, recordSeizure, recordTrigger, stage }) {
   if (stage === 'seizure') {
-    return <SeizureEntryScreen patientId={PATIENT_ID} recordSeizure={recordSeizure} />;
+    return (
+      <SeizureEntryScreen
+        initialOccurredAt={SEIZURE_TIME}
+        patientId={PATIENT_ID}
+        recordSeizure={recordSeizure}
+      />
+    );
   }
 
   if (stage === 'trigger') {
-    return <TriggerEntryScreen patientId={PATIENT_ID} recordTrigger={recordTrigger} />;
+    return (
+      <TriggerEntryScreen
+        initialRecordedAt={TRIGGER_TIME}
+        patientId={PATIENT_ID}
+        recordTrigger={recordTrigger}
+      />
+    );
   }
 
   return (
@@ -146,7 +158,6 @@ describe('US1 offline clinical-record journey', () => {
     const journey = render(
       <OfflineJourneyStage recordSeizure={firstLaunchUseCases.recordSeizure} stage="seizure" />,
     );
-    fireEvent.changeText(journey.getByLabelText('Seizure date and time'), SEIZURE_TIME);
     fireEvent(
       journey.getByLabelText('Occurrence type'),
       'valueChange',
@@ -158,7 +169,6 @@ describe('US1 offline clinical-record journey', () => {
     journey.rerender(
       <OfflineJourneyStage recordTrigger={firstLaunchUseCases.recordTrigger} stage="trigger" />,
     );
-    fireEvent.changeText(journey.getByLabelText('Trigger date and time'), TRIGGER_TIME);
     fireEvent(journey.getByLabelText('Cause'), 'valueChange', TriggerCause.SLEEP);
     fireEvent(journey.getByLabelText('Sleep quality'), 'valueChange', 2);
     fireEvent(journey.getByLabelText('Mood'), 'valueChange', 3);

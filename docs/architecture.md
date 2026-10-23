@@ -54,7 +54,7 @@ clinical-data source.
 | Patient profile used for local export       | Mobile SQLite             | Read only after report authorization succeeds                                |
 | Reports, trends, and alerts                 | Derived in memory         | Recomputed from authorized, selected-period local data; no report table      |
 | Export document                             | Local JSON file           | Versioned allow-list mapping; excludes credentials and unrelated fields      |
-| Session token                               | Device secure storage     | Only the token is persisted; rejected tokens are cleared                     |
+| Session token                               | Device secure storage     | The token, its expiration, and a minimal identity are persisted; no credential is stored, and rejected tokens are cleared |
 | Demo users and access grants                | Simulated REST API memory | Bearer authentication, role checks, ownership checks, and revocation         |
 
 No background synchronization queue exists. Uninstalling the app or clearing its storage can remove
@@ -66,8 +66,9 @@ the local prototype data, and there is no cloud recovery mechanism.
 
 1. The sign-in screen sends demo credentials to the API.
 2. The API validates the seeded user and returns a signed token plus a minimal public user shape.
-3. The mobile app stores only the token in secure device storage and validates it through
-   `GET /users/me` when restoring a session.
+3. The mobile app stores the token, its expiration, and a minimal identity in secure device
+   storage, and validates it through `GET /users/me` when restoring a session. When the API is
+   unreachable, an unexpired cached session is restored locally so that offline work continues.
 4. Patient grant/list/revoke actions and professional access checks use the token and the simulated
    access-grant endpoints.
 5. API responses contain no clinical records. Revoked or unauthorized access returns a safe denial.

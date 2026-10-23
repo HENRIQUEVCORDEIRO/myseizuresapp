@@ -34,8 +34,8 @@ function requireFields({ occurredAt, occurrenceType }) {
   return errors;
 }
 
-export function SeizureEntryForm({ patientId, recordSeizure }) {
-  const [occurredAt, setOccurredAt] = useState(null);
+export function SeizureEntryForm({ initialOccurredAt = null, patientId, recordSeizure }) {
+  const [occurredAt, setOccurredAt] = useState(initialOccurredAt);
   const [occurrenceType, setOccurrenceType] = useState(null);
   const [errors, setErrors] = useState({});
   const [feedback, setFeedback] = useState(null);
