@@ -1,76 +1,152 @@
 import { act, create } from 'react-test-renderer';
 
-import PatientHomeScreen from '../../app/(patient)/index.js';
-import { useAuthSession } from '../../src/presentation/navigation/AuthSessionProvider.js';
-import { useRouter } from 'expo-router';
+import { PatientHome } from '../../app/(patient)/(tabs)/index.js';
+import { ReportPeriodType } from '../../src/domain/rules/reportingRules.js';
 
-jest.mock('expo-router', () => {
-  const ReactModule = require('react');
-
+function createGenerateReport(overrides = {}) {
   return {
-    Link: ({ children, ...props }) => ReactModule.createElement('Link', props, children),
-    useRouter: jest.fn(),
+    execute: jest.fn().mockResolvedValue({
+      adherence: { finalDoses: 3, rate: 66.66666666666666, takenDoses: 2 },
+      alerts: [],
+      period: { periodEnd: '2026-08-11T15:00:00.000Z', periodStart: '2026-08-05T00:00:00.000Z' },
+      seizures: [{ id: 1 }, { id: 2 }],
+      triggerTrends: [],
+      triggers: [{ id: 1 }],
+    }),
+    ...overrides,
   };
-});
+}
 
-jest.mock('../../src/presentation/navigation/AuthSessionProvider.js', () => ({
-  useAuthSession: jest.fn(),
-}));
-
-const DESTINATIONS = [
-  ['Record seizure', '/(patient)/seizures/new'],
-  ['Record triggers', '/(patient)/triggers/new'],
-  ['Calendar and history', '/(patient)/calendar'],
-  ['Treatments', '/(patient)/treatments'],
-  ['Reminders and adherence', '/(patient)/reminders'],
-  ['Professional access sharing', '/(patient)/sharing'],
-];
-
-function renderPatientHome({ signOut = jest.fn().mockResolvedValue(undefined) } = {}) {
-  const router = { replace: jest.fn() };
-  useRouter.mockReturnValue(router);
-  useAuthSession.mockReturnValue({
-    signOut,
-    user: { id: 1, name: 'Patient One', role: 'PATIENT' },
-  });
+function renderHome({
+  generateReport = createGenerateReport(),
+  listReminders = { execute: jest.fn().mockResolvedValue([{ id: 1 }, { id: 2 }]) },
+  onNavigate = jest.fn(),
+  onSwitchProfile = jest.fn(),
+} = {}) {
   let renderer;
 
   act(() => {
-    renderer = create(<PatientHomeScreen />);
+    renderer = create(
+      <PatientHome
+        generateReport={generateReport}
+        listReminders={listReminders}
+        onNavigate={onNavigate}
+        onSwitchProfile={onSwitchProfile}
+        patientId={1}
+        user={{ id: 1, name: 'Patient One', role: 'PATIENT' }}
+      />,
+    );
   });
 
-  return { renderer, router, signOut };
+  return { generateReport, listReminders, onNavigate, onSwitchProfile, renderer };
 }
 
-describe('patient home navigation', () => {
-  test('renders clear entry points for every patient workflow', () => {
-    const { renderer } = renderPatientHome();
-    const links = renderer.root.findAllByType('Link');
+describe('patient home', () => {
+  test('offers the three quick actions with an accessible label and a destination', async () => {
+    const { onNavigate, renderer } = renderHome();
 
-    expect(links.map(({ props }) => [props.accessibilityLabel, props.href])).toEqual(DESTINATIONS);
-    expect(renderer.root.findByProps({ accessibilityLabel: 'Patient care tools' })).toBeTruthy();
+    await act(async () => {});
+
+    const actions = [
+      ['Record seizure', '/(patient)/seizures/new'],
+      ['Record trigger', '/(patient)/triggers/new'],
+      ['Confirm dose', '/(patient)/reminders'],
+    ];
+
+    for (const [label, href] of actions) {
+      const card = renderer.root
+        .findAllByProps({ accessibilityLabel: label })
+        .find((element) => element.props.accessibilityRole === 'button');
+      expect(card).toBeTruthy();
+      await act(async () => {
+        card.props.onPress();
+      });
+      expect(onNavigate).toHaveBeenCalledWith(href);
+    }
   });
 
-  test('clears the active session before safely returning to authentication', async () => {
-    const { renderer, router, signOut } = renderPatientHome();
+  test('shows the count of doses still waiting for confirmation', async () => {
+    const { renderer } = renderHome();
 
-    await act(async () => {
-      await renderer.root.findByProps({ accessibilityLabel: 'Switch profile' }).props.onPress();
-    });
+    await act(async () => {});
 
-    expect(signOut).toHaveBeenCalledTimes(1);
-    expect(router.replace).toHaveBeenCalledWith('/(auth)');
+    expect(renderer.root.findByProps({ accessibilityLabel: '2 doses to confirm' })).toBeTruthy();
   });
 
-  test('returns to authentication even when remote sign-out reports an error', async () => {
-    const { renderer, router } = renderPatientHome({
-      signOut: jest.fn().mockRejectedValue(new Error('Remote service unavailable.')),
-    });
+  test('summarises seizures, triggers, and adherence for the selected period', async () => {
+    const { generateReport, renderer } = renderHome();
+
+    await act(async () => {});
+
+    expect(generateReport.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ patientId: 1, periodType: ReportPeriodType.WEEKLY }),
+    );
+    expect(renderer.root.findByProps({ accessibilityLabel: 'Seizures: 2' })).toBeTruthy();
+    expect(renderer.root.findByProps({ accessibilityLabel: 'Triggers: 1' })).toBeTruthy();
+    expect(
+      renderer.root.findByProps({
+        accessibilityLabel: 'Adherence: 67%. 2 of 3 doses taken',
+      }),
+    ).toBeTruthy();
+  });
+
+  test('reloads the summary when a different period is chosen', async () => {
+    const { generateReport, renderer } = renderHome();
+
+    await act(async () => {});
 
     await act(async () => {
-      await renderer.root.findByProps({ accessibilityLabel: 'Switch profile' }).props.onPress();
+      renderer.root
+        .findByProps({ accessibilityLabel: 'Summary period' })
+        .findByProps({ accessibilityLabel: 'Month' })
+        .props.onPress();
     });
 
-    expect(router.replace).toHaveBeenCalledWith('/(auth)');
+    expect(generateReport.execute).toHaveBeenLastCalledWith(
+      expect.objectContaining({ periodType: ReportPeriodType.MONTHLY }),
+    );
+  });
+
+  test('keeps the quick actions usable when the summary fails to load', async () => {
+    const { renderer } = renderHome({
+      generateReport: createGenerateReport({
+        execute: jest.fn().mockRejectedValue(new Error('Local database is unavailable.')),
+      }),
+    });
+
+    await act(async () => {});
+
+    expect(renderer.root.findByProps({ accessibilityLabel: 'Record seizure' })).toBeTruthy();
+    expect(renderer.root.findAllByProps({ accessibilityRole: 'alert' }).length).toBeGreaterThan(0);
+  });
+
+  test('offers a recovery action when the summary fails to load', async () => {
+    const generateReport = createGenerateReport({
+      execute: jest.fn().mockRejectedValue(new Error('Local database is unavailable.')),
+    });
+    const { renderer } = renderHome({ generateReport });
+
+    await act(async () => {});
+
+    const retry = renderer.root.findByProps({
+      accessibilityLabel: 'Try loading the summary again',
+    });
+    await act(async () => {
+      retry.props.onPress();
+    });
+
+    expect(generateReport.execute).toHaveBeenCalledTimes(2);
+  });
+
+  test('signs the patient out and returns to authentication', async () => {
+    const { onSwitchProfile, renderer } = renderHome();
+
+    await act(async () => {});
+
+    await act(async () => {
+      renderer.root.findByProps({ accessibilityLabel: 'Switch profile' }).props.onPress();
+    });
+
+    expect(onSwitchProfile).toHaveBeenCalledTimes(1);
   });
 });

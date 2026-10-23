@@ -1,6 +1,6 @@
-import { getContainer } from '../../src/composition/container.js';
-import { CalendarHistory } from '../../src/presentation/features/calendar/index.js';
-import { useAuthSession } from '../../src/presentation/navigation/index.js';
+import { getContainer } from '../../../src/composition/container.js';
+import { CalendarHistory } from '../../../src/presentation/features/calendar/index.js';
+import { useAuthSession } from '../../../src/presentation/navigation/index.js';
 
 function ConnectedCalendarScreen() {
   const { user } = useAuthSession();

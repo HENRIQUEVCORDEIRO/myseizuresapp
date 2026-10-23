@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
-import SharingScreen from '../../app/(patient)/sharing.js';
+import SharingScreen from '../../app/(patient)/(tabs)/sharing.js';
 import ProfessionalPatientsScreen from '../../app/(professional)/patients/index.js';
 
 function result(value) {

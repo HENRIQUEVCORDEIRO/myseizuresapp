@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
-import CalendarScreen from '../../app/(patient)/calendar.js';
+import CalendarScreen from '../../app/(patient)/(tabs)/calendar.js';
 
 const PATIENT_ID = 7;
 const PERIOD = Object.freeze({

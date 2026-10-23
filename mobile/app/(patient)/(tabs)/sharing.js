@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { getContainer } from '../../src/composition/container.js';
+import { getContainer } from '../../../src/composition/container.js';
 import {
   AccessibleButton,
   ApplicationState,
   FormFeedback,
   FormField,
-} from '../../src/presentation/components/index.js';
-import { useAuthSession } from '../../src/presentation/navigation/index.js';
+} from '../../../src/presentation/components/index.js';
+import { useAuthSession } from '../../../src/presentation/navigation/index.js';
 
 function activeGrants(grants) {
   return grants.filter((grant) => grant.revokedAt === null);
