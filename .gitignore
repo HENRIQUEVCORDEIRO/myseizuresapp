@@ -14,6 +14,13 @@ coverage/
 .expo/
 .expo-shared/
 web-build/
+mobile/android/
+mobile/ios/
+
+# Local reference material (not versioned: third-party works and large binaries).
+# The competitor matrix (docs/fix_pesquisa_TCC.pdf) is versioned because it is original work.
+docs/EBook - Experiencia_do_Usuario_em_Interfaces_Digitais.pdf
+docs/Fluxo - outro app epilepsia/
 
 # Operating system and editor files
 .DS_Store
