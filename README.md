@@ -213,7 +213,28 @@ These indicators do not diagnose, predict emergencies, or contact anyone.
 
 ## Project documentation
 
-- [Current Overview](docs/current-overview.md)
+### Product and planning
+
+- [October 2026 master plan](docs/plano-geral-outubro-2026.md) — diagnosis, scope, and the 9-day rework schedule
+- [Minimum viable plan (8Rs)](docs/pmv-outubro-2026.md) — the sprint brief, risks, and responsibilities
+- [Usability study protocol](docs/usability-study-protocol.md) — tasks, consent form, and metrics for the SC-001/002/003 validation
+- [Competitor feature matrix](docs/fix_pesquisa_TCC.pdf) — the research matrix this project is measured against
+
+### Design
+
+- [Design system](docs/visual-design-system.md) — tokens, primitives, screen patterns, tone of voice, accessibility
+- [Interface patterns and screens](docs/ui-patterns-and-screens.md) — navigation map, wireframes, golden flows, state matrix
+- [Reference app analysis](docs/reference-app-analysis.md) — the interaction patterns adopted from the reference app, and why
+
+### Practices
+
+- [Working with the agent](docs/practices/working-with-the-agent.md) — the 4 Is, review by evidence, decision log
+- [Planning and scoping](docs/practices/planning-and-scoping.md) — 8Rs, PGG Dominó, priority rubric, definition of done
+- [Decision records](docs/practices/decision-records.md) — ADR template and live index
+- [Specification conventions](docs/practices/spec-conventions.md) — RF/RNF/RN, Given-When-Then, PlantUML, versioning
+
+### Specification
+
 - [Constitution](.specify/memory/constitution.md)
 - [Feature specification](specs/001-manage-epilepsy-care/spec.md)
 - [Implementation plan](specs/001-manage-epilepsy-care/plan.md)
