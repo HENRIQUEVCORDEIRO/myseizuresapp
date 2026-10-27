@@ -1,0 +1,21 @@
+D2 — evidência de persistência local (26/10/2026)
+Aparelho: SM-A145M (Android 14) · app com.myseizures.app
+Fluxo: limpar dados → login patient@example.com → crise → gatilho → tratamento 08:00/20:00 → confirmação de dose → login profissional para validar relatório → retorno ao paciente
+
+users: 2
+patients: 1
+seizure_records: 1
+trigger_records: 1
+treatments: 1
+treatment_times: 2
+reminders: 12
+adherence: 2
+
+users: [(1, 'Demo Patient', 'patient@example.com', 'PATIENT'), (2, 'Demo Professional', 'professional@example.com', 'MEDIC_CARETAKER')]
+patients: [(1, 1, '1990-01-01', None)]
+seizure_records: [(1, 1, '2026-10-26T23:23:08.220Z', 'FOCAL')]
+trigger_records: [(1, 1, '2026-10-26T23:25:02.180Z', 'SLEEP', 2, 3)]
+treatments: [(1, 1, 'MEDICATION', 'Levetiracetam', 2, 1)]
+treatment_times: [(1, '08:00'), (1, '20:00')]
+reminders (primeiros 4): [(1, 1, '2026-10-27T11:00:00.000Z', 'TAKEN'), (2, 1, '2026-10-27T23:00:00.000Z', 'TAKEN'), (3, 1, '2026-10-28T11:00:00.000Z', 'SCHEDULED'), (4, 1, '2026-10-28T23:00:00.000Z', 'SCHEDULED')]
+adherence: [(1, '2026-10-26T23:31:20.078Z', 'TAKEN'), (2, '2026-10-26T23:51:55.424Z', 'TAKEN')]

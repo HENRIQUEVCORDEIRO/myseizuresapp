@@ -31,7 +31,7 @@
 | Dia | Data | Entrega | N0 | N1 | N2 | N3 | N4 | N5 | N6 | Registro |
 |---|---|---|---|---|---|---|---|---|---|---|
 | **D1** | seg 20/10 | Documentação, design tokens, 10 primitivas de UI | — | ✅ 241 | ✅ | ✅ 17 | — | — | — | [d1](2026-10-20-d1.md) |
-| **D2** | ter 21/10 | Tab bar (4 abas) + home do paciente redesenhada | ✅ | ✅ 246 | ✅ | ✅ 8 | ⏳ | — | — | [d2](2026-10-21-d2.md) |
+| **D2** | ter 21/10 | Tab bar (4 abas) + home do paciente + fechamento D2.1 (identidade, doses, datas PT-BR) | ✅ | ✅ 260 | ✅ | ✅ | ✅ | — | ⏳ | [d2](2026-10-21-d2.md) |
 | D3 | qua 22/10 | Formulário de crise | | | | | | | | |
 | D4 | qui 23/10 | Formulário de gatilho | | | | | | | | |
 | D5 | seg 26/10 | Assistente de tratamento em 3 passos | | | | | | | | |
@@ -49,8 +49,8 @@
 
 | Métrica | D1 | D2 | Alvo em 30/10 |
 |---|---|---|---|
-| Suítes de teste | 38 | **39** | 46 |
-| Testes | 241 | **246** | ~300 |
+| Suítes de teste | 38 | **43** | 46 |
+| Testes | 241 | **260** | ~300 |
 | Primitivas de UI | 10 | 10 | 12 |
 | Linhas de código de apresentação | 6.670 | +420 | — |
 | Documentos | 11 | **13** | 16 |
@@ -60,41 +60,41 @@
 
 ## 4. Arquivos prontos para commit
 
-> O autor faz o commit manualmente. Esta lista cresce a cada dia.
+> O autor faz o commit manualmente. Os commits 1–10 do plano já estão no histórico
+> (`git log --oneline`); esta seção lista **somente o que ainda está na árvore de trabalho**.
 
-| Arquivo | Alterado | Motivo |
-|---|---|---|
-| `.specify/memory/constitution.md` | M | v1.1.0 — Princípio VI |
-| `README.md` | M | índice da documentação |
-| `docs/architecture.md` | M | contrato de sessão corrigido |
-| `mobile/app/(patient)/_layout.js` | M | Stack com o grupo de abas |
-| `mobile/app/(patient)/(tabs)/_layout.js` | **A** | barra de abas |
-| `mobile/app/(patient)/(tabs)/index.js` | **A** | home redesenhada |
-| `mobile/app/(patient)/(tabs)/calendar.js` | **R** | movido |
-| `mobile/app/(patient)/(tabs)/sharing.js` | **R** | movido |
-| `mobile/app/(patient)/(tabs)/treatments.js` | **R** | movido |
-| `mobile/app/(patient)/index.js` | **D** | substituído pela home |
-| `mobile/app/(patient)/calendar.js` | **D** | movido |
-| `mobile/app/(patient)/sharing.js` | **D** | movido |
-| `mobile/app/(patient)/treatments/index.js` | **D** | movido |
-| `mobile/src/presentation/theme/tokens.js` | **A** | tokens |
-| `mobile/src/presentation/components/ui/*` (11) | **A** | primitivas |
-| `mobile/src/presentation/components/index.js` | M | barrel |
-| `mobile/tests/unit/presentation/uiPrimitives.test.js` | **A** | 17 testes |
-| `mobile/tests/presentation/patientHome.test.js` | M | reescrito |
-| `mobile/tests/presentation/patientNavigation.test.js` | **A** | 4 abas |
-| `mobile/tests/presentation/calendar.test.js` | M | import |
-| `mobile/tests/presentation/sharingManagement.test.js` | M | import |
-| `mobile/tests/integration/us1-offline-flow.test.js` | M | import + contrato |
-| `mobile/tests/integration/privacyAccess.test.js` | M | contrato de sessão |
-| `mobile/app/(patient)/seizures/new.js` | M | prop `initialOccurredAt` |
-| `mobile/app/(patient)/triggers/new.js` | M | prop `initialRecordedAt` |
-| `mobile/app/(patient)/index.js` | M | `catch` vazio do lint |
-| `docs/**` (13 documentos) | **A** | documentação |
-| `.gitignore` | M | material local + `/mobile/android` |
+### 4.1 Fechamento D2.1
+
+| Área | Arquivos principais | Alterado | Motivo |
+|---|---|---|---|
+| Identidade e API | `api/src/routes/authRoutes.js`, `api/src/services/AuthService.js`, `api/tests/authentication.test.js`, `api/tests/integration/auth.test.js` | M | payload seguro de identidade e contrato coberto |
+| Identidade local | `RestClient.js`, `SignIn.js`, `SessionStore.js`, `LocalIdentityRepository.js`, `container.js`, `AuthSessionProvider.js`, `localIdentity.test.js` | M/A | sync idempotente de `users`/`patients` após login/restore |
+| Doses e lembretes | `reminders.js`, `ManageTreatment.js`, `treatmentRules.js`, `TreatmentRepository.js`, `ExpoNotificationService.js`, `reminders.test.js` | M | crash corrigido, loading/erro, notificação não fatal e fuso local |
+| Datas/horas e formulários | `formatters/dateTime.js`, `NativeDateTimeField.js`, `TimeListField.js`, telas de crise/gatilho/tratamento/calendário/relatórios, `dateTimeFormatter.test.js`, `treatmentForm.test.js` | M/A | formatter PT-BR, seletores nativos e horários |
+| PT-BR | telas de navegação, auth, home, calendário, tratamentos, doses, compartilhamento, relatórios e testes de apresentação | M | tradução integral da UI, sem i18n |
+| Acessibilidade | `_layout.js` das abas, `ClinicalEventItem.js`, `ClinicalAlertList.js`, `sharing.js`, testes de acessibilidade/calendário/navegação | M | safe area, `listitem` inválido no Android e rótulos em 1,3× |
+| Documentação | `docs/sprint-outubro/2026-10-21-d2.md`, `INDICE.md`, `evidencias/d2/*` (26 arquivos) | M/A | resultados, achados e capturas do reteste |
+
+```bash
+# Sugestão de agrupamento; o autor pode dividir em commits menores.
+git add api mobile
+git commit -m "fix: close D2 with local identity, PT-BR and stable reminders"
+
+git add docs/sprint-outubro/2026-10-21-d2.md docs/sprint-outubro/INDICE.md docs/sprint-outubro/evidencias/d2
+git commit -m "docs(sprint): record the D2 device verification"
+```
+
+**Fora dos commits:** `.specify/`, `prompts/`, `docs/instructions/`, `docs/fix_pesquisa_TCC.pdf`.
+
+### 4.2 Próximo
+
+Com o D2 fechado, retomar D3/D4/D5 e a trilha web (N5) depois do commit manual. A tradução PT-BR
+não é mais uma pendência separada; identificadores, domínio, API e testes de domínio permanecem em
+inglês.
 
 **A** = adicionado · **M** = modificado · **R** = renomeado · **D** = removido
 
 > **Não versionados por decisão do autor:** `docs/EBook - Experiencia_do_Usuario_em_Interfaces_
 > Digitais.pdf` (copyright EDUFRN) e `docs/Fluxo - outro app epilepsia/` (UI de app comercial).
-> A matriz `docs/fix_pesquisa_TCC.pdf` **é** versionada.
+> Nesta rodada, também ficam fora dos commits a matriz `docs/fix_pesquisa_TCC.pdf`, o diretório
+> `docs/instructions/` e as pastas de ferramenta `.specify/` e `prompts/`.
