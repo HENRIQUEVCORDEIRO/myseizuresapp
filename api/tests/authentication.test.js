@@ -63,9 +63,19 @@ describe('simulated authentication API', () => {
       assert.equal(response.status, 200);
       assert.equal(typeof body.token, 'string');
       assert.ok(body.token.length > 0);
-      assert.deepEqual(Object.keys(body.user).sort(), ['id', 'name', 'role']);
+      assert.equal(body.user.email, email);
       assert.equal(body.user.role, role);
+      assert.equal(typeof body.user.id, 'number');
+      assert.equal(typeof body.user.name, 'string');
       assert.doesNotMatch(JSON.stringify(body), /password|hash/i);
+
+      if (role === 'PATIENT') {
+        assert.equal(body.user.patientId, 1);
+        assert.match(body.user.birthDate, /^\d{4}-\d{2}-\d{2}$/);
+        assert.equal(body.user.diagnosisDate, null);
+      } else {
+        assert.equal(body.user.medicCaretakerId, 1);
+      }
     }
   });
 

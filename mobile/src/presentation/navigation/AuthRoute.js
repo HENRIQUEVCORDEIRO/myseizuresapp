@@ -8,17 +8,17 @@ export function AuthRoute({ children }) {
   const { error, retry, status, user } = useAuthSession();
 
   if (status === 'loading') {
-    return <ApplicationState title="Loading your account" variant="loading" />;
+    return <ApplicationState title="Carregando sua conta" variant="loading" />;
   }
 
   if (status === 'error') {
     return (
       <ApplicationState
-        actionHint="Retries application startup and session restoration"
-        actionLabel="Try again"
+        actionHint="Tenta iniciar o aplicativo e restaurar a sessão novamente"
+        actionLabel="Tentar novamente"
         message={error}
         onAction={retry}
-        title="Could not start MySeizures"
+        title="Não foi possível iniciar o MySeizures"
         variant="error"
       />
     );
@@ -33,8 +33,8 @@ export function AuthRoute({ children }) {
 
     return (
       <ApplicationState
-        message="This account has an unsupported role."
-        title="Access denied"
+        message="Esta conta tem um perfil não suportado."
+        title="Acesso negado"
         variant="forbidden"
       />
     );

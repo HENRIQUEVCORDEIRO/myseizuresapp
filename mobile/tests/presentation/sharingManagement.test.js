@@ -25,16 +25,16 @@ describe('sharing management and professional patient access', () => {
     };
 
     render(<SharingScreen {...commands} />);
-    expect(await screen.findByText('No active access')).toBeOnTheScreen();
+    expect(await screen.findByText('Nenhum acesso ativo')).toBeOnTheScreen();
 
-    fireEvent.changeText(screen.getByLabelText('Professional identifier'), '9');
-    fireEvent.press(screen.getByRole('button', { name: 'Grant professional access' }));
-    expect(await screen.findByText('Access granted.')).toBeOnTheScreen();
-    expect(screen.getByLabelText('Professional 9 has active access')).toBeOnTheScreen();
+    fireEvent.changeText(screen.getByLabelText('Identificador do profissional'), '9');
+    fireEvent.press(screen.getByRole('button', { name: 'Conceder acesso ao profissional' }));
+    expect(await screen.findByText('Acesso concedido.')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Profissional 9 tem acesso ativo')).toBeOnTheScreen();
 
-    fireEvent.press(screen.getByRole('button', { name: 'Revoke access for professional 9' }));
-    expect(await screen.findByText('Access revoked.')).toBeOnTheScreen();
-    expect(screen.queryByLabelText('Professional 9 has active access')).not.toBeOnTheScreen();
+    fireEvent.press(screen.getByRole('button', { name: 'Revogar acesso do profissional 9' }));
+    expect(await screen.findByText('Acesso revogado.')).toBeOnTheScreen();
+    expect(screen.queryByLabelText('Profissional 9 tem acesso ativo')).not.toBeOnTheScreen();
     expect(commands.grantAccess.execute).toHaveBeenCalledWith({ medicCaretakerId: 9 });
     expect(commands.revokeAccess.execute).toHaveBeenCalledWith({ grantId: 4 });
   });
@@ -48,13 +48,13 @@ describe('sharing management and professional patient access', () => {
     };
     render(<ProfessionalPatientsScreen authorizePatientAccess={authorizePatientAccess} />);
 
-    fireEvent.changeText(screen.getByLabelText('Patient identifier'), '1');
-    fireEvent.press(screen.getByRole('button', { name: 'Check patient access' }));
-    expect(await screen.findByText('Access denied')).toBeOnTheScreen();
-    expect(screen.queryByText('Open report')).not.toBeOnTheScreen();
+    fireEvent.changeText(screen.getByLabelText('Identificador do paciente'), '1');
+    fireEvent.press(screen.getByRole('button', { name: 'Verificar acesso do paciente' }));
+    expect(await screen.findByText('Acesso negado')).toBeOnTheScreen();
+    expect(screen.queryByText('Abrir relatório')).not.toBeOnTheScreen();
 
-    fireEvent.press(screen.getByRole('button', { name: 'Check patient access' }));
-    await waitFor(() => expect(screen.getByText('Active access confirmed')).toBeOnTheScreen());
-    expect(screen.getByLabelText('Open report for patient 1')).toBeOnTheScreen();
+    fireEvent.press(screen.getByRole('button', { name: 'Verificar acesso do paciente' }));
+    await waitFor(() => expect(screen.getByText('Acesso ativo confirmado')).toBeOnTheScreen());
+    expect(screen.getByLabelText('Abrir relatório do paciente 1')).toBeOnTheScreen();
   });
 });

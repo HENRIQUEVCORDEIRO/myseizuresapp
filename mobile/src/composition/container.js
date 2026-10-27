@@ -24,6 +24,7 @@ import { AccessGrantClient } from '../infrastructure/api/AccessGrantClient.js';
 import { ExpoNotificationService } from '../infrastructure/notifications/ExpoNotificationService.js';
 import { ReportFileExporter, RndsExportMapper } from '../infrastructure/export/index.js';
 import {
+  LocalIdentityRepository,
   PatientRepository,
   SeizureRepository,
   TreatmentRepository,
@@ -56,6 +57,7 @@ export function createContainer({
   const accessGrantClient = new AccessGrantClient({ baseUrl: config.apiBaseUrl, fetchImpl });
   const sessionStoreAdapter = sessionStore ?? new SessionStore({ secureStore });
   const notificationAdapter = notifications ?? new ExpoNotificationService();
+  const localIdentityRepository = new LocalIdentityRepository({ databaseProvider: database });
   const clinicalCommands = new Map();
   const treatmentCommands = new Map();
   const accessCommands = new Map();
@@ -103,7 +105,10 @@ export function createContainer({
     if (!Number.isInteger(patientId) || patientId < 1)
       throw new TypeError('Treatment commands require a positive patient id.');
     if (!treatmentCommands.has(patientId)) {
-      const treatmentRepository = new TreatmentRepository({ databaseProvider: database });
+      const treatmentRepository = new TreatmentRepository({
+        databaseProvider: database,
+        timeZoneOffsetMinutes: new Date().getTimezoneOffset(),
+      });
       const options = { treatmentRepository, getActivePatientId: () => patientId };
       treatmentCommands.set(
         patientId,
@@ -149,7 +154,10 @@ export function createContainer({
       const generateReport = new GenerateReport({
         seizureRepository: new SeizureRepository({ databaseProvider: database }),
         triggerRepository: new TriggerRepository({ databaseProvider: database }),
-        treatmentRepository: new TreatmentRepository({ databaseProvider: database }),
+        treatmentRepository: new TreatmentRepository({
+          databaseProvider: database,
+          timeZoneOffsetMinutes: new Date().getTimezoneOffset(),
+        }),
         authorizePatientAccess: new AuthorizePatientAccess({
           accessGrantClient,
           getSessionToken,
@@ -188,6 +196,7 @@ export function createContainer({
       authentication: authenticationAdapter,
       sessionStore: sessionStoreAdapter,
     }),
+    synchronizeIdentity: (user) => localIdentityRepository.synchronize(user),
     treatmentForPatient,
   });
 }

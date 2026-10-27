@@ -37,6 +37,14 @@ function requireToken(token) {
   return token;
 }
 
+function optionalPositiveInteger(value) {
+  return Number.isInteger(value) && value > 0 ? value : undefined;
+}
+
+function optionalString(value) {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
 function requireUser(value) {
   if (
     !value ||
@@ -53,11 +61,27 @@ function requireUser(value) {
     });
   }
 
-  return {
+  const user = {
     id: value.id,
     name: value.name.trim(),
     role: value.role,
   };
+  const email = optionalString(value.email);
+  const patientId = optionalPositiveInteger(value.patientId);
+  const birthDate = optionalString(value.birthDate);
+  const medicCaretakerId = optionalPositiveInteger(value.medicCaretakerId);
+
+  if (email) user.email = email;
+  if (patientId) {
+    user.patientId = patientId;
+    if (birthDate) user.birthDate = birthDate;
+    if (value.diagnosisDate === null || typeof value.diagnosisDate === 'string') {
+      user.diagnosisDate = value.diagnosisDate;
+    }
+  }
+  if (medicCaretakerId) user.medicCaretakerId = medicCaretakerId;
+
+  return user;
 }
 
 function requireAuthenticationResponse(value) {

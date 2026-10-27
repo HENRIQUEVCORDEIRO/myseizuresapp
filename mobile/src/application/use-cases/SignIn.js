@@ -45,7 +45,11 @@ function decodeTokenExpiration(token) {
   }
 }
 
-function normalizeUser(user) {
+function optionalString(value) {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function normalizeUser(user, fallbackEmail = null) {
   if (
     !user ||
     !Number.isInteger(user.id) ||
@@ -63,15 +67,29 @@ function normalizeUser(user) {
     throw new Error('Authentication adapter returned an invalid patient identity.');
   }
 
+  const email = optionalString(user.email) ?? optionalString(fallbackEmail);
+  const birthDate = optionalString(user.birthDate);
+  const diagnosisDate = user.diagnosisDate === null ? null : optionalString(user.diagnosisDate);
+
   return {
     id: user.id,
     name: user.name.trim(),
     role: user.role,
-    ...(user.role === UserRole.PATIENT ? { patientId } : {}),
+    ...(email ? { email } : {}),
+    ...(user.role === UserRole.PATIENT
+      ? {
+          patientId,
+          ...(birthDate ? { birthDate } : {}),
+          ...(diagnosisDate !== undefined ? { diagnosisDate } : {}),
+        }
+      : {}),
+    ...(Number.isInteger(user.medicCaretakerId) && user.medicCaretakerId > 0
+      ? { medicCaretakerId: user.medicCaretakerId }
+      : {}),
   };
 }
 
-function normalizeSession(session) {
+function normalizeSession(session, fallbackEmail = null) {
   if (!hasToken(session) || !session?.user) {
     throw new Error('Authentication adapter returned an invalid session.');
   }
@@ -82,7 +100,11 @@ function normalizeSession(session) {
     throw new Error('Authentication adapter returned a token without a valid expiration.');
   }
 
-  return { token: session.token, tokenExpiresAt, user: normalizeUser(session.user) };
+  return {
+    token: session.token,
+    tokenExpiresAt,
+    user: normalizeUser(session.user, fallbackEmail),
+  };
 }
 
 function isRejectedToken(error) {
@@ -105,7 +127,7 @@ export class SignIn {
     const { email, password } = requireCredentials(input);
     const session = await this.authentication.authenticate(email, password);
 
-    const normalizedSession = normalizeSession(session);
+    const normalizedSession = normalizeSession(session, email);
 
     await this.sessionStore.saveSession(normalizedSession);
     return normalizedSession;
@@ -135,7 +157,11 @@ export class SignIn {
 
     try {
       cachedSession = storedSession.user
-        ? { ...storedSession, tokenExpiresAt, user: normalizeUser(storedSession.user) }
+        ? {
+            ...storedSession,
+            tokenExpiresAt,
+            user: normalizeUser(storedSession.user, storedSession.user.email),
+          }
         : null;
     } catch {
       cachedSession = null;
@@ -143,7 +169,10 @@ export class SignIn {
 
     try {
       const user = await this.authentication.getCurrentUser(storedSession.token);
-      const session = normalizeSession({ token: storedSession.token, user });
+      const session = normalizeSession(
+        { token: storedSession.token, user },
+        storedSession.user?.email,
+      );
 
       await this.sessionStore.saveSession(session);
       return session;

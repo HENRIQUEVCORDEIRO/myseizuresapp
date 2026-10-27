@@ -7,15 +7,15 @@ import { ReportPeriodType } from '../../src/domain/rules/reportingRules.js';
 import {
   AccessibleButton,
   ApplicationState,
-  DateTimeField,
+  NativeDateTimeField,
   SelectField,
 } from '../../src/presentation/components/index.js';
 import { useAuthSession } from '../../src/presentation/navigation/index.js';
 
 const PERIOD_OPTIONS = Object.freeze([
-  { label: 'Weekly', value: ReportPeriodType.WEEKLY },
-  { label: 'Monthly', value: ReportPeriodType.MONTHLY },
-  { label: 'Annual', value: ReportPeriodType.ANNUAL },
+  { label: 'Semanal', value: ReportPeriodType.WEEKLY },
+  { label: 'Mensal', value: ReportPeriodType.MONTHLY },
+  { label: 'Anual', value: ReportPeriodType.ANNUAL },
 ]);
 
 export function ReportExportAction({
@@ -32,7 +32,7 @@ export function ReportExportAction({
 
   async function submit() {
     if (!Number.isFinite(Date.parse(periodEnd))) {
-      setPeriodError('Report end must be a valid ISO 8601 date and time.');
+      setPeriodError('Informe uma data e hora final válidas para a exportação.');
       return;
     }
     setPeriodError(null);
@@ -52,61 +52,66 @@ export function ReportExportAction({
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.heading}>
           <Text accessibilityRole="header" style={styles.title}>
-            Export care summary
+            Exportar resumo do cuidado
           </Text>
           <Text style={styles.description}>
-            Create a versioned JSON file locally. The app does not transmit it to RNDS, e-SUS, or
-            any external service.
+            Crie um arquivo JSON versionado localmente. O aplicativo não o transmite ao RNDS, ao
+            e-SUS ou a qualquer serviço externo.
           </Text>
         </View>
         <SelectField
-          accessibilityHint="Choose the report period included in the local JSON file"
-          label="Export period"
+          accessibilityHint="Escolha o período do relatório incluído no arquivo JSON local"
+          label="Período da exportação"
           onValueChange={setPeriodType}
           options={PERIOD_OPTIONS}
           value={periodType}
         />
-        <DateTimeField
-          accessibilityHint="Enter the inclusive end of the exported report period in UTC"
+        <NativeDateTimeField
+          accessibilityHint="Escolha o fim inclusivo do período exportado"
           error={periodError}
-          label="Export period end"
-          onChangeText={setPeriodEnd}
+          label="Fim do período da exportação"
+          onValueChange={setPeriodEnd}
+          testID="export-period-end"
           value={periodEnd}
         />
         <AccessibleButton
-          accessibilityHint="Authorizes the report, saves a local JSON file, and opens device sharing when available"
-          accessibilityLabel="Export selected report"
+          accessibilityHint="Autoriza o relatório, salva um arquivo JSON local e abre o compartilhamento do aparelho quando disponível"
+          accessibilityLabel="Exportar relatório selecionado"
           busy={status === 'loading'}
           onPress={submit}
-          title="Export JSON"
+          title="Exportar JSON"
         />
         {status === 'denied' ? (
           <ApplicationState
-            message="The patient has not granted active access. No report or export file was created."
-            title="Access denied"
+            message="O paciente não concedeu acesso ativo. Nenhum relatório ou arquivo de exportação foi criado."
+            title="Acesso negado"
             variant="forbidden"
           />
         ) : null}
         {status === 'error' ? (
           <ApplicationState
-            actionHint="Attempts the authorized local export again"
-            actionLabel="Try again"
-            message="The local export could not be created. No clinical information was transmitted."
+            actionHint="Tenta novamente a exportação local autorizada"
+            actionLabel="Tentar novamente"
+            message="Não foi possível criar a exportação local. Nenhuma informação clínica foi transmitida."
             onAction={submit}
-            title="Export unavailable"
+            title="Exportação indisponível"
             variant="error"
           />
         ) : null}
         {status === 'success' ? (
           <View accessibilityRole="summary" style={styles.success}>
             <Text accessibilityRole="header" style={styles.successTitle}>
-              Export ready
+              Exportação pronta
             </Text>
             <Text>
-              {result.shared ? 'The device share sheet was opened.' : 'The file was saved locally.'}
+              {result.shared
+                ? 'A tela de compartilhamento do aparelho foi aberta.'
+                : 'O arquivo foi salvo localmente.'}
             </Text>
-            <Text selectable>Local file: {result.uri}</Text>
-            <Text style={styles.notice}>No external transmission was initiated by MySeizures.</Text>
+            <Text selectable>Arquivo local: {result.uri}</Text>
+            <Text style={styles.notice}>
+              Nenhuma transmissão externa foi iniciada pelo MySeizures.
+            </Text>
           </View>
         ) : null}
       </ScrollView>
@@ -129,8 +134,8 @@ function ConnectedReportExport() {
   if (!Number.isInteger(patientId) || patientId < 1) {
     return (
       <ApplicationState
-        message="Choose an authorized patient report before exporting."
-        title="Invalid patient"
+        message="Escolha um relatório de paciente autorizado antes de exportar."
+        title="Paciente inválido"
         variant="error"
       />
     );

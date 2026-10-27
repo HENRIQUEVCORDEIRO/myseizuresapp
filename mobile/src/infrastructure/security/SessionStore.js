@@ -33,11 +33,28 @@ function requireCachedUser(user) {
     throw new TypeError('Session user must contain an id, name, and role.');
   }
 
-  return {
+  const cached = {
     id: user.id,
     name: user.name.trim(),
     role: user.role,
   };
+  const email = typeof user.email === 'string' && user.email.trim() ? user.email.trim() : null;
+  const birthDate =
+    typeof user.birthDate === 'string' && user.birthDate.trim() ? user.birthDate : null;
+
+  if (email) cached.email = email;
+  if (Number.isInteger(user.patientId) && user.patientId > 0) {
+    cached.patientId = user.patientId;
+    if (birthDate) cached.birthDate = birthDate;
+    if (user.diagnosisDate === null || typeof user.diagnosisDate === 'string') {
+      cached.diagnosisDate = user.diagnosisDate;
+    }
+  }
+  if (Number.isInteger(user.medicCaretakerId) && user.medicCaretakerId > 0) {
+    cached.medicCaretakerId = user.medicCaretakerId;
+  }
+
+  return cached;
 }
 
 function requireTokenExpiration(session) {

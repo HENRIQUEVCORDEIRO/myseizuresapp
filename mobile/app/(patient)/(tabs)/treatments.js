@@ -1,45 +1,100 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useFocusEffect } from 'expo-router';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { getContainer } from '../../../src/composition/container.js';
+import { AccessibleButton, FormFeedback } from '../../../src/presentation/components/index.js';
 import { useAuthSession } from '../../../src/presentation/navigation/index.js';
 
-export function TreatmentList({ listTreatments }) {
+export function TreatmentList({ listTreatments, refreshKey = 0 }) {
   const [items, setItems] = useState([]);
-  useEffect(() => {
-    listTreatments.execute().then(setItems);
+  const [status, setStatus] = useState('loading');
+  const [error, setError] = useState(null);
+
+  const load = useCallback(async () => {
+    setStatus('loading');
+    setError(null);
+
+    try {
+      setItems(await listTreatments.execute());
+      setStatus('success');
+    } catch {
+      setItems([]);
+      setError('Não foi possível carregar os tratamentos.');
+      setStatus('error');
+    }
   }, [listTreatments]);
+
+  useEffect(() => {
+    void load();
+  }, [load, refreshKey]);
+
   return (
     <SafeAreaView style={styles.page}>
       <Text accessibilityRole="header" style={styles.title}>
-        Treatments
+        Tratamentos
       </Text>
-      <Link href="/(patient)/treatments/new" accessibilityLabel="Add treatment">
-        Add treatment
+      <Link href="/(patient)/treatments/new" accessibilityLabel="Adicionar tratamento">
+        Adicionar tratamento
       </Link>
-      {items.length ? (
-        items.map((item) => (
-          <View key={item.id} style={styles.card}>
-            <Text style={styles.name}>{item.name}</Text>
-            <Text>{item.baseTimes.join(', ')}</Text>
-            <Link
-              accessibilityLabel={`Edit ${item.name}`}
-              href={{ pathname: '/(patient)/treatments/[id]', params: { id: item.id } }}
-            >
-              Edit treatment
-            </Link>
-          </View>
-        ))
-      ) : (
-        <Text>No treatments yet.</Text>
-      )}
+      {status === 'loading' ? (
+        <Text accessibilityLiveRegion="polite">Carregando tratamentos…</Text>
+      ) : null}
+      {status === 'error' ? (
+        <>
+          <FormFeedback message={error} variant="error" />
+          <AccessibleButton
+            accessibilityLabel="Tentar carregar os tratamentos novamente"
+            onPress={load}
+            title="Tentar novamente"
+            variant="secondary"
+          />
+        </>
+      ) : null}
+      {status === 'success' && items.length === 0 ? (
+        <Text>Nenhum tratamento cadastrado.</Text>
+      ) : null}
+      {status === 'success'
+        ? items.map((item) => (
+            <View key={item.id} style={styles.card}>
+              <Text style={styles.name}>{item.name}</Text>
+              <Text>{item.baseTimes.join(', ')}</Text>
+              <Link
+                accessibilityLabel={`Editar ${item.name}`}
+                href={{ pathname: '/(patient)/treatments/[id]', params: { id: item.id } }}
+              >
+                Editar tratamento
+              </Link>
+            </View>
+          ))
+        : null}
     </SafeAreaView>
   );
 }
+
 function Connected() {
   const { user } = useAuthSession();
   const id = user?.patientId ?? user?.id;
-  return <TreatmentList listTreatments={getContainer().treatmentForPatient(id).listTreatments} />;
+  const [refreshKey, setRefreshKey] = useState(0);
+  const firstFocus = useRef(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (firstFocus.current) {
+        firstFocus.current = false;
+        return undefined;
+      }
+
+      setRefreshKey((current) => current + 1);
+      return undefined;
+    }, []),
+  );
+
+  return (
+    <TreatmentList
+      listTreatments={getContainer().treatmentForPatient(id).listTreatments}
+      refreshKey={refreshKey}
+    />
+  );
 }
 export default function TreatmentsScreen(props) {
   return props?.listTreatments ? <TreatmentList {...props} /> : <Connected />;

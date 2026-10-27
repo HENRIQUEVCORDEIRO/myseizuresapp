@@ -9,17 +9,17 @@ export function ProtectedRoute({ allowedRoles, children }) {
   const decision = resolveProtectedRoute({ allowedRoles, status, user });
 
   if (decision === GuardDecision.LOADING) {
-    return <ApplicationState title="Loading your account" variant="loading" />;
+    return <ApplicationState title="Carregando sua conta" variant="loading" />;
   }
 
   if (decision === GuardDecision.ERROR) {
     return (
       <ApplicationState
-        actionHint="Retries application startup and session restoration"
-        actionLabel="Try again"
+        actionHint="Tenta iniciar o aplicativo e restaurar a sessão novamente"
+        actionLabel="Tentar novamente"
         message={error}
         onAction={retry}
-        title="Could not start MySeizures"
+        title="Não foi possível iniciar o MySeizures"
         variant="error"
       />
     );
@@ -32,8 +32,8 @@ export function ProtectedRoute({ allowedRoles, children }) {
   if (decision === GuardDecision.FORBIDDEN) {
     return (
       <ApplicationState
-        message="Your account does not have permission to open this area."
-        title="Access denied"
+        message="Sua conta não tem permissão para abrir esta área."
+        title="Acesso negado"
         variant="forbidden"
       />
     );

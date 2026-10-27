@@ -18,6 +18,8 @@ export const seededUsers = Object.freeze([
       'scrypt$myseizures-demo-patient-v1$be49f7545cd9bfa95c42e443f3b5fa11abffa7fedce8fcc7bdd784b4b9be7e75e2af1c867cc4b63a81ac0824c09634172f0ab8f0288f37946b3980b154c6b2eb',
     role: UserRole.PATIENT,
     patientId: 1,
+    birthDate: '1990-01-01',
+    diagnosisDate: null,
   }),
   Object.freeze({
     id: 2,
@@ -60,20 +62,29 @@ function verifyPassword(password, encodedHash) {
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
 
-function publicUser(user) {
+function safeUser(user) {
   return {
     id: user.id,
     name: user.name,
+    email: user.email,
     role: user.role,
+    ...(user.patientId
+      ? {
+          patientId: user.patientId,
+          birthDate: user.birthDate,
+          diagnosisDate: user.diagnosisDate ?? null,
+        }
+      : {}),
+    ...(user.medicCaretakerId ? { medicCaretakerId: user.medicCaretakerId } : {}),
   };
 }
 
+function publicUser(user) {
+  return safeUser(user);
+}
+
 function authenticatedUser(user) {
-  return {
-    ...publicUser(user),
-    ...(user.patientId ? { patientId: user.patientId } : {}),
-    ...(user.medicCaretakerId ? { medicCaretakerId: user.medicCaretakerId } : {}),
-  };
+  return safeUser(user);
 }
 
 export class AuthService {

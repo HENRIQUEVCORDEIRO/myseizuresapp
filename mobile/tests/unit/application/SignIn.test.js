@@ -8,13 +8,20 @@ function tokenWithExpiration(exp = 2_000_000_000) {
 
 const validSession = {
   token: tokenWithExpiration(),
-  user: { id: 1, name: 'Demo Patient', role: 'PATIENT' },
+  user: {
+    id: 1,
+    name: 'Demo Patient',
+    email: 'patient@example.com',
+    role: 'PATIENT',
+    patientId: 1,
+    birthDate: '1990-01-01',
+    diagnosisDate: null,
+  },
 };
 
 const persistedSession = {
   ...validSession,
   tokenExpiresAt: 2_000_000_000,
-  user: { ...validSession.user, patientId: 1 },
 };
 
 function createAuthentication() {

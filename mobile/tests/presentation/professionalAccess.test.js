@@ -41,7 +41,7 @@ describe('professional clinical-data access presentation', () => {
     const renderer = renderProfessionalArea({ id: 1, role: UserRole.PATIENT });
     expect(renderer.root.findAllByType('span')).toHaveLength(0);
     expect(renderer.root.findByProps({ accessibilityRole: 'alert' })).toBeTruthy();
-    expect(JSON.stringify(renderer.toJSON())).toMatch(/Access denied/);
+    expect(JSON.stringify(renderer.toJSON())).toMatch(/Acesso negado/);
     expect(JSON.stringify(renderer.toJSON())).not.toMatch(/Patient 1|seizure details/i);
   });
 

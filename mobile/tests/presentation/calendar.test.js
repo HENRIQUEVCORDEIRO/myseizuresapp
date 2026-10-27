@@ -1,6 +1,14 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import CalendarScreen from '../../app/(patient)/(tabs)/calendar.js';
+import { formatDateTimeLong } from '../../src/presentation/formatters/index.js';
+
+jest.mock('@react-native-community/datetimepicker', () => {
+  const ReactModule = require('react');
+  const { View } = require('react-native');
+
+  return ({ onChange, testID }) => ReactModule.createElement(View, { onChange, testID });
+});
 
 const PATIENT_ID = 7;
 const PERIOD = Object.freeze({
@@ -47,16 +55,16 @@ describe('patient chronological calendar', () => {
         ...PERIOD,
       }),
     );
-    const items = await screen.findAllByRole('listitem');
+    const items = await screen.findAllByLabelText(/^(Possível gatilho|Crise) em /);
 
     expect(items.map((item) => item.props.accessibilityLabel)).toEqual([
-      `Possible trigger at ${trigger.recordedAt}`,
-      `Seizure at ${seizure.occurredAt}`,
+      `Possível gatilho em ${formatDateTimeLong(trigger.recordedAt)}`,
+      `Crise em ${formatDateTimeLong(seizure.occurredAt)}`,
     ]);
-    expect(screen.getByText('Possible trigger')).toBeOnTheScreen();
-    expect(screen.getByText('Cause: Sleep')).toBeOnTheScreen();
-    expect(screen.getByText('Seizure')).toBeOnTheScreen();
-    expect(screen.getByText('Occurrence type: Focal')).toBeOnTheScreen();
+    expect(screen.getByText('Possível gatilho')).toBeOnTheScreen();
+    expect(screen.getByText('Causa: Sono')).toBeOnTheScreen();
+    expect(screen.getByText('Crise')).toBeOnTheScreen();
+    expect(screen.getByText('Tipo de ocorrência: Focal')).toBeOnTheScreen();
   });
 
   test('validates a manually selected period before loading history', async () => {
@@ -70,28 +78,50 @@ describe('patient chronological calendar', () => {
       />,
     );
 
-    fireEvent.press(screen.getByRole('button', { name: 'View history' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Ver histórico' }));
 
-    expect(await screen.findByText('Start date and time is required.')).toBeOnTheScreen();
-    expect(screen.getByText('End date and time is required.')).toBeOnTheScreen();
+    expect(await screen.findByText('A data e hora inicial são obrigatórias.')).toBeOnTheScreen();
+    expect(screen.getByText('A data e hora final são obrigatórias.')).toBeOnTheScreen();
     expect(listChronologicalEvents.execute).not.toHaveBeenCalled();
 
-    fireEvent.changeText(screen.getByLabelText('Period start'), PERIOD.periodStart);
-    fireEvent.changeText(screen.getByLabelText('Period end'), PERIOD.periodEnd);
-    fireEvent.press(screen.getByRole('button', { name: 'View history' }));
+    const start = new Date(2026, 7, 10, 0, 0, 0, 0);
+    const end = new Date(2026, 7, 10, 23, 59, 0, 0);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Escolher data — Início do período' }));
+    fireEvent(
+      screen.getByTestId('period-start-picker'),
+      'onChange',
+      { type: 'set' },
+      new Date(2026, 7, 10),
+    );
+    fireEvent.press(screen.getByRole('button', { name: 'Escolher hora — Início do período' }));
+    fireEvent(screen.getByTestId('period-start-picker'), 'onChange', { type: 'set' }, start);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Escolher data — Fim do período' }));
+    fireEvent(
+      screen.getByTestId('period-end-picker'),
+      'onChange',
+      { type: 'set' },
+      new Date(2026, 7, 10),
+    );
+    fireEvent.press(screen.getByRole('button', { name: 'Escolher hora — Fim do período' }));
+    fireEvent(screen.getByTestId('period-end-picker'), 'onChange', { type: 'set' }, end);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Ver histórico' }));
 
     await waitFor(() =>
       expect(listChronologicalEvents.execute).toHaveBeenCalledWith({
         patientId: PATIENT_ID,
-        ...PERIOD,
+        periodStart: start.toISOString(),
+        periodEnd: end.toISOString(),
       }),
     );
-    expect(await screen.findByText('No events in this period.')).toBeOnTheScreen();
+    expect(await screen.findByText('Nenhum evento neste período.')).toBeOnTheScreen();
   });
 
   test('shows an actionable error when local history cannot be loaded', async () => {
     const listChronologicalEvents = {
-      execute: jest.fn().mockRejectedValue(new Error('Local history is unavailable.')),
+      execute: jest.fn().mockRejectedValue(new Error('local failure')),
     };
 
     render(
@@ -102,11 +132,11 @@ describe('patient chronological calendar', () => {
       />,
     );
 
-    expect(await screen.findByText('Local history is unavailable.')).toHaveProp(
+    expect(await screen.findByText('Não foi possível carregar o histórico local.')).toHaveProp(
       'accessibilityRole',
       'alert',
     );
-    fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Tentar novamente' }));
     await waitFor(() => expect(listChronologicalEvents.execute).toHaveBeenCalledTimes(2));
   });
 });

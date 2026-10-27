@@ -39,29 +39,34 @@ function requireAdherence(value, field = 'existingAdherence') {
   return value;
 }
 
-function startOfUtcDay(timestamp) {
+function startOfLocalDay(timestamp, offsetMinutes) {
   const date = new Date(timestamp);
-  date.setUTCHours(0, 0, 0, 0);
-  return date;
+  const localDate = new Date(date.getTime() - offsetMinutes * 60_000);
+  localDate.setUTCHours(0, 0, 0, 0);
+  return new Date(localDate.getTime() + offsetMinutes * 60_000);
 }
 
-function scheduledTimestamp(day, baseTime) {
+function scheduledTimestamp(day, baseTime, offsetMinutes) {
   const [hours, minutes] = baseTime.split(':').map(Number);
-  const scheduledAt = new Date(day);
-  scheduledAt.setUTCHours(hours, minutes, 0, 0);
-  return scheduledAt.toISOString();
+  const localDate = new Date(day.getTime() - offsetMinutes * 60_000);
+  localDate.setUTCHours(hours, minutes, 0, 0);
+  return new Date(localDate.getTime() + offsetMinutes * 60_000).toISOString();
 }
 
-export function generateReminderSchedule({ treatment, from, days = 1 }) {
+export function generateReminderSchedule({ treatment, from, days = 1, timeZoneOffsetMinutes = 0 }) {
   const validTreatment = requireTreatment(treatment);
   const fromTimestamp = requireTimestamp(from, 'from');
   const numberOfDays = requireInteger(days, 'days', { min: 1 });
+  const offset = requireInteger(timeZoneOffsetMinutes, 'timeZoneOffsetMinutes', {
+    min: -1_440,
+    max: 1_440,
+  });
 
   if (!validTreatment.active) {
     return Object.freeze([]);
   }
 
-  const firstDay = startOfUtcDay(fromTimestamp);
+  const firstDay = startOfLocalDay(fromTimestamp, offset);
   const reminders = [];
 
   for (let dayOffset = 0; dayOffset < numberOfDays; dayOffset += 1) {
@@ -69,7 +74,7 @@ export function generateReminderSchedule({ treatment, from, days = 1 }) {
     day.setUTCDate(firstDay.getUTCDate() + dayOffset);
 
     for (const baseTime of validTreatment.baseTimes) {
-      const scheduledAt = scheduledTimestamp(day, baseTime);
+      const scheduledAt = scheduledTimestamp(day, baseTime, offset);
 
       if (scheduledAt >= fromTimestamp) {
         reminders.push(

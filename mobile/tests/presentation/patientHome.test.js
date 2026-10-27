@@ -48,9 +48,9 @@ describe('patient home', () => {
     await act(async () => {});
 
     const actions = [
-      ['Record seizure', '/(patient)/seizures/new'],
-      ['Record trigger', '/(patient)/triggers/new'],
-      ['Confirm dose', '/(patient)/reminders'],
+      ['Registrar crise', '/(patient)/seizures/new'],
+      ['Registrar gatilho', '/(patient)/triggers/new'],
+      ['Confirmar dose', '/(patient)/reminders'],
     ];
 
     for (const [label, href] of actions) {
@@ -70,7 +70,9 @@ describe('patient home', () => {
 
     await act(async () => {});
 
-    expect(renderer.root.findByProps({ accessibilityLabel: '2 doses to confirm' })).toBeTruthy();
+    expect(
+      renderer.root.findByProps({ accessibilityLabel: '2 doses para confirmar' }),
+    ).toBeTruthy();
   });
 
   test('summarises seizures, triggers, and adherence for the selected period', async () => {
@@ -81,11 +83,11 @@ describe('patient home', () => {
     expect(generateReport.execute).toHaveBeenCalledWith(
       expect.objectContaining({ patientId: 1, periodType: ReportPeriodType.WEEKLY }),
     );
-    expect(renderer.root.findByProps({ accessibilityLabel: 'Seizures: 2' })).toBeTruthy();
-    expect(renderer.root.findByProps({ accessibilityLabel: 'Triggers: 1' })).toBeTruthy();
+    expect(renderer.root.findByProps({ accessibilityLabel: 'Crises: 2' })).toBeTruthy();
+    expect(renderer.root.findByProps({ accessibilityLabel: 'Gatilhos: 1' })).toBeTruthy();
     expect(
       renderer.root.findByProps({
-        accessibilityLabel: 'Adherence: 67%. 2 of 3 doses taken',
+        accessibilityLabel: 'Adesão: 67%. 2 de 3 doses tomadas',
       }),
     ).toBeTruthy();
   });
@@ -97,8 +99,8 @@ describe('patient home', () => {
 
     await act(async () => {
       renderer.root
-        .findByProps({ accessibilityLabel: 'Summary period' })
-        .findByProps({ accessibilityLabel: 'Month' })
+        .findByProps({ accessibilityLabel: 'Período do resumo' })
+        .findByProps({ accessibilityLabel: 'Mês' })
         .props.onPress();
     });
 
@@ -116,7 +118,7 @@ describe('patient home', () => {
 
     await act(async () => {});
 
-    expect(renderer.root.findByProps({ accessibilityLabel: 'Record seizure' })).toBeTruthy();
+    expect(renderer.root.findByProps({ accessibilityLabel: 'Registrar crise' })).toBeTruthy();
     expect(renderer.root.findAllByProps({ accessibilityRole: 'alert' }).length).toBeGreaterThan(0);
   });
 
@@ -129,7 +131,7 @@ describe('patient home', () => {
     await act(async () => {});
 
     const retry = renderer.root.findByProps({
-      accessibilityLabel: 'Try loading the summary again',
+      accessibilityLabel: 'Tentar carregar o resumo novamente',
     });
     await act(async () => {
       retry.props.onPress();
@@ -144,7 +146,7 @@ describe('patient home', () => {
     await act(async () => {});
 
     await act(async () => {
-      renderer.root.findByProps({ accessibilityLabel: 'Switch profile' }).props.onPress();
+      renderer.root.findByProps({ accessibilityLabel: 'Trocar perfil' }).props.onPress();
     });
 
     expect(onSwitchProfile).toHaveBeenCalledTimes(1);

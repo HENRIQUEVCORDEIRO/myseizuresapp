@@ -87,8 +87,14 @@ export class ExpoNotificationService {
   async deliverMedicationReminders({ treatmentName, reminders }) {
     if (!Array.isArray(reminders)) throw new TypeError('Medication reminders must be an array.');
     const medicationName = requireTreatmentName(treatmentName);
-    let status = await this.getPermissionStatus();
-    if (status === 'undetermined') status = await this.requestPermission();
+    let status;
+
+    try {
+      status = await this.getPermissionStatus();
+      if (status === 'undetermined') status = await this.requestPermission();
+    } catch {
+      status = 'unavailable';
+    }
 
     const now = this.now();
     const inApp = [];

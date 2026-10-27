@@ -43,8 +43,7 @@ export function createAuthRoutes({ authService }) {
   });
 
   router.get('/users/me', authenticate({ authService }), (request, response) => {
-    const { id, name, role } = request.auth;
-    response.status(200).json({ id, name, role });
+    response.status(200).json(request.auth);
   });
 
   return router;

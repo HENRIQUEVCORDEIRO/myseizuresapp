@@ -43,6 +43,29 @@ describe('RestClient authentication adapter', () => {
     });
   });
 
+  test('preserves the safe patient identity needed for local clinical saves', async () => {
+    const payload = {
+      token: 'signed-token',
+      user: {
+        id: 1,
+        name: 'Demo Patient',
+        email: 'patient@example.com',
+        role: 'PATIENT',
+        patientId: 42,
+        birthDate: '1990-01-01',
+        diagnosisDate: null,
+      },
+    };
+    const client = new RestClient({
+      baseUrl: 'http://localhost:3000',
+      fetchImpl: jest.fn().mockResolvedValue(jsonResponse(payload)),
+    });
+
+    await expect(client.authenticate('patient@example.com', 'Patient123!')).resolves.toEqual(
+      payload,
+    );
+  });
+
   test('validates a stored token with the protected current-user endpoint', async () => {
     const user = { id: 2, name: 'Demo Professional', role: 'MEDIC_CARETAKER' };
     const fetchImpl = jest.fn().mockResolvedValue(jsonResponse(user));
@@ -137,6 +160,28 @@ describe('SessionStore secure adapter', () => {
         keychainAccessible: secureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
       },
     );
+  });
+
+  test('keeps patient demographics in the cached identity', async () => {
+    const secureStore = createSecureStore();
+    const store = new SessionStore({ secureStore });
+    const session = {
+      token: 'signed-token',
+      tokenExpiresAt: 2_000_000_000,
+      user: {
+        id: 1,
+        name: 'Demo Patient',
+        email: 'patient@example.com',
+        role: 'PATIENT',
+        patientId: 42,
+        birthDate: '1990-01-01',
+        diagnosisDate: null,
+      },
+    };
+
+    await store.saveSession(session);
+
+    expect(JSON.parse(secureStore.setItemAsync.mock.calls[0][1])).toEqual(session);
   });
 
   test('loads and clears the stored session', async () => {

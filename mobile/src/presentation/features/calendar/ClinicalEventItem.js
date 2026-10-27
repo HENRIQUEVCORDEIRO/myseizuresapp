@@ -1,19 +1,16 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { ClinicalEventType } from '../../../application/use-cases/clinical/index.js';
-
-function humanize(value) {
-  if (typeof value !== 'string' || !value) return 'Not recorded';
-
-  const words = value.toLowerCase().replaceAll('_', ' ');
-  return words.charAt(0).toUpperCase() + words.slice(1);
-}
+import { formatDateTime, formatDateTimeLong } from '../../formatters/index.js';
+import { labelFor, OCCURRENCE_TYPE_LABELS, TRIGGER_CAUSE_LABELS } from '../../labels.js';
 
 function presentationFor(event) {
   if (event.eventType === ClinicalEventType.SEIZURE) {
     return {
-      details: [`Occurrence type: ${humanize(event.record.occurrenceType)}`],
-      label: 'Seizure',
+      details: [
+        `Tipo de ocorrência: ${labelFor(OCCURRENCE_TYPE_LABELS, event.record.occurrenceType)}`,
+      ],
+      label: 'Crise',
       style: styles.seizure,
     };
   }
@@ -21,17 +18,17 @@ function presentationFor(event) {
   if (event.eventType === ClinicalEventType.TRIGGER) {
     return {
       details: [
-        `Cause: ${humanize(event.record.commonCause)}`,
-        `Sleep quality: ${event.record.sleepQuality}`,
-        `Mood: ${event.record.mood}`,
-        ...(event.record.otherDescription ? [`Other cause: ${event.record.otherDescription}`] : []),
+        `Causa: ${labelFor(TRIGGER_CAUSE_LABELS, event.record.commonCause)}`,
+        `Qualidade do sono: ${event.record.sleepQuality}`,
+        `Humor: ${event.record.mood}`,
+        ...(event.record.otherDescription ? [`Outra causa: ${event.record.otherDescription}`] : []),
       ],
-      label: 'Possible trigger',
+      label: 'Possível gatilho',
       style: styles.trigger,
     };
   }
 
-  return { details: [], label: 'Clinical event', style: styles.unknown };
+  return { details: [], label: 'Evento clínico', style: styles.unknown };
 }
 
 export function ClinicalEventItem({ event }) {
@@ -40,12 +37,12 @@ export function ClinicalEventItem({ event }) {
   return (
     <View
       accessible
-      accessibilityLabel={`${presentation.label} at ${event.occurredAt}`}
-      accessibilityRole="listitem"
+      accessibilityLabel={`${presentation.label} em ${formatDateTimeLong(event.occurredAt)}`}
+      accessibilityRole="text"
       style={[styles.card, presentation.style]}
     >
       <Text style={styles.type}>{presentation.label}</Text>
-      <Text style={styles.timestamp}>{event.occurredAt}</Text>
+      <Text style={styles.timestamp}>{formatDateTime(event.occurredAt)}</Text>
       {presentation.details.map((detail) => (
         <Text key={detail} style={styles.detail}>
           {detail}

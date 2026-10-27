@@ -113,14 +113,27 @@ export class FinalConfirmationError extends Error {
 }
 
 export class TreatmentRepository extends PatientScopedRepository {
-  constructor({ now = () => new Date().toISOString(), ...options } = {}) {
+  constructor({
+    now = () => new Date().toISOString(),
+    timeZoneOffsetMinutes = 0,
+    ...options
+  } = {}) {
     super(options);
 
     if (typeof now !== 'function') {
       throw new TypeError('Treatment repository clock must be a function.');
     }
 
+    if (
+      !Number.isInteger(timeZoneOffsetMinutes) ||
+      timeZoneOffsetMinutes < -1_440 ||
+      timeZoneOffsetMinutes > 1_440
+    ) {
+      throw new TypeError('Treatment repository time zone offset must be an integer in minutes.');
+    }
+
     this.now = now;
+    this.timeZoneOffsetMinutes = timeZoneOffsetMinutes;
   }
 
   async saveTreatment(value) {
@@ -239,6 +252,7 @@ export class TreatmentRepository extends PatientScopedRepository {
         treatment: savedTreatment,
         from: boundary,
         days,
+        timeZoneOffsetMinutes: this.timeZoneOffsetMinutes,
       });
       await database.runAsync(
         `DELETE FROM reminders WHERE treatment_id = $treatmentId

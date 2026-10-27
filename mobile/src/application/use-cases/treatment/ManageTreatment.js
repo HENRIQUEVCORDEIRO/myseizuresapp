@@ -14,16 +14,29 @@ export class ManageTreatment {
       from: this.now(),
       days: this.scheduleDays,
     });
-    const delivery = this.notifications
-      ? await this.notifications.deliverMedicationReminders({
+    let delivery;
+
+    if (this.notifications) {
+      try {
+        delivery = await this.notifications.deliverMedicationReminders({
           treatmentName: saved.treatment.name,
           reminders: saved.reminders,
-        })
-      : Object.freeze({
+        });
+      } catch {
+        delivery = Object.freeze({
           permissionStatus: 'unavailable',
           scheduled: Object.freeze([]),
           inApp: saved.reminders,
         });
+      }
+    } else {
+      delivery = Object.freeze({
+        permissionStatus: 'unavailable',
+        scheduled: Object.freeze([]),
+        inApp: saved.reminders,
+      });
+    }
+
     return Object.freeze({ ...saved, delivery });
   }
 }

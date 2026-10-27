@@ -9,26 +9,27 @@ import {
   NativeDateTimeField,
   SelectField,
 } from '../../../src/presentation/components/index.js';
+import { OCCURRENCE_TYPE_LABELS } from '../../../src/presentation/labels.js';
 import { useAuthSession } from '../../../src/presentation/navigation/index.js';
 
-const OCCURRENCE_OPTIONS = Object.freeze([
-  { label: 'Focal', value: SeizureOccurrenceType.FOCAL },
-  { label: 'Generalized', value: SeizureOccurrenceType.GENERALIZED },
-  { label: 'Unknown', value: SeizureOccurrenceType.UNKNOWN },
-  { label: 'Other', value: SeizureOccurrenceType.OTHER },
-]);
+const OCCURRENCE_OPTIONS = Object.freeze(
+  Object.values(SeizureOccurrenceType).map((value) => ({
+    label: OCCURRENCE_TYPE_LABELS[value],
+    value,
+  })),
+);
 
 function requireFields({ occurredAt, occurrenceType }) {
   const errors = {};
 
   if (!occurredAt) {
-    errors.occurredAt = 'Date and time is required.';
+    errors.occurredAt = 'Informe a data e hora da crise.';
   }
 
   if (!occurrenceType) {
-    errors.occurrenceType = 'Occurrence type is required.';
+    errors.occurrenceType = 'Informe o tipo de ocorrência.';
   } else if (!OCCURRENCE_OPTIONS.some((option) => option.value === occurrenceType)) {
-    errors.occurrenceType = 'Choose a valid occurrence type.';
+    errors.occurrenceType = 'Escolha um tipo de ocorrência válido.';
   }
 
   return errors;
@@ -54,10 +55,10 @@ export function SeizureEntryForm({ initialOccurredAt = null, patientId, recordSe
 
     try {
       await recordSeizure.execute({ patientId, occurredAt, occurrenceType });
-      setFeedback({ message: 'Seizure saved.', variant: 'success' });
-    } catch (error) {
+      setFeedback({ message: 'Crise salva.', variant: 'success' });
+    } catch {
       setFeedback({
-        message: error?.message || 'The seizure could not be saved. Try again.',
+        message: 'Não foi possível salvar a crise. Tente novamente.',
         variant: 'error',
       });
     } finally {
@@ -70,25 +71,26 @@ export function SeizureEntryForm({ initialOccurredAt = null, patientId, recordSe
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.heading}>
           <Text accessibilityRole="header" style={styles.title}>
-            Record a seizure
+            Registrar uma crise
           </Text>
           <Text style={styles.description}>
-            Add the date, time, and occurrence type. This record is saved on this device.
+            Informe a data, a hora e o tipo de ocorrência. Este registro é salvo neste aparelho.
           </Text>
         </View>
         <NativeDateTimeField
-          accessibilityHint="Choose when the seizure occurred"
+          accessibilityHint="Escolha quando a crise ocorreu"
           error={errors.occurredAt}
-          label="Seizure date and time"
+          label="Data e hora da crise"
           maximumDate={new Date()}
           onValueChange={setOccurredAt}
           required
+          testID="seizure-date-and-time"
           value={occurredAt}
         />
         <SelectField
-          accessibilityHint="Choose the seizure occurrence type"
+          accessibilityHint="Escolha o tipo de ocorrência da crise"
           error={errors.occurrenceType}
-          label="Occurrence type"
+          label="Tipo de ocorrência"
           onValueChange={setOccurrenceType}
           options={OCCURRENCE_OPTIONS}
           required
@@ -96,11 +98,11 @@ export function SeizureEntryForm({ initialOccurredAt = null, patientId, recordSe
         />
         <FormFeedback message={feedback?.message} variant={feedback?.variant} />
         <AccessibleButton
-          accessibilityHint="Validates and saves this seizure on the device"
-          accessibilityLabel="Save seizure"
+          accessibilityHint="Valida e salva esta crise no aparelho"
+          accessibilityLabel="Salvar crise"
           busy={busy}
           onPress={submit}
-          title="Save seizure"
+          title="Salvar crise"
         />
       </ScrollView>
     </SafeAreaView>

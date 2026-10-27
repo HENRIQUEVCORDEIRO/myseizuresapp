@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { getContainer } from '../../../src/composition/container.js';
@@ -16,62 +16,62 @@ import { useAuthSession } from '../../../src/presentation/navigation/index.js';
 import { colors, spacing, typography } from '../../../src/presentation/theme/tokens.js';
 
 const PERIOD_OPTIONS = Object.freeze([
-  { label: 'Week', value: ReportPeriodType.WEEKLY },
-  { label: 'Month', value: ReportPeriodType.MONTHLY },
-  { label: 'Year', value: ReportPeriodType.ANNUAL },
+  { label: 'Semana', value: ReportPeriodType.WEEKLY },
+  { label: 'Mês', value: ReportPeriodType.MONTHLY },
+  { label: 'Ano', value: ReportPeriodType.ANNUAL },
 ]);
 
 const PERIOD_TITLES = Object.freeze({
-  [ReportPeriodType.WEEKLY]: 'Last 7 days',
-  [ReportPeriodType.MONTHLY]: 'This month',
-  [ReportPeriodType.ANNUAL]: 'This year',
+  [ReportPeriodType.WEEKLY]: 'Últimos 7 dias',
+  [ReportPeriodType.MONTHLY]: 'Este mês',
+  [ReportPeriodType.ANNUAL]: 'Este ano',
 });
 
 const QUICK_ACTIONS = Object.freeze([
   {
-    description: 'Add the date, time, and type of a seizure.',
+    description: 'Adicione a data, a hora e o tipo de uma crise.',
     glyph: '⚡',
     href: '/(patient)/seizures/new',
-    title: 'Record seizure',
+    title: 'Registrar crise',
   },
   {
-    description: 'Add possible triggers, sleep quality, and mood.',
+    description: 'Adicione possíveis gatilhos, qualidade do sono e humor.',
     glyph: '🌙',
     href: '/(patient)/triggers/new',
-    title: 'Record trigger',
+    title: 'Registrar gatilho',
   },
   {
-    description: 'Confirm the doses you have taken.',
+    description: 'Confirme as doses que você tomou.',
     glyph: '💊',
     href: '/(patient)/reminders',
-    title: 'Confirm dose',
+    title: 'Confirmar dose',
   },
 ]);
 
 const SHORTCUTS = Object.freeze([
   {
-    description: 'Add or update your medications and schedules.',
+    description: 'Adicione ou atualize seus medicamentos e horários.',
     href: '/(patient)/treatments',
-    title: 'Treatments',
+    title: 'Tratamentos',
   },
   {
-    description: 'Choose which doctor or caregiver can review your care information.',
+    description: 'Escolha qual médico ou cuidador pode revisar suas informações de cuidado.',
     href: '/(patient)/sharing',
-    title: 'Professional access',
+    title: 'Acesso do profissional',
   },
 ]);
 
 function adherenceTile(adherence) {
   if (!adherence || adherence.rate === undefined) {
     return {
-      caption: 'No confirmed doses',
+      caption: 'Nenhuma dose confirmada',
       tone: StatTileTones.neutral,
       value: '—',
     };
   }
 
   return {
-    caption: `${adherence.takenDoses} of ${adherence.finalDoses} doses taken`,
+    caption: `${adherence.takenDoses} de ${adherence.finalDoses} doses tomadas`,
     tone: adherence.rate >= 80 ? StatTileTones.success : StatTileTones.warning,
     value: `${Math.round(adherence.rate)}%`,
   };
@@ -83,6 +83,7 @@ export function PatientHome({
   onNavigate,
   onSwitchProfile,
   patientId,
+  refreshKey = 0,
   user,
 }) {
   const [periodType, setPeriodType] = useState(ReportPeriodType.WEEKLY);
@@ -103,12 +104,12 @@ export function PatientHome({
       setSummary(report);
       setPendingDoses(reminders.length);
       setStatus('success');
-    } catch (loadError) {
+    } catch {
       setSummary(null);
-      setError(loadError?.message || 'The care summary could not be loaded.');
+      setError('Não foi possível carregar o resumo do cuidado.');
       setStatus('error');
     }
-  }, [generateReport, listReminders, patientId, periodType]);
+  }, [generateReport, listReminders, patientId, periodType, refreshKey]);
 
   useEffect(() => {
     void load();
@@ -117,8 +118,8 @@ export function PatientHome({
   const adherence = summary ? adherenceTile(summary.adherence) : null;
 
   return (
-    <Screen subtitle={`Welcome, ${user?.name ?? ''}.`} title="Home">
-      <View accessibilityLabel="Quick actions" accessibilityRole="list" style={styles.actions}>
+    <Screen subtitle={`Bem-vindo(a), ${user?.name ?? ''}.`} title="Início">
+      <View accessibilityLabel="Ações rápidas" accessibilityRole="list" style={styles.actions}>
         {QUICK_ACTIONS.map((action) => (
           <Card
             accessibilityHint={action.description}
@@ -130,7 +131,10 @@ export function PatientHome({
           >
             <Text style={styles.actionDescription}>{action.description}</Text>
             {action.href === '/(patient)/reminders' && pendingDoses > 0 ? (
-              <Text accessibilityLabel={`${pendingDoses} doses to confirm`} style={styles.badge}>
+              <Text
+                accessibilityLabel={`${pendingDoses} doses para confirmar`}
+                style={styles.badge}
+              >
                 {pendingDoses}
               </Text>
             ) : null}
@@ -143,8 +147,8 @@ export function PatientHome({
           {PERIOD_TITLES[periodType]}
         </Text>
         <SegmentedControl
-          accessibilityHint="Choose the period the summary covers"
-          accessibilityLabel="Summary period"
+          accessibilityHint="Escolha o período coberto pelo resumo"
+          accessibilityLabel="Período do resumo"
           onValueChange={setPeriodType}
           options={PERIOD_OPTIONS}
           value={periodType}
@@ -153,8 +157,8 @@ export function PatientHome({
 
       {status === 'loading' ? (
         <View accessibilityLiveRegion="polite" style={styles.loading}>
-          <ActivityIndicator accessibilityLabel="Loading the care summary" size="large" />
-          <Text style={styles.loadingText}>Loading your summary…</Text>
+          <ActivityIndicator accessibilityLabel="Carregando o resumo do cuidado" size="large" />
+          <Text style={styles.loadingText}>Carregando seu resumo…</Text>
         </View>
       ) : null}
 
@@ -165,12 +169,12 @@ export function PatientHome({
             accessibilityRole="alert"
             style={styles.errorText}
           >
-            {error} No clinical information was shared.
+            {error} Nenhuma informação clínica foi exibida.
           </Text>
           <Button
-            accessibilityLabel="Try loading the summary again"
+            accessibilityLabel="Tentar carregar o resumo novamente"
             onPress={load}
-            title="Try again"
+            title="Tentar novamente"
             variant="secondary"
           />
         </View>
@@ -178,18 +182,18 @@ export function PatientHome({
 
       {status === 'success' && summary ? (
         <View style={styles.tiles}>
-          <StatTile label="Seizures" value={String(summary.seizures.length)} />
-          <StatTile label="Triggers" value={String(summary.triggers.length)} />
+          <StatTile label="Crises" value={String(summary.seizures.length)} />
+          <StatTile label="Gatilhos" value={String(summary.triggers.length)} />
           <StatTile
             caption={adherence.caption}
-            label="Adherence"
+            label="Adesão"
             tone={adherence.tone}
             value={adherence.value}
           />
         </View>
       ) : null}
 
-      <View accessibilityLabel="Care shortcuts" accessibilityRole="list" style={styles.actions}>
+      <View accessibilityLabel="Atalhos de cuidado" accessibilityRole="list" style={styles.actions}>
         {SHORTCUTS.map((shortcut) => (
           <Card
             accessibilityHint={shortcut.description}
@@ -204,10 +208,10 @@ export function PatientHome({
       </View>
 
       <Button
-        accessibilityHint="Clears this profile and returns to the sign-in screen"
-        accessibilityLabel="Switch profile"
+        accessibilityHint="Limpa este perfil e retorna à tela de entrada"
+        accessibilityLabel="Trocar perfil"
         onPress={onSwitchProfile}
-        title="Switch profile"
+        title="Trocar perfil"
         variant="secondary"
       />
     </Screen>
@@ -218,6 +222,20 @@ export default function PatientHomeScreen(props) {
   const router = useRouter();
   const { signOut, user } = useAuthSession();
   const patientId = user?.patientId ?? user?.id;
+  const [refreshKey, setRefreshKey] = useState(0);
+  const firstFocus = useRef(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (firstFocus.current) {
+        firstFocus.current = false;
+        return undefined;
+      }
+
+      setRefreshKey((current) => current + 1);
+      return undefined;
+    }, []),
+  );
 
   async function switchProfile() {
     try {
@@ -243,6 +261,7 @@ export default function PatientHomeScreen(props) {
       onNavigate={(href) => router.push(href)}
       onSwitchProfile={switchProfile}
       patientId={patientId}
+      refreshKey={refreshKey}
       user={user}
     />
   );

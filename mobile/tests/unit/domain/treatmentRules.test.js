@@ -113,6 +113,19 @@ describe('treatment domain rules', () => {
       expect(Object.isFrozen(reminders)).toBe(true);
     });
 
+    test('schedules base times in the device time zone instead of UTC', () => {
+      const reminders = generateReminderSchedule({
+        treatment: createTreatment(),
+        from: '2026-08-20T12:00:00.000Z',
+        days: 1,
+        timeZoneOffsetMinutes: 180,
+      });
+
+      expect(reminders.map((reminder) => reminder.scheduledAt)).toEqual([
+        '2026-08-20T23:00:00.000Z',
+      ]);
+    });
+
     test('includes a reminder exactly on the lower scheduling boundary', () => {
       const reminders = generateReminderSchedule({
         treatment: createTreatment(),
@@ -139,6 +152,10 @@ describe('treatment domain rules', () => {
       ['an unsaved treatment', { treatment: createTreatment({ id: undefined }), from: NOW }],
       ['a malformed start time', { treatment: createTreatment(), from: '2026-08-20' }],
       ['a zero-day horizon', { treatment: createTreatment(), from: NOW, days: 0 }],
+      [
+        'an invalid time zone offset',
+        { treatment: createTreatment(), from: NOW, timeZoneOffsetMinutes: 1_441 },
+      ],
     ])('rejects %s', (_case, input) => {
       expect(() => generateReminderSchedule(input)).toThrow(DomainValidationError);
     });

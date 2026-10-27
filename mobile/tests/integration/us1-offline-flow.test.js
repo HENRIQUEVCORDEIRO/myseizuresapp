@@ -19,6 +19,7 @@ import {
 } from '../../src/infrastructure/persistence/repositories/index.js';
 import { DatabaseProvider } from '../../src/infrastructure/persistence/sqlite/DatabaseProvider.js';
 import { createSQLiteTestDatabase } from '../unit/factories/sqliteTestDatabase.js';
+import { formatDateTimeLong } from '../../src/presentation/formatters/index.js';
 
 const PATIENT_ID = 1;
 const NOW = '2026-08-11T15:00:00.000Z';
@@ -159,21 +160,21 @@ describe('US1 offline clinical-record journey', () => {
       <OfflineJourneyStage recordSeizure={firstLaunchUseCases.recordSeizure} stage="seizure" />,
     );
     fireEvent(
-      journey.getByLabelText('Occurrence type'),
+      journey.getByLabelText('Tipo de ocorrência'),
       'valueChange',
       SeizureOccurrenceType.FOCAL,
     );
-    fireEvent.press(journey.getByRole('button', { name: 'Save seizure' }));
-    expect(await journey.findByText('Seizure saved.')).toBeOnTheScreen();
+    fireEvent.press(journey.getByRole('button', { name: 'Salvar crise' }));
+    expect(await journey.findByText('Crise salva.')).toBeOnTheScreen();
 
     journey.rerender(
       <OfflineJourneyStage recordTrigger={firstLaunchUseCases.recordTrigger} stage="trigger" />,
     );
-    fireEvent(journey.getByLabelText('Cause'), 'valueChange', TriggerCause.SLEEP);
-    fireEvent(journey.getByLabelText('Sleep quality'), 'valueChange', 2);
-    fireEvent(journey.getByLabelText('Mood'), 'valueChange', 3);
-    fireEvent.press(journey.getByRole('button', { name: 'Save trigger' }));
-    expect(await journey.findByText('Trigger saved.')).toBeOnTheScreen();
+    fireEvent(journey.getByLabelText('Causa'), 'valueChange', TriggerCause.SLEEP);
+    fireEvent.press(journey.getByRole('radio', { name: 'Qualidade do sono 2' }));
+    fireEvent.press(journey.getByRole('radio', { name: 'Humor 3' }));
+    fireEvent.press(journey.getByRole('button', { name: 'Salvar gatilho' }));
+    expect(await journey.findByText('Gatilho salvo.')).toBeOnTheScreen();
 
     await database.closeAsync();
     database = null;
@@ -189,10 +190,10 @@ describe('US1 offline clinical-record journey', () => {
       />,
     );
 
-    const events = await journey.findAllByRole('listitem');
+    const events = await journey.findAllByLabelText(/^(Possível gatilho|Crise) em /);
     expect(events.map((event) => event.props.accessibilityLabel)).toEqual([
-      `Possible trigger at ${TRIGGER_TIME}`,
-      `Seizure at ${SEIZURE_TIME}`,
+      `Possível gatilho em ${formatDateTimeLong(TRIGGER_TIME)}`,
+      `Crise em ${formatDateTimeLong(SEIZURE_TIME)}`,
     ]);
     await waitFor(() => expect(global.fetch).not.toHaveBeenCalled());
   });

@@ -4,8 +4,8 @@ import { getContainer } from '../../composition/container.js';
 
 const AuthSessionContext = createContext(null);
 
-function messageFrom(error) {
-  return error?.message || 'The application could not restore your session.';
+function messageFrom() {
+  return 'Não foi possível restaurar sua sessão. Verifique sua conexão e tente novamente.';
 }
 
 export function AuthSessionProvider({ children, container: suppliedContainer }) {
@@ -18,6 +18,11 @@ export function AuthSessionProvider({ children, container: suppliedContainer }) 
     try {
       await container.database.initialize();
       const session = await container.signIn.restoreSession();
+
+      if (session && typeof container.synchronizeIdentity === 'function') {
+        await container.synchronizeIdentity(session.user);
+      }
+
       setState({
         error: null,
         session,
@@ -35,6 +40,11 @@ export function AuthSessionProvider({ children, container: suppliedContainer }) 
   const signIn = useCallback(
     async (credentials) => {
       const session = await container.signIn.execute(credentials);
+
+      if (typeof container.synchronizeIdentity === 'function') {
+        await container.synchronizeIdentity(session.user);
+      }
+
       setState({ error: null, session, status: 'authenticated' });
       return session;
     },

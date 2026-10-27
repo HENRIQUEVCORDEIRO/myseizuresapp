@@ -18,7 +18,7 @@ export function ProfessionalPatientAccess({ authorizePatientAccess }) {
   async function checkAccess() {
     const selectedPatientId = Number(patientIdInput);
     if (!Number.isInteger(selectedPatientId) || selectedPatientId < 1) {
-      setFieldError('Enter a positive patient identifier.');
+      setFieldError('Informe um identificador positivo de paciente.');
       setPatientId(null);
       setStatus('idle');
       return;
@@ -54,63 +54,63 @@ export function ProfessionalPatientAccess({ authorizePatientAccess }) {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.heading}>
           <Text accessibilityRole="header" style={styles.title}>
-            Patient access
+            Acesso do paciente
           </Text>
           <Text style={styles.description}>
-            Enter a patient identifier to verify an active sharing relationship.
+            Informe o identificador de um paciente para verificar um compartilhamento ativo.
           </Text>
         </View>
         <FormField
-          accessibilityHint="Enter the numeric identifier shared by the patient"
+          accessibilityHint="Informe o identificador numérico compartilhado pelo paciente"
           error={fieldError}
           keyboardType="number-pad"
-          label="Patient identifier"
+          label="Identificador do paciente"
           onChangeText={setPatientIdInput}
           value={patientIdInput}
         />
         <AccessibleButton
-          accessibilityHint="Checks whether this patient currently grants you access"
-          accessibilityLabel="Check patient access"
+          accessibilityHint="Verifica se este paciente concede acesso a você no momento"
+          accessibilityLabel="Verificar acesso do paciente"
           busy={status === 'checking'}
           onPress={checkAccess}
-          title="Check access"
+          title="Verificar acesso"
         />
 
         {status === 'allowed' ? (
           <View accessibilityRole="summary" style={styles.allowedCard}>
             <Text accessibilityRole="header" style={styles.allowedTitle}>
-              Active access confirmed
+              Acesso ativo confirmado
             </Text>
             <Text style={styles.description}>
-              You may review patient {patientId}'s selected-period report.
+              Você pode revisar o relatório do período selecionado do paciente {patientId}.
             </Text>
             <Link
-              accessibilityHint="Opens the authorized selected-period clinical report"
-              accessibilityLabel={`Open report for patient ${patientId}`}
+              accessibilityHint="Abre o relatório clínico autorizado do período selecionado"
+              accessibilityLabel={`Abrir relatório do paciente ${patientId}`}
               href={{ pathname: '/(professional)/reports/[patientId]', params: { patientId } }}
               style={styles.link}
             >
-              Open report
+              Abrir relatório
             </Link>
           </View>
         ) : null}
         {status === 'denied' ? (
           <ApplicationState
-            message="This patient has not granted you active access. No clinical information is available."
-            title="Access denied"
+            message="Este paciente não concedeu acesso ativo a você. Nenhuma informação clínica está disponível."
+            title="Acesso negado"
             variant="forbidden"
           />
         ) : null}
         {status === 'error' ? (
           <ApplicationState
-            message="Access could not be verified. No clinical information is available."
-            title="Access check unavailable"
+            message="Não foi possível verificar o acesso. Nenhuma informação clínica está disponível."
+            title="Verificação de acesso indisponível"
             variant="error"
           />
         ) : null}
         {status === 'idle' ? (
           <Text accessibilityLiveRegion="polite" style={styles.prompt}>
-            No patient selected.
+            Nenhum paciente selecionado.
           </Text>
         ) : null}
       </ScrollView>

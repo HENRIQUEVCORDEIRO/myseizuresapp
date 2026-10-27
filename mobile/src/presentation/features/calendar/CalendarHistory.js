@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { AccessibleButton, DateTimeField, FormFeedback } from '../../components/index.js';
+import { AccessibleButton, FormFeedback, NativeDateTimeField } from '../../components/index.js';
 import { ClinicalEventItem } from './ClinicalEventItem.js';
 
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
@@ -14,23 +14,23 @@ function defaultPeriod() {
 }
 
 function requirePeriod(periodStartValue, periodEndValue) {
-  const periodStart = periodStartValue.trim();
-  const periodEnd = periodEndValue.trim();
+  const periodStart = String(periodStartValue ?? '').trim();
+  const periodEnd = String(periodEndValue ?? '').trim();
   const errors = {};
 
-  if (!periodStart) errors.periodStart = 'Start date and time is required.';
-  if (!periodEnd) errors.periodEnd = 'End date and time is required.';
+  if (!periodStart) errors.periodStart = 'A data e hora inicial são obrigatórias.';
+  if (!periodEnd) errors.periodEnd = 'A data e hora final são obrigatórias.';
 
   if (periodStart && !Number.isFinite(Date.parse(periodStart))) {
-    errors.periodStart = 'Start must be a valid ISO 8601 date and time.';
+    errors.periodStart = 'Informe uma data e hora inicial válidas.';
   }
 
   if (periodEnd && !Number.isFinite(Date.parse(periodEnd))) {
-    errors.periodEnd = 'End must be a valid ISO 8601 date and time.';
+    errors.periodEnd = 'Informe uma data e hora final válidas.';
   }
 
   if (!errors.periodStart && !errors.periodEnd && Date.parse(periodStart) > Date.parse(periodEnd)) {
-    errors.periodEnd = 'End date and time must be on or after the start.';
+    errors.periodEnd = 'A data e hora final devem ser iguais ou posteriores ao início.';
   }
 
   return { errors, period: { periodStart, periodEnd } };
@@ -41,14 +41,17 @@ export function CalendarHistory({
   listChronologicalEvents,
   loadOnMount = true,
   patientId,
+  refreshKey = 0,
 }) {
   const initialPeriodRef = useRef(initialPeriod ?? (loadOnMount ? defaultPeriod() : {}));
   const [periodStart, setPeriodStart] = useState(initialPeriodRef.current.periodStart ?? '');
   const [periodEnd, setPeriodEnd] = useState(initialPeriodRef.current.periodEnd ?? '');
+  const currentPeriodRef = useRef({ periodEnd, periodStart });
   const [errors, setErrors] = useState({});
   const [events, setEvents] = useState([]);
   const [status, setStatus] = useState('idle');
   const [loadError, setLoadError] = useState(null);
+  currentPeriodRef.current = { periodEnd, periodStart };
 
   const loadPeriod = useCallback(
     async (period) => {
@@ -59,9 +62,9 @@ export function CalendarHistory({
         const result = await listChronologicalEvents.execute({ patientId, ...period });
         setEvents(result);
         setStatus('success');
-      } catch (error) {
+      } catch {
         setEvents([]);
-        setLoadError(error?.message || 'The local history could not be loaded.');
+        setLoadError('Não foi possível carregar o histórico local.');
         setStatus('error');
       }
     },
@@ -69,10 +72,13 @@ export function CalendarHistory({
   );
 
   useEffect(() => {
-    if (loadOnMount) {
-      void loadPeriod(initialPeriodRef.current);
+    if (!loadOnMount) {
+      return;
     }
-  }, [loadOnMount, loadPeriod]);
+
+    const period = refreshKey === 0 ? initialPeriodRef.current : currentPeriodRef.current;
+    void loadPeriod(period);
+  }, [loadOnMount, loadPeriod, refreshKey]);
 
   function submit() {
     const validation = requirePeriod(periodStart, periodEnd);
@@ -92,41 +98,43 @@ export function CalendarHistory({
       >
         <View style={styles.heading}>
           <Text accessibilityRole="header" style={styles.title}>
-            Calendar and history
+            Calendário e histórico
           </Text>
           <Text style={styles.description}>
-            Choose an inclusive period to review seizure and possible-trigger records saved on this
-            device.
+            Escolha um período inclusivo para revisar crises e possíveis gatilhos salvos neste
+            aparelho.
           </Text>
         </View>
-        <DateTimeField
-          accessibilityHint="Enter the beginning of the history period in UTC"
+        <NativeDateTimeField
+          accessibilityHint="Escolha o início do período do histórico"
           error={errors.periodStart}
-          label="Period start"
-          onChangeText={setPeriodStart}
+          label="Início do período"
+          onValueChange={setPeriodStart}
           required
+          testID="period-start"
           value={periodStart}
         />
-        <DateTimeField
-          accessibilityHint="Enter the end of the history period in UTC"
+        <NativeDateTimeField
+          accessibilityHint="Escolha o fim do período do histórico"
           error={errors.periodEnd}
-          label="Period end"
-          onChangeText={setPeriodEnd}
+          label="Fim do período"
+          onValueChange={setPeriodEnd}
           required
+          testID="period-end"
           value={periodEnd}
         />
         <AccessibleButton
-          accessibilityHint="Loads locally saved events in the selected inclusive period"
-          accessibilityLabel="View history"
+          accessibilityHint="Carrega os eventos salvos localmente no período inclusivo selecionado"
+          accessibilityLabel="Ver histórico"
           busy={status === 'loading'}
           onPress={submit}
-          title="View history"
+          title="Ver histórico"
         />
 
         {status === 'loading' ? (
           <View accessibilityLiveRegion="polite" style={styles.state}>
-            <ActivityIndicator accessibilityLabel="Loading clinical history" size="large" />
-            <Text style={styles.stateText}>Loading history…</Text>
+            <ActivityIndicator accessibilityLabel="Carregando histórico clínico" size="large" />
+            <Text style={styles.stateText}>Carregando histórico…</Text>
           </View>
         ) : null}
 
@@ -134,10 +142,10 @@ export function CalendarHistory({
           <View style={styles.state}>
             <FormFeedback message={loadError} variant="error" />
             <AccessibleButton
-              accessibilityHint="Attempts to load the selected period again"
-              accessibilityLabel="Try again"
+              accessibilityHint="Tenta carregar novamente o período selecionado"
+              accessibilityLabel="Tentar novamente"
               onPress={() => loadPeriod({ periodStart, periodEnd })}
-              title="Try again"
+              title="Tentar novamente"
               variant="secondary"
             />
           </View>
@@ -146,15 +154,17 @@ export function CalendarHistory({
         {status === 'success' && events.length === 0 ? (
           <View accessibilityRole="summary" style={styles.state}>
             <Text accessibilityRole="header" style={styles.emptyTitle}>
-              No events in this period.
+              Nenhum evento neste período.
             </Text>
-            <Text style={styles.stateText}>Try a wider period or record a new clinical event.</Text>
+            <Text style={styles.stateText}>
+              Tente um período maior ou registre um novo evento clínico.
+            </Text>
           </View>
         ) : null}
 
         {status === 'success' && events.length > 0 ? (
           <View
-            accessibilityLabel="Chronological clinical events"
+            accessibilityLabel="Eventos clínicos em ordem cronológica"
             accessibilityRole="list"
             style={styles.list}
           >
@@ -169,7 +179,7 @@ export function CalendarHistory({
 
         {status === 'idle' ? (
           <Text accessibilityLiveRegion="polite" style={styles.stateText}>
-            Select a period to view your local history.
+            Selecione um período para ver o histórico local.
           </Text>
         ) : null}
       </ScrollView>

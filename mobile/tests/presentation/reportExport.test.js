@@ -21,11 +21,11 @@ describe('report export action', () => {
       />,
     );
 
-    fireEvent.press(screen.getByRole('button', { name: 'Export selected report' }));
-    expect(await screen.findByText('Export ready')).toBeOnTheScreen();
-    expect(screen.getByText('The file was saved locally.')).toBeOnTheScreen();
+    fireEvent.press(screen.getByRole('button', { name: 'Exportar relatório selecionado' }));
+    expect(await screen.findByText('Exportação pronta')).toBeOnTheScreen();
+    expect(screen.getByText('O arquivo foi salvo localmente.')).toBeOnTheScreen();
     expect(
-      screen.getByText('No external transmission was initiated by MySeizures.'),
+      screen.getByText('Nenhuma transmissão externa foi iniciada pelo MySeizures.'),
     ).toBeOnTheScreen();
     expect(exportReport.execute).toHaveBeenCalledWith({
       patientId: 1,
@@ -47,9 +47,9 @@ describe('report export action', () => {
       />,
     );
 
-    fireEvent.press(screen.getByRole('button', { name: 'Export selected report' }));
-    await waitFor(() => expect(screen.getByText('Access denied')).toBeOnTheScreen());
-    expect(screen.queryByText(/Local file:/)).not.toBeOnTheScreen();
-    expect(screen.queryByText('Export ready')).not.toBeOnTheScreen();
+    fireEvent.press(screen.getByRole('button', { name: 'Exportar relatório selecionado' }));
+    await waitFor(() => expect(screen.getByText('Acesso negado')).toBeOnTheScreen());
+    expect(screen.queryByText(/Arquivo local:/)).not.toBeOnTheScreen();
+    expect(screen.queryByText('Exportação pronta')).not.toBeOnTheScreen();
   });
 });

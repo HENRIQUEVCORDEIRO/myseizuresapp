@@ -23,77 +23,95 @@ describe('patient clinical-record entry flows', () => {
     const recordSeizure = createCommand({ id: 101 });
     render(<SeizureEntryScreen patientId={PATIENT_ID} recordSeizure={recordSeizure} />);
 
-    fireEvent.press(screen.getByRole('button', { name: 'Save seizure' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Salvar crise' }));
 
-    expect(await screen.findByText('Date and time is required.')).toBeOnTheScreen();
-    expect(screen.getByText('Occurrence type is required.')).toBeOnTheScreen();
+    expect(await screen.findByText('Informe a data e hora da crise.')).toBeOnTheScreen();
+    expect(screen.getByText('Informe o tipo de ocorrência.')).toBeOnTheScreen();
     expect(recordSeizure.execute).not.toHaveBeenCalled();
 
-    fireEvent.press(screen.getByRole('button', { name: 'Select seizure date and time date' }));
+    const occurredAt = new Date(2026, 6, 10, 8, 30, 0, 0);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Escolher data — Data e hora da crise' }));
     fireEvent(
       screen.getByTestId('seizure-date-and-time-picker'),
       'onChange',
       { type: 'set' },
-      new Date('2026-07-10T08:30:00.000Z'),
+      new Date(2026, 6, 10),
     );
-    fireEvent(screen.getByLabelText('Occurrence type'), 'valueChange', 'FOCAL');
-    fireEvent.press(screen.getByRole('button', { name: 'Save seizure' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Escolher hora — Data e hora da crise' }));
+    fireEvent(
+      screen.getByTestId('seizure-date-and-time-picker'),
+      'onChange',
+      { type: 'set' },
+      occurredAt,
+    );
+    fireEvent(screen.getByLabelText('Tipo de ocorrência'), 'valueChange', 'FOCAL');
+    fireEvent.press(screen.getByRole('button', { name: 'Salvar crise' }));
 
     await waitFor(() =>
       expect(recordSeizure.execute).toHaveBeenCalledWith({
         patientId: PATIENT_ID,
-        occurredAt: '2026-07-10T08:30:00.000Z',
+        occurredAt: occurredAt.toISOString(),
         occurrenceType: 'FOCAL',
       }),
     );
-    expect(await screen.findByText('Seizure saved.')).toHaveProp('accessibilityRole', 'alert');
+    expect(await screen.findByText('Crise salva.')).toHaveProp('accessibilityRole', 'alert');
   });
 
   test('trigger entry reports required fields and confirms a successful save', async () => {
     const recordTrigger = createCommand({ id: 202 });
     render(<TriggerEntryScreen patientId={PATIENT_ID} recordTrigger={recordTrigger} />);
 
-    fireEvent.press(screen.getByRole('button', { name: 'Save trigger' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Salvar gatilho' }));
 
-    expect(await screen.findByText('Date and time is required.')).toBeOnTheScreen();
-    expect(screen.getByText('Cause is required.')).toBeOnTheScreen();
-    expect(screen.getByText('Sleep quality is required.')).toBeOnTheScreen();
-    expect(screen.getByText('Mood is required.')).toBeOnTheScreen();
+    expect(await screen.findByText('Informe a data e hora do gatilho.')).toBeOnTheScreen();
+    expect(screen.getByText('Informe a causa.')).toBeOnTheScreen();
+    expect(screen.getByText('Informe a qualidade do sono.')).toBeOnTheScreen();
+    expect(screen.getByText('Informe o humor.')).toBeOnTheScreen();
     expect(recordTrigger.execute).not.toHaveBeenCalled();
 
-    fireEvent.press(screen.getByRole('button', { name: 'Select trigger date and time date' }));
+    const recordedAt = new Date(2026, 6, 10, 9, 0, 0, 0);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Escolher data — Data e hora do gatilho' }));
     fireEvent(
       screen.getByTestId('trigger-date-and-time-picker'),
       'onChange',
       { type: 'set' },
-      new Date('2026-07-10T09:00:00.000Z'),
+      new Date(2026, 6, 10),
     );
-    fireEvent(screen.getByLabelText('Cause'), 'valueChange', 'SLEEP');
-    fireEvent.press(screen.getByRole('radio', { name: 'Sleep quality 2' }));
-    fireEvent.press(screen.getByRole('radio', { name: 'Mood 3' }));
-    fireEvent.press(screen.getByRole('button', { name: 'Save trigger' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Escolher hora — Data e hora do gatilho' }));
+    fireEvent(
+      screen.getByTestId('trigger-date-and-time-picker'),
+      'onChange',
+      { type: 'set' },
+      recordedAt,
+    );
+    fireEvent(screen.getByLabelText('Causa'), 'valueChange', 'SLEEP');
+    fireEvent.press(screen.getByRole('radio', { name: 'Qualidade do sono 2' }));
+    fireEvent.press(screen.getByRole('radio', { name: 'Humor 3' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Salvar gatilho' }));
 
     await waitFor(() =>
       expect(recordTrigger.execute).toHaveBeenCalledWith({
         patientId: PATIENT_ID,
-        recordedAt: '2026-07-10T09:00:00.000Z',
+        recordedAt: recordedAt.toISOString(),
         commonCause: 'SLEEP',
         sleepQuality: 2,
         mood: 3,
       }),
     );
-    expect(await screen.findByText('Trigger saved.')).toHaveProp('accessibilityRole', 'alert');
+    expect(await screen.findByText('Gatilho salvo.')).toHaveProp('accessibilityRole', 'alert');
   });
 
   test('requires a description before an other trigger can be saved', () => {
     const recordTrigger = createCommand({ id: 203 });
     render(<TriggerEntryScreen patientId={PATIENT_ID} recordTrigger={recordTrigger} />);
 
-    fireEvent(screen.getByLabelText('Cause'), 'valueChange', 'OTHER');
+    fireEvent(screen.getByLabelText('Causa'), 'valueChange', 'OTHER');
 
-    expect(screen.getByText('Describe the other cause.')).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Save trigger' })).toBeDisabled();
-    fireEvent.changeText(screen.getByLabelText('Other cause description'), 'Missed medication');
-    expect(screen.getByRole('button', { name: 'Save trigger' })).not.toBeDisabled();
+    expect(screen.getByText('Descreva a outra causa.')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Salvar gatilho' })).toBeDisabled();
+    fireEvent.changeText(screen.getByLabelText('Descrição da outra causa'), 'Medicação esquecida');
+    expect(screen.getByRole('button', { name: 'Salvar gatilho' })).not.toBeDisabled();
   });
 });

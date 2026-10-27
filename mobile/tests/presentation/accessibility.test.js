@@ -72,24 +72,25 @@ describe('critical-screen accessibility regressions', () => {
       />,
     );
     const labels = labelledNodes(renderer);
-    const dateIndex = labels.indexOf('Select seizure date and time date');
-    const typeIndex = labels.indexOf('Occurrence type');
-    const saveIndex = labels.indexOf('Save seizure');
+    const dateIndex = labels.indexOf('Escolher data — Data e hora da crise');
+    const typeIndex = labels.indexOf('Tipo de ocorrência');
+    const saveIndex = labels.indexOf('Salvar crise');
 
     expect(dateIndex).toBeGreaterThanOrEqual(0);
     expect(typeIndex).toBeGreaterThan(dateIndex);
     expect(saveIndex).toBeGreaterThan(typeIndex);
     expect(
-      renderer.root.findByProps({ accessibilityLabel: 'Select seizure date and time date' }).props,
+      renderer.root.findByProps({ accessibilityLabel: 'Escolher data — Data e hora da crise' })
+        .props,
     ).toEqual(
       expect.objectContaining({
-        accessibilityHint: expect.stringMatching(/choose when the seizure occurred/i),
+        accessibilityHint: expect.stringMatching(/escolha quando a crise ocorreu/i),
         focusable: true,
       }),
     );
-    expect(accessibleNode(renderer, 'Save seizure', 'button').props).toEqual(
+    expect(accessibleNode(renderer, 'Salvar crise', 'button').props).toEqual(
       expect.objectContaining({
-        accessibilityHint: expect.stringMatching(/saves this seizure on the device/i),
+        accessibilityHint: expect.stringMatching(/salva esta crise no aparelho/i),
         accessibilityRole: 'button',
       }),
     );
@@ -103,16 +104,18 @@ describe('critical-screen accessibility regressions', () => {
     );
     const labels = labelledNodes(renderer);
 
-    expect(labels.indexOf('Patient identifier')).toBeGreaterThanOrEqual(0);
-    expect(labels.indexOf('Check patient access')).toBeGreaterThan(
-      labels.indexOf('Patient identifier'),
+    expect(labels.indexOf('Identificador do paciente')).toBeGreaterThanOrEqual(0);
+    expect(labels.indexOf('Verificar acesso do paciente')).toBeGreaterThan(
+      labels.indexOf('Identificador do paciente'),
     );
-    expect(renderer.root.findByProps({ accessibilityLabel: 'Patient identifier' }).props).toEqual(
+    expect(
+      renderer.root.findByProps({ accessibilityLabel: 'Identificador do paciente' }).props,
+    ).toEqual(
       expect.objectContaining({
-        accessibilityHint: expect.stringMatching(/numeric identifier/i),
+        accessibilityHint: expect.stringMatching(/identificador numérico/i),
       }),
     );
-    expect(accessibleNode(renderer, 'Check patient access', 'button').props).toEqual(
+    expect(accessibleNode(renderer, 'Verificar acesso do paciente', 'button').props).toEqual(
       expect.objectContaining({ accessibilityRole: 'button' }),
     );
   });
@@ -182,8 +185,8 @@ describe('touch-target and contrast regressions', () => {
 
 describe('non-colour status regressions', () => {
   test.each([
-    ['error', 'Review the highlighted fields.', 'Error', '!'],
-    ['success', 'Dose confirmation saved.', 'Success', '✓'],
+    ['error', 'Revise os campos destacados.', 'Erro', '!'],
+    ['success', 'Confirmação da dose salva.', 'Sucesso', '✓'],
   ])('%s feedback has a spoken prefix and visible marker', (variant, message, prefix, marker) => {
     const renderer = render(<FormFeedback message={message} variant={variant} />);
     const alert = renderer.root.findByProps({ accessibilityRole: 'alert' });
@@ -193,23 +196,35 @@ describe('non-colour status regressions', () => {
   });
 
   test('clinical alerts announce and display severity and reason without relying on colour', () => {
-    const reason = 'Three or more recorded seizures occurred in the selected weekly period.';
     const renderer = render(
       <ClinicalAlertList
-        alerts={[{ id: 'SEIZURE_FREQUENCY', severity: 'HIGH', reason, ruleVersion: '1.0' }]}
+        alerts={[
+          {
+            id: 'SEIZURE_FREQUENCY',
+            severity: 'HIGH',
+            reason: 'Three or more recorded seizures occurred.',
+            ruleVersion: '1.0',
+          },
+        ]}
       />,
     );
-    const item = renderer.root.findByProps({ accessibilityRole: 'listitem' });
+    const item = renderer.root.find(
+      (node) =>
+        node.props.accessibilityRole === 'text' &&
+        String(node.props.accessibilityLabel).startsWith('Alerta de gravidade'),
+    );
     const visibleText = renderedText(renderer);
     const severityText = nodeText(
       item.find(
-        (node) => node.props.style?.fontWeight === '800' && nodeText(node).includes('HIGH'),
+        (node) => node.props.style?.fontWeight === '800' && nodeText(node).includes('Alta'),
       ),
     );
 
-    expect(item.props.accessibilityLabel).toBe(`HIGH severity alert. ${reason}`);
-    expect(severityText).toContain('[HIGH]');
-    expect(visibleText).toContain(reason);
-    expect(visibleText).toMatch(/informational|not diagnoses|emergency/i);
+    expect(item.props.accessibilityLabel).toMatch(
+      /Alerta de gravidade Alta\. .*pelo menos 3 crises/i,
+    );
+    expect(severityText).toContain('[Alta]');
+    expect(visibleText).toContain('Foram registradas pelo menos 3 crises');
+    expect(visibleText).toMatch(/informativos|diagnósticos|emergência/i);
   });
 });

@@ -11,27 +11,25 @@ import {
   RatingField,
   SelectField,
 } from '../../../src/presentation/components/index.js';
+import { TRIGGER_CAUSE_LABELS } from '../../../src/presentation/labels.js';
 import { useAuthSession } from '../../../src/presentation/navigation/index.js';
 
-const CAUSE_OPTIONS = Object.freeze([
-  { label: 'Sleep', value: TriggerCause.SLEEP },
-  { label: 'Stress', value: TriggerCause.STRESS },
-  { label: 'Medication', value: TriggerCause.MEDICATION },
-  { label: 'Alcohol', value: TriggerCause.ALCOHOL },
-  { label: 'Illness', value: TriggerCause.ILLNESS },
-  { label: 'Routine change', value: TriggerCause.ROUTINE },
-  { label: 'Other', value: TriggerCause.OTHER },
-]);
+const CAUSE_OPTIONS = Object.freeze(
+  Object.values(TriggerCause).map((value) => ({
+    label: TRIGGER_CAUSE_LABELS[value],
+    value,
+  })),
+);
 
 function requireFields({ commonCause, mood, otherDescription, recordedAt, sleepQuality }) {
   const errors = {};
 
-  if (!recordedAt) errors.recordedAt = 'Date and time is required.';
-  if (!commonCause) errors.commonCause = 'Cause is required.';
-  if (sleepQuality === null) errors.sleepQuality = 'Sleep quality is required.';
-  if (mood === null) errors.mood = 'Mood is required.';
+  if (!recordedAt) errors.recordedAt = 'Informe a data e hora do gatilho.';
+  if (!commonCause) errors.commonCause = 'Informe a causa.';
+  if (sleepQuality === null) errors.sleepQuality = 'Informe a qualidade do sono.';
+  if (mood === null) errors.mood = 'Informe o humor.';
   if (commonCause === TriggerCause.OTHER && !otherDescription.trim()) {
-    errors.otherDescription = 'Describe the other cause.';
+    errors.otherDescription = 'Descreva a outra causa.';
   }
 
   return errors;
@@ -68,10 +66,10 @@ export function TriggerEntryForm({ initialRecordedAt = null, patientId, recordTr
         sleepQuality,
         mood,
       });
-      setFeedback({ message: 'Trigger saved.', variant: 'success' });
-    } catch (error) {
+      setFeedback({ message: 'Gatilho salvo.', variant: 'success' });
+    } catch {
       setFeedback({
-        message: error?.message || 'The trigger could not be saved. Try again.',
+        message: 'Não foi possível salvar o gatilho. Tente novamente.',
         variant: 'error',
       });
     } finally {
@@ -84,26 +82,27 @@ export function TriggerEntryForm({ initialRecordedAt = null, patientId, recordTr
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.heading}>
           <Text accessibilityRole="header" style={styles.title}>
-            Record a possible trigger
+            Registrar um possível gatilho
           </Text>
           <Text style={styles.description}>
-            Add possible context such as cause, sleep quality, and mood. This record is saved on
-            this device.
+            Informe contextos possíveis, como causa, qualidade do sono e humor. Este registro é
+            salvo neste aparelho.
           </Text>
         </View>
         <NativeDateTimeField
-          accessibilityHint="Choose when the possible trigger occurred"
+          accessibilityHint="Escolha quando o possível gatilho ocorreu"
           error={errors.recordedAt}
-          label="Trigger date and time"
+          label="Data e hora do gatilho"
           maximumDate={new Date()}
           onValueChange={setRecordedAt}
           required
+          testID="trigger-date-and-time"
           value={recordedAt}
         />
         <SelectField
-          accessibilityHint="Choose the most likely trigger cause"
+          accessibilityHint="Escolha a causa mais provável do gatilho"
           error={errors.commonCause}
-          label="Cause"
+          label="Causa"
           onValueChange={setCommonCause}
           options={CAUSE_OPTIONS}
           required
@@ -111,37 +110,37 @@ export function TriggerEntryForm({ initialRecordedAt = null, patientId, recordTr
         />
         {commonCause === TriggerCause.OTHER ? (
           <FormField
-            accessibilityHint="Briefly describe the other possible cause"
-            error={errors.otherDescription ?? 'Describe the other cause.'}
-            label="Other cause description"
+            accessibilityHint="Descreva brevemente a outra possível causa"
+            error={errors.otherDescription ?? 'Descreva a outra causa.'}
+            label="Descrição da outra causa"
             onChangeText={setOtherDescription}
             value={otherDescription}
           />
         ) : null}
         <RatingField
-          accessibilityHint="Rate sleep quality from 1, very poor, to 5, very good"
+          accessibilityHint="Avalie a qualidade do sono de 1, muito ruim, a 5, muito boa"
           error={errors.sleepQuality}
-          label="Sleep quality"
+          label="Qualidade do sono"
           onValueChange={setSleepQuality}
           required
           value={sleepQuality}
         />
         <RatingField
-          accessibilityHint="Rate mood from 1, very low, to 5, very good"
+          accessibilityHint="Avalie o humor de 1, muito baixo, a 5, muito bom"
           error={errors.mood}
-          label="Mood"
+          label="Humor"
           onValueChange={setMood}
           required
           value={mood}
         />
         <FormFeedback message={feedback?.message} variant={feedback?.variant} />
         <AccessibleButton
-          accessibilityHint="Validates and saves this trigger on the device"
-          accessibilityLabel="Save trigger"
+          accessibilityHint="Valida e salva este gatilho no aparelho"
+          accessibilityLabel="Salvar gatilho"
           busy={busy}
           disabled={commonCause === TriggerCause.OTHER && !otherDescription.trim()}
           onPress={submit}
-          title="Save trigger"
+          title="Salvar gatilho"
         />
       </ScrollView>
     </SafeAreaView>

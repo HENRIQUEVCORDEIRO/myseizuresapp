@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, spacing, typography } from '../../../src/presentation/theme/tokens.js';
 
@@ -11,25 +12,30 @@ import { colors, spacing, typography } from '../../../src/presentation/theme/tok
  * render identically on every platform.
  */
 const TABS = Object.freeze([
-  { glyph: '🏠', name: 'index', title: 'Home' },
-  { glyph: '📅', name: 'calendar', title: 'Records' },
-  { glyph: '💊', name: 'treatments', title: 'Treatments' },
-  { glyph: '🔗', name: 'sharing', title: 'Sharing' },
+  { glyph: '🏠', name: 'index', title: 'Início' },
+  { glyph: '📅', name: 'calendar', title: 'Registros' },
+  { glyph: '💊', name: 'treatments', title: 'Tratamentos' },
+  { glyph: '🔗', name: 'sharing', title: 'Compartilhamento', visibleTitle: 'Compartilhar' },
 ]);
 
 function TabIcon({ color, glyph }) {
-  return <Text style={[styles.icon, { color }]}>{glyph}</Text>;
+  return (
+    <Text maxFontSizeMultiplier={1.2} style={[styles.icon, { color }]}>
+      {glyph}
+    </Text>
+  );
 }
 
 export default function PatientTabsLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.action,
         tabBarInactiveTintColor: colors.textTertiary,
-        tabBarStyle: styles.bar,
-        tabBarLabelStyle: styles.label,
+        tabBarStyle: [styles.bar, { height: 62 + insets.bottom, paddingBottom: insets.bottom }],
       }}
     >
       {TABS.map((tab) => (
@@ -37,8 +43,19 @@ export default function PatientTabsLayout() {
           key={tab.name}
           name={tab.name}
           options={{
+            tabBarAccessibilityLabel: tab.title,
             tabBarIcon: ({ color }) => <TabIcon color={color} glyph={tab.glyph} />,
-            tabBarLabel: tab.title,
+            tabBarLabel: ({ color }) => (
+              <Text
+                adjustsFontSizeToFit
+                maxFontSizeMultiplier={1.2}
+                minimumFontScale={0.8}
+                numberOfLines={1}
+                style={[styles.label, { color }]}
+              >
+                {tab.visibleTitle ?? tab.title}
+              </Text>
+            ),
             title: tab.title,
           }}
         />
@@ -52,7 +69,6 @@ const styles = {
     backgroundColor: colors.surfaceBase,
     borderTopColor: colors.borderDefault,
     borderTopWidth: 1,
-    paddingBottom: spacing.sm,
     paddingTop: spacing.xs,
   },
   icon: { fontSize: 20 },

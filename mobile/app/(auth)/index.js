@@ -17,8 +17,8 @@ export default function SignInScreen() {
 
     try {
       await signIn({ email, password });
-    } catch (submissionError) {
-      setError(submissionError?.message || 'Sign-in failed. Check your details and try again.');
+    } catch {
+      setError('Não foi possível entrar. Verifique seus dados e tente novamente.');
     } finally {
       setBusy(false);
     }
@@ -31,23 +31,23 @@ export default function SignInScreen() {
           <Text accessibilityRole="header" style={styles.title}>
             MySeizures
           </Text>
-          <Text style={styles.description}>Sign in to manage epilepsy care records.</Text>
+          <Text style={styles.description}>Entre para gerenciar seus registros de epilepsia.</Text>
         </View>
         <FormField
-          accessibilityHint="Enter the email for your MySeizures account"
+          accessibilityHint="Informe o e-mail da sua conta MySeizures"
           autoCapitalize="none"
           autoComplete="email"
           keyboardType="email-address"
-          label="Email"
+          label="E-mail"
           onChangeText={setEmail}
           textContentType="emailAddress"
           value={email}
         />
         <FormField
-          accessibilityHint="Enter your MySeizures account password"
+          accessibilityHint="Informe a senha da sua conta MySeizures"
           autoCapitalize="none"
           autoComplete="password"
-          label="Password"
+          label="Senha"
           onChangeText={setPassword}
           secureTextEntry
           textContentType="password"
@@ -59,11 +59,11 @@ export default function SignInScreen() {
           </Text>
         ) : null}
         <AccessibleButton
-          accessibilityHint="Authenticates your account and opens your care area"
-          accessibilityLabel="Sign in"
+          accessibilityHint="Autentica sua conta e abre sua área de cuidado"
+          accessibilityLabel="Entrar"
           busy={busy}
           onPress={submit}
-          title="Sign in"
+          title="Entrar"
         />
       </ScrollView>
     </SafeAreaView>

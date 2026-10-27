@@ -37,16 +37,18 @@ describe('professional selected-period report', () => {
       />,
     );
 
-    expect(await screen.findByLabelText('Authorized selected-period report')).toBeOnTheScreen();
-    expect(screen.getByText('Seizures: 3')).toBeOnTheScreen();
     expect(
-      screen.getByText('Global adherence: 50.0% (1 of 2 final doses taken)'),
+      await screen.findByLabelText('Relatório autorizado do período selecionado'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('Crises: 3')).toBeOnTheScreen();
+    expect(
+      screen.getByText('Adesão global: 50.0% (1 de 2 doses finais tomadas)'),
     ).toBeOnTheScreen();
     expect(
-      screen.getByLabelText(/Summary chart: Seizures 3, Possible triggers 1, Final doses 2/),
+      screen.getByLabelText(/Gráfico do período: Crises 3, Possíveis gatilhos 1, Doses finais 2/),
     ).toBeOnTheScreen();
-    expect(screen.getByText('SLEEP: 1')).toBeOnTheScreen();
-    expect(screen.getByText('[MEDIUM] LOW ADHERENCE')).toBeOnTheScreen();
+    expect(screen.getByText('Sono: 1')).toBeOnTheScreen();
+    expect(screen.getByText('[Média] BAIXA ADESÃO')).toBeOnTheScreen();
     expect(generateReport.execute).toHaveBeenCalledWith({
       patientId: 1,
       periodType: 'WEEKLY',
@@ -75,9 +77,11 @@ describe('professional selected-period report', () => {
       />,
     );
 
-    expect(await screen.findByText('No records in this period')).toBeOnTheScreen();
-    expect(screen.getByText(/No adherence rate or risk is inferred/)).toBeOnTheScreen();
-    expect(screen.queryByLabelText('Authorized selected-period report')).not.toBeOnTheScreen();
+    expect(await screen.findByText('Nenhum registro neste período')).toBeOnTheScreen();
+    expect(screen.getByText(/Nenhuma taxa de adesão ou risco é inferida/)).toBeOnTheScreen();
+    expect(
+      screen.queryByLabelText('Relatório autorizado do período selecionado'),
+    ).not.toBeOnTheScreen();
   });
 
   test('clears report content and exposes no details when authorization is denied', async () => {
@@ -91,10 +95,10 @@ describe('professional selected-period report', () => {
       />,
     );
 
-    fireEvent.press(screen.getByRole('button', { name: 'View selected report' }));
-    await waitFor(() => expect(screen.getByText('Access denied')).toBeOnTheScreen());
-    expect(screen.queryByText(/Seizures:/)).not.toBeOnTheScreen();
-    expect(screen.queryByText(/Global adherence:/)).not.toBeOnTheScreen();
-    expect(screen.queryByText('Informational alerts')).not.toBeOnTheScreen();
+    fireEvent.press(screen.getByRole('button', { name: 'Ver relatório selecionado' }));
+    await waitFor(() => expect(screen.getByText('Acesso negado')).toBeOnTheScreen());
+    expect(screen.queryByText(/Crises:/)).not.toBeOnTheScreen();
+    expect(screen.queryByText(/Adesão global:/)).not.toBeOnTheScreen();
+    expect(screen.queryByText('Alertas informativos')).not.toBeOnTheScreen();
   });
 });

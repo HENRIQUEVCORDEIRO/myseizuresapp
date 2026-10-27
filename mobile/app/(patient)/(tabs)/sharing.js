@@ -8,6 +8,7 @@ import {
   FormFeedback,
   FormField,
 } from '../../../src/presentation/components/index.js';
+import { formatDateTime } from '../../../src/presentation/formatters/index.js';
 import { useAuthSession } from '../../../src/presentation/navigation/index.js';
 
 function activeGrants(grants) {
@@ -29,7 +30,7 @@ export function SharingManagement({ grantAccess, listAccessGrants, revokeAccess 
       const result = await listAccessGrants.execute();
       if (!result.ok) {
         setGrants([]);
-        setFeedback({ message: result.error.message, variant: 'error' });
+        setFeedback({ message: 'Não foi possível carregar os acessos.', variant: 'error' });
         setStatus('error');
         return;
       }
@@ -38,7 +39,10 @@ export function SharingManagement({ grantAccess, listAccessGrants, revokeAccess 
       setStatus('success');
     } catch {
       setGrants([]);
-      setFeedback({ message: 'The sharing request could not be completed.', variant: 'error' });
+      setFeedback({
+        message: 'Não foi possível concluir a solicitação de compartilhamento.',
+        variant: 'error',
+      });
       setStatus('error');
     }
   }, [listAccessGrants]);
@@ -50,7 +54,7 @@ export function SharingManagement({ grantAccess, listAccessGrants, revokeAccess 
   async function createGrant() {
     const medicCaretakerId = Number(professionalId);
     if (!Number.isInteger(medicCaretakerId) || medicCaretakerId < 1) {
-      setFieldError('Enter a positive professional identifier.');
+      setFieldError('Informe um identificador positivo de profissional.');
       return;
     }
 
@@ -60,15 +64,18 @@ export function SharingManagement({ grantAccess, listAccessGrants, revokeAccess 
     try {
       const result = await grantAccess.execute({ medicCaretakerId });
       if (!result.ok) {
-        setFeedback({ message: result.error.message, variant: 'error' });
+        setFeedback({ message: 'Não foi possível conceder o acesso.', variant: 'error' });
         return;
       }
 
       setProfessionalId('');
       setGrants((current) => [...current, result.value]);
-      setFeedback({ message: 'Access granted.', variant: 'success' });
+      setFeedback({ message: 'Acesso concedido.', variant: 'success' });
     } catch {
-      setFeedback({ message: 'The sharing request could not be completed.', variant: 'error' });
+      setFeedback({
+        message: 'Não foi possível concluir a solicitação de compartilhamento.',
+        variant: 'error',
+      });
     } finally {
       setStatus('success');
     }
@@ -80,14 +87,17 @@ export function SharingManagement({ grantAccess, listAccessGrants, revokeAccess 
     try {
       const result = await revokeAccess.execute({ grantId });
       if (!result.ok) {
-        setFeedback({ message: result.error.message, variant: 'error' });
+        setFeedback({ message: 'Não foi possível revogar o acesso.', variant: 'error' });
         return;
       }
 
       setGrants((current) => current.filter((grant) => grant.id !== grantId));
-      setFeedback({ message: 'Access revoked.', variant: 'success' });
+      setFeedback({ message: 'Acesso revogado.', variant: 'success' });
     } catch {
-      setFeedback({ message: 'The sharing request could not be completed.', variant: 'error' });
+      setFeedback({
+        message: 'Não foi possível concluir a solicitação de compartilhamento.',
+        variant: 'error',
+      });
     } finally {
       setBusyGrantId(null);
     }
@@ -98,81 +108,83 @@ export function SharingManagement({ grantAccess, listAccessGrants, revokeAccess 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.heading}>
           <Text accessibilityRole="header" style={styles.title}>
-            Manage sharing
+            Gerenciar compartilhamento
           </Text>
           <Text style={styles.description}>
-            You control which doctor or caregiver can review your care information.
+            Você controla qual médico ou cuidador pode revisar suas informações de cuidado.
           </Text>
         </View>
 
         <FormField
-          accessibilityHint="Enter the numeric identifier supplied to the doctor or caregiver"
+          accessibilityHint="Informe o identificador numérico fornecido ao médico ou cuidador"
           error={fieldError}
           keyboardType="number-pad"
-          label="Professional identifier"
+          label="Identificador do profissional"
           onChangeText={setProfessionalId}
           value={professionalId}
         />
         <AccessibleButton
-          accessibilityHint="Creates an active sharing relationship"
-          accessibilityLabel="Grant professional access"
+          accessibilityHint="Cria um relacionamento de compartilhamento ativo"
+          accessibilityLabel="Conceder acesso ao profissional"
           busy={status === 'granting'}
           onPress={createGrant}
-          title="Grant access"
+          title="Conceder acesso"
         />
         <FormFeedback message={feedback?.message} variant={feedback?.variant} />
 
         <Text accessibilityRole="header" style={styles.sectionTitle}>
-          Active access
+          Acesso ativo
         </Text>
         {status === 'loading' ? (
           <ApplicationState
-            message="Checking your sharing relationships."
-            title="Loading access"
+            message="Verificando seus compartilhamentos."
+            title="Carregando acessos"
             variant="loading"
           />
         ) : null}
         {status === 'error' ? (
           <ApplicationState
-            actionHint="Attempts to load active sharing relationships again"
-            actionLabel="Try again"
-            message="Active access could not be loaded. No clinical information was shared."
+            actionHint="Tenta carregar novamente os compartilhamentos ativos"
+            actionLabel="Tentar novamente"
+            message="Não foi possível carregar os acessos ativos. Nenhuma informação clínica foi compartilhada."
             onAction={loadGrants}
-            title="Sharing unavailable"
+            title="Compartilhamento indisponível"
             variant="error"
           />
         ) : null}
         {status === 'success' && grants.length === 0 ? (
           <ApplicationState
-            message="No doctor or caregiver currently has access."
-            title="No active access"
+            message="Nenhum médico ou cuidador tem acesso no momento."
+            title="Nenhum acesso ativo"
           />
         ) : null}
         {status === 'success' && grants.length > 0 ? (
           <View
-            accessibilityLabel="Professionals with active access"
+            accessibilityLabel="Profissionais com acesso ativo"
             accessibilityRole="list"
             style={styles.list}
           >
             {grants.map((grant) => (
               <View
-                accessibilityLabel={`Professional ${grant.medicCaretakerId} has active access`}
-                accessibilityRole="listitem"
+                accessibilityLabel={`Profissional ${grant.medicCaretakerId} tem acesso ativo`}
+                accessibilityRole="text"
                 key={grant.id}
                 style={styles.card}
               >
                 <View style={styles.cardCopy}>
-                  <Text style={styles.cardTitle}>Professional {grant.medicCaretakerId}</Text>
-                  <Text style={styles.activeStatus}>Active access</Text>
-                  <Text style={styles.metadata}>Granted {grant.grantedAt}</Text>
+                  <Text style={styles.cardTitle}>Profissional {grant.medicCaretakerId}</Text>
+                  <Text style={styles.activeStatus}>Acesso ativo</Text>
+                  <Text style={styles.metadata}>
+                    Concedido em {formatDateTime(grant.grantedAt)}
+                  </Text>
                 </View>
                 <AccessibleButton
-                  accessibilityHint={`Removes access for professional ${grant.medicCaretakerId}`}
-                  accessibilityLabel={`Revoke access for professional ${grant.medicCaretakerId}`}
+                  accessibilityHint={`Remove o acesso do profissional ${grant.medicCaretakerId}`}
+                  accessibilityLabel={`Revogar acesso do profissional ${grant.medicCaretakerId}`}
                   busy={busyGrantId === grant.id}
                   disabled={busyGrantId !== null && busyGrantId !== grant.id}
                   onPress={() => revoke(grant.id)}
-                  title="Revoke access"
+                  title="Revogar acesso"
                   variant="secondary"
                 />
               </View>

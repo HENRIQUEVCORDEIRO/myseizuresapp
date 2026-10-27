@@ -7,20 +7,20 @@ function barWidth(value, maximum) {
 
 export function ReportSummaryChart({ report }) {
   const values = [
-    { label: 'Seizures', value: report.seizures.length },
-    { label: 'Possible triggers', value: report.triggers.length },
-    { label: 'Final doses', value: report.adherence.finalDoses },
+    { label: 'Crises', value: report.seizures.length },
+    { label: 'Possíveis gatilhos', value: report.triggers.length },
+    { label: 'Doses finais', value: report.adherence.finalDoses },
   ];
   const maximum = Math.max(...values.map((item) => item.value));
 
   return (
     <View
-      accessibilityLabel={`Summary chart: ${values.map((item) => `${item.label} ${item.value}`).join(', ')}`}
+      accessibilityLabel={`Gráfico do período: ${values.map((item) => `${item.label} ${item.value}`).join(', ')}`}
       accessibilityRole="image"
       style={styles.chart}
     >
       <Text accessibilityRole="header" style={styles.title}>
-        Period chart
+        Gráfico do período
       </Text>
       {values.map((item) => (
         <View key={item.label} style={styles.row}>
@@ -34,7 +34,7 @@ export function ReportSummaryChart({ report }) {
         </View>
       ))}
       <Text style={styles.note}>
-        Bars are accompanied by exact values and do not rely on colour alone.
+        As barras são acompanhadas dos valores exatos e não dependem apenas da cor.
       </Text>
     </View>
   );

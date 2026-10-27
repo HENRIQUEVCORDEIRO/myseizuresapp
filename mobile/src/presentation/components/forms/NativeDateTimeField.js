@@ -2,6 +2,7 @@ import { useState } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { formatDateTime } from '../../formatters/index.js';
 import { FormFeedback } from './FormFeedback.js';
 
 function dateFromValue(value) {
@@ -15,6 +16,21 @@ function mergeTime(date, time) {
   return result;
 }
 
+function mergeDate(date, time) {
+  const result = new Date(time);
+  result.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+  return result;
+}
+
+function slug(value) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 export function NativeDateTimeField({
   accessibilityHint,
   error,
@@ -22,10 +38,12 @@ export function NativeDateTimeField({
   maximumDate,
   onValueChange,
   required = false,
+  testID,
   value,
 }) {
   const [mode, setMode] = useState(null);
   const selectedDate = dateFromValue(value);
+  const pickerTestID = `${testID ?? slug(label)}-picker`;
 
   function handleChange(event, nextDate) {
     const activeMode = mode;
@@ -35,7 +53,8 @@ export function NativeDateTimeField({
       return;
     }
 
-    const result = activeMode === 'time' ? mergeTime(selectedDate, nextDate) : nextDate;
+    const result =
+      activeMode === 'time' ? mergeTime(selectedDate, nextDate) : mergeDate(nextDate, selectedDate);
     onValueChange?.(result.toISOString());
   }
 
@@ -45,29 +64,29 @@ export function NativeDateTimeField({
         {label}
         {required ? ' *' : ''}
       </Text>
-      <Text style={styles.value}>{value ? selectedDate.toLocaleString() : 'Not selected'}</Text>
+      <Text style={styles.value}>{value ? formatDateTime(value) : 'Não selecionado'}</Text>
       <View style={styles.actions}>
         <Pressable
           accessibilityHint={accessibilityHint}
-          accessibilityLabel={`Select ${label.toLowerCase()} date`}
+          accessibilityLabel={`Escolher data — ${label}`}
           accessibilityRole="button"
           accessibilityState={{ invalid: Boolean(error) }}
           focusable
           onPress={() => setMode('date')}
           style={[styles.button, error && styles.invalidButton]}
         >
-          <Text style={styles.buttonText}>Choose date</Text>
+          <Text style={styles.buttonText}>Escolher data</Text>
         </Pressable>
         <Pressable
           accessibilityHint={accessibilityHint}
-          accessibilityLabel={`Select ${label.toLowerCase()} time`}
+          accessibilityLabel={`Escolher hora — ${label}`}
           accessibilityRole="button"
           accessibilityState={{ invalid: Boolean(error) }}
           focusable
           onPress={() => setMode('time')}
           style={[styles.button, error && styles.invalidButton]}
         >
-          <Text style={styles.buttonText}>Choose time</Text>
+          <Text style={styles.buttonText}>Escolher hora</Text>
         </Pressable>
       </View>
       {mode ? (
@@ -75,7 +94,7 @@ export function NativeDateTimeField({
           maximumDate={mode === 'date' ? maximumDate : undefined}
           mode={mode}
           onChange={handleChange}
-          testID={`${label.toLowerCase().replaceAll(' ', '-')}-picker`}
+          testID={pickerTestID}
           value={selectedDate}
         />
       ) : null}

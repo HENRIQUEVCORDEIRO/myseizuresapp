@@ -10,16 +10,16 @@ export default function ProfessionalHomeScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.content}>
         <Text accessibilityRole="header" style={styles.title}>
-          Professional care
+          Área do profissional
         </Text>
         <Text style={styles.description}>
-          Welcome, {user?.name}. Authorized care tools are ready.
+          Bem-vindo(a), {user?.name}. As ferramentas de cuidado autorizadas estão prontas.
         </Text>
         <AccessibleButton
-          accessibilityHint="Ends your session and returns to the sign-in screen"
-          accessibilityLabel="Sign out"
+          accessibilityHint="Encerra sua sessão e retorna à tela de entrada"
+          accessibilityLabel="Sair"
           onPress={signOut}
-          title="Sign out"
+          title="Sair"
           variant="secondary"
         />
       </View>

@@ -52,7 +52,14 @@ function createAuthentication(overrides = {}) {
   return {
     authenticate: jest.fn().mockResolvedValue({
       token: PATIENT_TOKEN,
-      user: { id: 1, patientId: 1, name: 'Demo Patient', role: 'PATIENT' },
+      user: {
+        id: 1,
+        patientId: 1,
+        birthDate: '1990-01-01',
+        email: 'patient@example.test',
+        name: 'Demo Patient',
+        role: 'PATIENT',
+      },
     }),
     getCurrentUser: jest.fn(),
     signOut: jest.fn().mockResolvedValue(undefined),
@@ -69,7 +76,7 @@ function privateRepositories() {
 }
 
 describe('session and role privacy boundaries', () => {
-  test('persists the token with a minimal identity envelope and clears a server-rejected session', async () => {
+  test('persists the token with a safe identity envelope and clears a server-rejected session', async () => {
     const secureStore = createSecureStore();
     const sessionStore = new SessionStore({ secureStore });
     const authentication = createAuthentication();
@@ -85,13 +92,20 @@ describe('session and role privacy boundaries', () => {
     const [storageKey, storedValue] = secureStore.setItemAsync.mock.calls[0];
     expect(storageKey).toBe(SECURE_SESSION_KEY);
 
-    // The stored envelope holds the token, its expiration, and the minimal identity needed to
-    // restore the session offline. It must never hold a credential.
+    // The stored envelope holds the token, its expiration, and the safe patient identity needed to
+    // restore the session and local saves offline. It must never hold a credential.
     const envelope = JSON.parse(storedValue);
     expect(envelope.token).toBe(PATIENT_TOKEN);
     expect(envelope.tokenExpiresAt).toBe(TOKEN_EXPIRATION_SECONDS);
-    expect(envelope.user).toMatchObject({ id: 1, name: 'Demo Patient', role: 'PATIENT' });
-    expect(storedValue).not.toMatch(/private-password|patient@example|password|hash/i);
+    expect(envelope.user).toEqual({
+      id: 1,
+      name: 'Demo Patient',
+      role: 'PATIENT',
+      email: 'patient@example.test',
+      patientId: 1,
+      birthDate: '1990-01-01',
+    });
+    expect(storedValue).not.toMatch(/private-password|password|hash/i);
 
     secureStore.getItemAsync.mockResolvedValue(PATIENT_TOKEN);
     authentication.getCurrentUser.mockRejectedValue({

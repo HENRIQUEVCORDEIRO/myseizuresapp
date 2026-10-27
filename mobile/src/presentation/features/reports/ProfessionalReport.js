@@ -5,21 +5,23 @@ import { ReportPeriodType } from '../../../domain/rules/reportingRules.js';
 import {
   AccessibleButton,
   ApplicationState,
-  DateTimeField,
+  NativeDateTimeField,
   SelectField,
 } from '../../components/index.js';
+import { formatDateTime } from '../../formatters/index.js';
+import { labelFor, TRIGGER_CAUSE_LABELS } from '../../labels.js';
 import { ClinicalAlertList } from './ClinicalAlertList.js';
 import { ReportSummaryChart } from './ReportSummaryChart.js';
 
 const PERIOD_OPTIONS = Object.freeze([
-  { label: 'Weekly', value: ReportPeriodType.WEEKLY },
-  { label: 'Monthly', value: ReportPeriodType.MONTHLY },
-  { label: 'Annual', value: ReportPeriodType.ANNUAL },
+  { label: 'Semanal', value: ReportPeriodType.WEEKLY },
+  { label: 'Mensal', value: ReportPeriodType.MONTHLY },
+  { label: 'Anual', value: ReportPeriodType.ANNUAL },
 ]);
 
 function adherenceText(adherence) {
-  if (adherence.rate === undefined) return 'Not available: no final dose confirmations.';
-  return `${adherence.rate.toFixed(1)}% (${adherence.takenDoses} of ${adherence.finalDoses} final doses taken)`;
+  if (adherence.rate === undefined) return 'Não disponível: sem confirmações finais de doses.';
+  return `${adherence.rate.toFixed(1)}% (${adherence.takenDoses} de ${adherence.finalDoses} doses finais tomadas)`;
 }
 
 export function ProfessionalReport({
@@ -57,7 +59,7 @@ export function ProfessionalReport({
 
   function submit() {
     if (!Number.isFinite(Date.parse(periodEnd))) {
-      setPeriodEndError('Report end must be a valid ISO 8601 date and time.');
+      setPeriodEndError('Informe uma data e hora final válidas para o relatório.');
       return;
     }
     setPeriodEndError(null);
@@ -69,93 +71,97 @@ export function ProfessionalReport({
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.heading}>
           <Text accessibilityRole="header" style={styles.title}>
-            Patient report
+            Relatório do paciente
           </Text>
           <Text style={styles.description}>
-            Review only information covered by the patient's current active access grant.
+            Revise apenas as informações cobertas pela autorização de acesso ativa do paciente.
           </Text>
         </View>
         <SelectField
-          accessibilityHint="Choose a weekly, monthly, or annual reporting period"
-          label="Report period"
+          accessibilityHint="Escolha um período semanal, mensal ou anual"
+          label="Período do relatório"
           onValueChange={setPeriodType}
           options={PERIOD_OPTIONS}
           value={periodType}
         />
-        <DateTimeField
-          accessibilityHint="Enter the inclusive end of the report period in UTC"
+        <NativeDateTimeField
+          accessibilityHint="Escolha o fim inclusivo do período do relatório"
           error={periodEndError}
-          label="Report period end"
-          onChangeText={setPeriodEnd}
+          label="Fim do período do relatório"
+          onValueChange={setPeriodEnd}
+          testID="report-period-end"
           value={periodEnd}
         />
         <AccessibleButton
-          accessibilityHint="Rechecks active access and loads the selected report period"
-          accessibilityLabel="View selected report"
+          accessibilityHint="Verifica novamente o acesso ativo e carrega o período selecionado"
+          accessibilityLabel="Ver relatório selecionado"
           busy={status === 'loading'}
           onPress={submit}
-          title="View report"
+          title="Ver relatório"
         />
 
         {status === 'loading' ? (
           <ApplicationState
-            message="Authorization and report data are being checked."
-            title="Loading report"
+            message="A autorização e os dados do relatório estão sendo verificados."
+            title="Carregando relatório"
             variant="loading"
           />
         ) : null}
         {status === 'denied' ? (
           <ApplicationState
-            message="The patient has not granted active access. Report data, alerts, and clinical details are unavailable."
-            title="Access denied"
+            message="O paciente não concedeu acesso ativo. Dados do relatório, alertas e detalhes clínicos não estão disponíveis."
+            title="Acesso negado"
             variant="forbidden"
           />
         ) : null}
         {status === 'error' ? (
           <ApplicationState
-            actionHint="Attempts to authorize and load the selected report again"
-            actionLabel="Try again"
-            message="The report could not be loaded. No clinical information is displayed."
+            actionHint="Tenta autorizar e carregar novamente o relatório selecionado"
+            actionLabel="Tentar novamente"
+            message="Não foi possível carregar o relatório. Nenhuma informação clínica é exibida."
             onAction={() => loadReport({ periodType, periodEnd })}
-            title="Report unavailable"
+            title="Relatório indisponível"
             variant="error"
           />
         ) : null}
         {status === 'idle' ? (
-          <Text style={styles.prompt}>Select a period to view the report.</Text>
+          <Text style={styles.prompt}>Selecione um período para ver o relatório.</Text>
         ) : null}
 
         {status === 'success' && report?.empty ? (
           <ApplicationState
-            message="There are no seizure, trigger, or final adherence records in the selected period. No adherence rate or risk is inferred from missing data."
-            title="No records in this period"
+            message="Não há crises, gatilhos ou confirmações finais de doses no período selecionado. Nenhuma taxa de adesão ou risco é inferida pela ausência de dados."
+            title="Nenhum registro neste período"
           />
         ) : null}
         {status === 'success' && report && !report.empty ? (
-          <View accessibilityLabel="Authorized selected-period report" style={styles.report}>
+          <View
+            accessibilityLabel="Relatório autorizado do período selecionado"
+            style={styles.report}
+          >
             <View accessibilityRole="summary" style={styles.summary}>
               <Text accessibilityRole="header" style={styles.sectionTitle}>
-                Selected-period summary
+                Resumo do período selecionado
               </Text>
-              <Text>From {report.period.periodStart}</Text>
-              <Text>Through {report.period.periodEnd}</Text>
-              <Text>Seizures: {report.seizures.length}</Text>
-              <Text>Possible triggers: {report.triggers.length}</Text>
-              <Text>Global adherence: {adherenceText(report.adherence)}</Text>
+              <Text>De {formatDateTime(report.period.periodStart)}</Text>
+              <Text>Até {formatDateTime(report.period.periodEnd)}</Text>
+              <Text>Crises: {report.seizures.length}</Text>
+              <Text>Possíveis gatilhos: {report.triggers.length}</Text>
+              <Text>Adesão global: {adherenceText(report.adherence)}</Text>
             </View>
             <ReportSummaryChart report={report} />
             <View style={styles.summary}>
               <Text accessibilityRole="header" style={styles.sectionTitle}>
-                Trigger trends
+                Tendências de gatilhos
               </Text>
               {report.triggerTrends.length ? (
                 report.triggerTrends.map((trend) => (
                   <Text key={trend.cause}>
-                    {trend.cause}: {trend.count}
+                    {labelFor(TRIGGER_CAUSE_LABELS, trend.cause)}: {trend.count}
                   </Text>
                 ))
               ) : (
-                <Text>No trigger trends in this period.</Text>
+                <Text>Nenhuma tendência de gatilho neste período.</Text>
               )}
             </View>
             <ClinicalAlertList alerts={report.alerts} />

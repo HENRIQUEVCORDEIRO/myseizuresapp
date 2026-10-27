@@ -1,56 +1,94 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { getContainer } from '../../src/composition/container.js';
 import { ConsumptionStatus } from '../../src/domain/value-objects/index.js';
 import { AccessibleButton, FormFeedback } from '../../src/presentation/components/index.js';
+import { formatDateTime, formatDateTimeLong } from '../../src/presentation/formatters/index.js';
 import { useAuthSession } from '../../src/presentation/navigation/index.js';
 
 export function ReminderList({ confirmDose, listReminders, selectedReminderId }) {
   const [items, setItems] = useState([]);
   const [feedback, setFeedback] = useState(null);
-  const load = () => listReminders.execute().then(setItems);
-  useEffect(load, [listReminders]);
-  async function confirm(id, status) {
+  const [status, setStatus] = useState('loading');
+
+  const load = useCallback(async () => {
+    setStatus('loading');
+
     try {
-      await confirmDose.execute({ reminderId: id, consumptionStatus: status });
-      setFeedback({ variant: 'success', message: 'Dose confirmation saved.' });
+      const nextItems = await listReminders.execute();
+      setItems(nextItems);
+      setStatus('success');
+    } catch {
+      setItems([]);
+      setStatus('error');
+      setFeedback({
+        variant: 'error',
+        message: 'Não foi possível carregar as doses de medicação.',
+      });
+    }
+  }, [listReminders]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function confirm(id, consumptionStatus) {
+    try {
+      await confirmDose.execute({ reminderId: id, consumptionStatus });
+      setFeedback({ variant: 'success', message: 'Confirmação da dose salva.' });
       await load();
-    } catch (error) {
-      setFeedback({ variant: 'error', message: error?.message ?? 'Dose could not be confirmed.' });
+    } catch {
+      setFeedback({
+        variant: 'error',
+        message: 'Não foi possível confirmar a dose.',
+      });
     }
   }
+
   return (
     <SafeAreaView style={styles.page}>
       <Text accessibilityRole="header" style={styles.title}>
-        Medication reminders
+        Doses de medicação
       </Text>
       <FormFeedback {...feedback} />
-      {items.length ? (
-        items.map((item) => (
-          <View
-            accessibilityLabel={`Reminder ${item.id}`}
-            key={item.id}
-            style={[styles.card, Number(selectedReminderId) === item.id && styles.selected]}
-          >
-            <Text>{new Date(item.scheduledAt).toLocaleString()}</Text>
-            <View style={styles.actions}>
-              <AccessibleButton
-                title="Taken"
-                accessibilityLabel={`Mark reminder ${item.id} taken`}
-                onPress={() => confirm(item.id, ConsumptionStatus.TAKEN)}
-              />
-              <AccessibleButton
-                title="Missed"
-                accessibilityLabel={`Mark reminder ${item.id} missed`}
-                onPress={() => confirm(item.id, ConsumptionStatus.MISSED)}
-              />
+      {status === 'loading' ? (
+        <Text accessibilityLiveRegion="polite">Carregando doses de medicação…</Text>
+      ) : null}
+      {status === 'success' && items.length === 0 ? (
+        <Text>Nenhuma dose precisa de confirmação.</Text>
+      ) : null}
+      {status === 'error' ? (
+        <AccessibleButton
+          accessibilityLabel="Tentar carregar as doses de medicação novamente"
+          onPress={load}
+          title="Tentar novamente"
+          variant="secondary"
+        />
+      ) : null}
+      {status === 'success'
+        ? items.map((item) => (
+            <View
+              accessibilityLabel={`Lembrete ${item.id} em ${formatDateTimeLong(item.scheduledAt)}`}
+              key={item.id}
+              style={[styles.card, Number(selectedReminderId) === item.id && styles.selected]}
+            >
+              <Text style={styles.scheduledAt}>{formatDateTime(item.scheduledAt)}</Text>
+              <View style={styles.actions}>
+                <AccessibleButton
+                  title="Tomei"
+                  accessibilityLabel={`Marcar lembrete ${item.id} como tomado`}
+                  onPress={() => confirm(item.id, ConsumptionStatus.TAKEN)}
+                />
+                <AccessibleButton
+                  title="Não tomei"
+                  accessibilityLabel={`Marcar lembrete ${item.id} como não tomado`}
+                  onPress={() => confirm(item.id, ConsumptionStatus.MISSED)}
+                />
+              </View>
             </View>
-          </View>
-        ))
-      ) : (
-        <Text>No doses need confirmation.</Text>
-      )}
+          ))
+        : null}
     </SafeAreaView>
   );
 }
@@ -69,6 +107,7 @@ const styles = StyleSheet.create({
   page: { flex: 1, gap: 16, padding: 24 },
   title: { color: '#17324D', fontSize: 28, fontWeight: '700' },
   card: { backgroundColor: '#FFF', gap: 12, padding: 16 },
+  scheduledAt: { color: '#17324D', fontSize: 17, fontWeight: '700' },
   selected: { borderColor: '#2563EB', borderWidth: 2 },
   actions: { flexDirection: 'row', gap: 12 },
 });

@@ -18,7 +18,7 @@ export function RatingField({
         {label}
         {required ? ' *' : ''}
       </Text>
-      <Text style={styles.description}>1 is very poor and 5 is very good.</Text>
+      <Text style={styles.description}>1 é muito ruim e 5 é muito bom.</Text>
       <View
         accessibilityHint={accessibilityHint}
         accessibilityLabel={label}

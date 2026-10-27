@@ -2,17 +2,17 @@ import { StyleSheet, Text, View } from 'react-native';
 
 const FEEDBACK = Object.freeze({
   error: {
-    accessibilityPrefix: 'Error',
+    accessibilityPrefix: 'Erro',
     marker: '!',
     liveRegion: 'assertive',
   },
   success: {
-    accessibilityPrefix: 'Success',
+    accessibilityPrefix: 'Sucesso',
     marker: '✓',
     liveRegion: 'polite',
   },
   info: {
-    accessibilityPrefix: 'Information',
+    accessibilityPrefix: 'Informação',
     marker: 'i',
     liveRegion: 'polite',
   },

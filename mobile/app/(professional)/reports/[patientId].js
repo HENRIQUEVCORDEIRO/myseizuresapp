@@ -11,8 +11,8 @@ function ConnectedProfessionalReport() {
   if (!Number.isInteger(patientId) || patientId < 1) {
     return (
       <ApplicationState
-        message="Choose a patient through the patient-access screen."
-        title="Invalid patient"
+        message="Escolha um paciente pela tela de acesso do paciente."
+        title="Paciente inválido"
         variant="error"
       />
     );
