@@ -348,11 +348,11 @@ Cada dia útil da sprint termina com uma verificação em níveis. O painel est�
 | **N3** | A feature do dia **funciona** (teste novo, não só "não quebrou") | incluído no N1 | 🤖 |
 | **N4** | O app **funciona no aparelho** | `adb install` → `am start` → `screencap` → **leitura da imagem** | 🤖 |
 | **N5** | O app **funciona na web** | `expo export --platform web` + servidor estático | 🤖 |
-| **N6** | Acessibilidade e usabilidade **reais** | TalkBack, fonte dinâmica, toque | 👤 autor |
+| **N6** | Acessibilidade e usabilidade **reais** | Fonte dinâmica e toque; TalkBack já validado no D2 (não repetir) | 👤 autor |
 
 **Regra do dia:** N0–N3 são obrigatórios para declarar o dia encerrado. N4 e N5 são o **incremento
-demonstrável** — o dia só conta como entregue quando o app abre e mostra a mudança. N6 é semanal,
-não diário.
+demonstrável** — o dia só conta como entregue quando o app abre e mostra a mudança. N6 é pontual,
+não diário. O TalkBack foi validado uma vez no D2 (26/10) e não entra no checklist recorrente.
 
 **Como o N4 é executado (D-12):** o `adb.exe` do SDK Android instalado no Windows roda dentro do
 WSL. O agente pode, portanto: compilar (via `cmd.exe`, usando o Node do Windows e o JBR do

@@ -1,0 +1,29 @@
+D3 — evidência de persistência local e migração (27/10/2026)
+
+Aparelho: SM-A145M (Android 14) · app com.myseizures.app
+Fluxo: login patient@example.com → Registrar crise → escolher tipo → marcar aura → Salvar crise → Registros → fechar e reabrir o app
+
+Banco: files/SQLite/myseizures.db (copiado via `adb exec-out run-as com.myseizures.app cat ...`)
+
+schema_migrations:
+[(1, 'identity'), (2, 'clinical_records_and_treatments'), (3, 'seizure_aura')]
+
+seizure_records (colunas):
+['id', 'patient_id', 'occurred_at', 'occurrence_type', 'created_at', 'felt_aura']
+
+seizure_records:
+[
+  (1, '2026-10-26T23:23:08.220Z', 'FOCAL', 0),
+  (2, '2026-10-28T00:08:32.373Z', 'GENERALIZED', 0),
+  (3, '2026-10-28T00:17:31.191Z', 'GENERALIZED', 1),
+  (4, '2026-10-28T00:19:22.142Z', 'FOCAL', 0)
+]
+
+Leitura:
+- Registro 1: dados do D2 preservados; migração aplicou felt_aura = 0.
+- Registro 2: criado antes da correção do caso de uso; permaneceu como aura “Não” (0).
+- Registro 3: “Sim” selecionado no formulário → felt_aura = 1.
+- Registro 4: “Não” padrão → felt_aura = 0.
+
+Após fechar e reabrir o app, schema_migrations continuou em 3 e os quatro registros
+permaneceram no banco. A tela inicial passou a exibir 4 crises.
