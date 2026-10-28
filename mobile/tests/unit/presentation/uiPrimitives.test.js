@@ -131,8 +131,31 @@ describe('ChoiceGroup', () => {
       />,
     );
 
+    expect(screen.getByLabelText('Focal').props.accessibilityState).toEqual({ checked: true });
+    expect(screen.getByLabelText('Generalizada').props.accessibilityState).toEqual({
+      checked: false,
+    });
+
     fireEvent.press(screen.getByLabelText('Generalizada'));
     expect(onValueChange).toHaveBeenCalledWith('GENERALIZED');
+  });
+
+  it('announces a labelled invalid group and its error', () => {
+    render(
+      <ChoiceGroup
+        error="Escolha o tipo de ocorrência."
+        label="Tipo de ocorrência"
+        onValueChange={() => {}}
+        options={[{ label: 'Focal', value: 'FOCAL' }]}
+        required
+        value={null}
+      />,
+    );
+
+    expect(screen.getByLabelText('Tipo de ocorrência').props.accessibilityState).toEqual({
+      invalid: true,
+    });
+    expect(screen.getByText('Escolha o tipo de ocorrência.')).toBeOnTheScreen();
   });
 
   it('toggles values in multiple mode', () => {

@@ -1,3 +1,5 @@
+import { migrations } from '../../src/infrastructure/persistence/migrations/index.js';
+import { runMigrations } from '../../src/infrastructure/persistence/migrations/MigrationRunner.js';
 import { DatabaseProvider } from '../../src/infrastructure/persistence/sqlite/DatabaseProvider.js';
 import { createIdentityFixture } from '../unit/factories/identityFactory.js';
 import { createSQLiteTestDatabase } from '../unit/factories/sqliteTestDatabase.js';
@@ -72,13 +74,52 @@ describe('database migration bootstrap', () => {
     const versions = await database.getAllAsync(
       'SELECT version, name FROM schema_migrations ORDER BY version;',
     );
+    const seizureColumns = await database.getAllAsync('PRAGMA table_info(seizure_records);');
 
     expect(tables.map(({ name }) => name)).toEqual(EXPECTED_TABLES);
     expect(versions).toEqual([
       { version: 1, name: 'identity' },
       { version: 2, name: 'clinical_records_and_treatments' },
+      { version: 3, name: 'seizure_aura' },
     ]);
+    expect(seizureColumns).toContainEqual(
+      expect.objectContaining({
+        name: 'felt_aura',
+        notnull: 1,
+        dflt_value: '0',
+      }),
+    );
     expect(openDatabase).toHaveBeenCalledTimes(1);
+  });
+
+  test('adds the aura column without losing seizures created before the migration', async () => {
+    database = createSQLiteTestDatabase();
+    await runMigrations(database, migrations.slice(0, 2));
+
+    await database.runAsync(
+      `INSERT INTO users (id, name, email, password_hash, role, created_at)
+       VALUES (1, 'Patient', 'patient@example.test', 'test-hash', 'PATIENT', ?);`,
+      '2026-07-01T00:00:00.000Z',
+    );
+    await database.runAsync(
+      `INSERT INTO patients (id, user_id, birth_date, diagnosis_date)
+       VALUES (1, 1, '1980-01-01', NULL);`,
+    );
+    await database.runAsync(
+      `INSERT INTO seizure_records (patient_id, occurred_at, occurrence_type, created_at)
+       VALUES (1, ?, 'FOCAL', ?);`,
+      '2026-07-10T08:30:00.000Z',
+      '2026-07-10T08:35:00.000Z',
+    );
+
+    await runMigrations(database, migrations);
+
+    await expect(
+      database.getFirstAsync('SELECT felt_aura FROM seizure_records WHERE id = 1;'),
+    ).resolves.toEqual({ felt_aura: 0 });
+    await expect(
+      database.getAllAsync('SELECT version FROM schema_migrations ORDER BY version;'),
+    ).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }]);
   });
 
   test('enforces identity foreign keys and one active authorization per pair', async () => {

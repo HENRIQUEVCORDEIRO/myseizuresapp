@@ -9,6 +9,7 @@ function presentationFor(event) {
     return {
       details: [
         `Tipo de ocorrência: ${labelFor(OCCURRENCE_TYPE_LABELS, event.record.occurrenceType)}`,
+        `Sentiu que viria: ${event.record.feltAura === true ? 'Sim' : 'Não'}`,
       ],
       label: 'Crise',
       style: styles.seizure,

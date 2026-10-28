@@ -25,6 +25,7 @@ export class RecordSeizure {
       patientId,
       occurredAt: input.occurredAt,
       occurrenceType: input.occurrenceType,
+      feltAura: input.feltAura,
       createdAt: this.now(),
     });
 

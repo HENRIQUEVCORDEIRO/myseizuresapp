@@ -5,9 +5,9 @@ import { getContainer } from '../../../src/composition/container.js';
 import { SeizureOccurrenceType } from '../../../src/domain/value-objects/index.js';
 import {
   AccessibleButton,
+  ChoiceGroup,
   FormFeedback,
   NativeDateTimeField,
-  SelectField,
 } from '../../../src/presentation/components/index.js';
 import { OCCURRENCE_TYPE_LABELS } from '../../../src/presentation/labels.js';
 import { useAuthSession } from '../../../src/presentation/navigation/index.js';
@@ -18,6 +18,11 @@ const OCCURRENCE_OPTIONS = Object.freeze(
     value,
   })),
 );
+
+const AURA_OPTIONS = Object.freeze([
+  { label: 'Sim', value: true },
+  { label: 'Não', value: false },
+]);
 
 function requireFields({ occurredAt, occurrenceType }) {
   const errors = {};
@@ -36,8 +41,9 @@ function requireFields({ occurredAt, occurrenceType }) {
 }
 
 export function SeizureEntryForm({ initialOccurredAt = null, patientId, recordSeizure }) {
-  const [occurredAt, setOccurredAt] = useState(initialOccurredAt);
+  const [occurredAt, setOccurredAt] = useState(() => initialOccurredAt ?? new Date().toISOString());
   const [occurrenceType, setOccurrenceType] = useState(null);
+  const [feltAura, setFeltAura] = useState(false);
   const [errors, setErrors] = useState({});
   const [feedback, setFeedback] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -54,8 +60,11 @@ export function SeizureEntryForm({ initialOccurredAt = null, patientId, recordSe
     setBusy(true);
 
     try {
-      await recordSeizure.execute({ patientId, occurredAt, occurrenceType });
+      await recordSeizure.execute({ patientId, occurredAt, occurrenceType, feltAura });
       setFeedback({ message: 'Crise salva.', variant: 'success' });
+      setOccurrenceType(null);
+      setFeltAura(false);
+      setOccurredAt(new Date().toISOString());
     } catch {
       setFeedback({
         message: 'Não foi possível salvar a crise. Tente novamente.',
@@ -74,7 +83,8 @@ export function SeizureEntryForm({ initialOccurredAt = null, patientId, recordSe
             Registrar uma crise
           </Text>
           <Text style={styles.description}>
-            Informe a data, a hora e o tipo de ocorrência. Este registro é salvo neste aparelho.
+            O horário atual já vem preenchido. Ajuste se precisar e escolha o tipo de ocorrência.
+            Este registro é salvo neste aparelho.
           </Text>
         </View>
         <NativeDateTimeField
@@ -87,7 +97,7 @@ export function SeizureEntryForm({ initialOccurredAt = null, patientId, recordSe
           testID="seizure-date-and-time"
           value={occurredAt}
         />
-        <SelectField
+        <ChoiceGroup
           accessibilityHint="Escolha o tipo de ocorrência da crise"
           error={errors.occurrenceType}
           label="Tipo de ocorrência"
@@ -95,6 +105,13 @@ export function SeizureEntryForm({ initialOccurredAt = null, patientId, recordSe
           options={OCCURRENCE_OPTIONS}
           required
           value={occurrenceType}
+        />
+        <ChoiceGroup
+          accessibilityHint="Informe se você sentiu que a crise viria"
+          label="Sentiu que viria?"
+          onValueChange={setFeltAura}
+          options={AURA_OPTIONS}
+          value={feltAura}
         />
         <FormFeedback message={feedback?.message} variant={feedback?.variant} />
         <AccessibleButton

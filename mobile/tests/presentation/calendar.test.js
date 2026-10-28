@@ -35,6 +35,7 @@ describe('patient chronological calendar', () => {
       patientId: PATIENT_ID,
       occurredAt: '2026-08-10T09:30:00.000Z',
       occurrenceType: 'FOCAL',
+      feltAura: true,
     };
     const listChronologicalEvents = createQuery([
       { eventType: 'TRIGGER', occurredAt: trigger.recordedAt, record: trigger },
@@ -65,6 +66,7 @@ describe('patient chronological calendar', () => {
     expect(screen.getByText('Causa: Sono')).toBeOnTheScreen();
     expect(screen.getByText('Crise')).toBeOnTheScreen();
     expect(screen.getByText('Tipo de ocorrência: Focal')).toBeOnTheScreen();
+    expect(screen.getByText('Sentiu que viria: Sim')).toBeOnTheScreen();
   });
 
   test('validates a manually selected period before loading history', async () => {

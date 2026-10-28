@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, spacing, touchTarget, typography } from '../../theme/tokens.js';
+import { FormFeedback } from '../forms/FormFeedback.js';
 
 /**
  * Group of large, explicit choices.
@@ -11,9 +12,12 @@ import { colors, radius, spacing, touchTarget, typography } from '../../theme/to
 export function ChoiceGroup({
   accessibilityHint,
   accessibilityLabel,
+  error,
+  label,
   multiple = false,
   onValueChange,
   options = [],
+  required = false,
   value,
   values = [],
 }) {
@@ -34,47 +38,66 @@ export function ChoiceGroup({
   }
 
   return (
-    <View
-      accessibilityLabel={accessibilityLabel}
-      accessibilityRole={multiple ? 'radiogroup' : 'radiogroup'}
-      style={styles.group}
-    >
-      {options.map((option) => {
-        const selected = isSelected(option.value);
+    <View style={styles.field}>
+      {label ? (
+        <Text style={styles.fieldLabel}>
+          {label}
+          {required ? <Text style={styles.required}> *</Text> : null}
+        </Text>
+      ) : null}
+      <View
+        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityRole="radiogroup"
+        accessibilityState={error ? { invalid: true } : undefined}
+        style={[styles.group, error ? styles.invalidGroup : null]}
+      >
+        {options.map((option) => {
+          const selected = isSelected(option.value);
 
-        return (
-          <Pressable
-            accessibilityHint={accessibilityHint}
-            accessibilityLabel={option.label}
-            accessibilityRole={multiple ? 'checkbox' : 'radio'}
-            accessibilityState={{ checked: multiple, selected: !multiple && selected }}
-            key={option.value}
-            onPress={() => select(option.value)}
-            style={({ pressed }) => [
-              styles.option,
-              selected ? styles.selected : styles.unselected,
-              pressed ? styles.pressed : null,
-            ]}
-          >
-            <View style={styles.copy}>
-              <Text style={[styles.label, selected ? styles.selectedLabel : styles.label]}>
-                {option.label}
+          return (
+            <Pressable
+              accessibilityHint={accessibilityHint}
+              accessibilityLabel={option.label}
+              accessibilityRole={multiple ? 'checkbox' : 'radio'}
+              accessibilityState={{ checked: selected }}
+              key={String(option.value)}
+              onPress={() => select(option.value)}
+              style={({ pressed }) => [
+                styles.option,
+                selected ? styles.selected : styles.unselected,
+                pressed ? styles.pressed : null,
+              ]}
+            >
+              <View style={styles.copy}>
+                <Text style={[styles.label, selected ? styles.selectedLabel : styles.label]}>
+                  {option.label}
+                </Text>
+                {option.description ? (
+                  <Text style={styles.description}>{option.description}</Text>
+                ) : null}
+              </View>
+              <Text accessibilityElementsHidden style={styles.marker}>
+                {selected ? '✓' : '○'}
               </Text>
-              {option.description ? (
-                <Text style={styles.description}>{option.description}</Text>
-              ) : null}
-            </View>
-            <Text accessibilityElementsHidden style={styles.marker}>
-              {selected ? '✓' : '○'}
-            </Text>
-          </Pressable>
-        );
-      })}
+            </Pressable>
+          );
+        })}
+      </View>
+      <FormFeedback message={error} variant="error" />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  field: { gap: spacing.sm },
+  fieldLabel: { ...typography.body, color: colors.textPrimary },
+  required: { ...typography.bodyStrong, color: colors.danger },
+  invalidGroup: {
+    borderColor: colors.danger,
+    borderRadius: radius.md,
+    borderWidth: 2,
+    padding: spacing.xs,
+  },
   group: { gap: spacing.sm },
   option: {
     alignItems: 'center',

@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 
 import SeizureEntryScreen from '../../app/(patient)/seizures/new.js';
 import TriggerEntryScreen from '../../app/(patient)/triggers/new.js';
+import { formatDateTime } from '../../src/presentation/formatters/index.js';
 
 jest.mock('@react-native-community/datetimepicker', () => {
   const ReactModule = require('react');
@@ -19,13 +20,29 @@ function createCommand(result) {
 }
 
 describe('patient clinical-record entry flows', () => {
+  test('starts a new seizure at the current instant', () => {
+    const now = '2026-08-11T15:00:00.000Z';
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(now));
+
+    try {
+      render(
+        <SeizureEntryScreen patientId={PATIENT_ID} recordSeizure={createCommand({ id: 100 })} />,
+      );
+
+      expect(screen.getByText(formatDateTime(now))).toBeOnTheScreen();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   test('seizure entry reports required fields and confirms a successful save', async () => {
     const recordSeizure = createCommand({ id: 101 });
     render(<SeizureEntryScreen patientId={PATIENT_ID} recordSeizure={recordSeizure} />);
 
     fireEvent.press(screen.getByRole('button', { name: 'Salvar crise' }));
 
-    expect(await screen.findByText('Informe a data e hora da crise.')).toBeOnTheScreen();
+    expect(screen.queryByText('Informe a data e hora da crise.')).toBeNull();
     expect(screen.getByText('Informe o tipo de ocorrência.')).toBeOnTheScreen();
     expect(recordSeizure.execute).not.toHaveBeenCalled();
 
@@ -45,7 +62,7 @@ describe('patient clinical-record entry flows', () => {
       { type: 'set' },
       occurredAt,
     );
-    fireEvent(screen.getByLabelText('Tipo de ocorrência'), 'valueChange', 'FOCAL');
+    fireEvent.press(screen.getByRole('radio', { name: 'Focal' }));
     fireEvent.press(screen.getByRole('button', { name: 'Salvar crise' }));
 
     await waitFor(() =>
@@ -53,9 +70,34 @@ describe('patient clinical-record entry flows', () => {
         patientId: PATIENT_ID,
         occurredAt: occurredAt.toISOString(),
         occurrenceType: 'FOCAL',
+        feltAura: false,
       }),
     );
     expect(await screen.findByText('Crise salva.')).toHaveProp('accessibilityRole', 'alert');
+  });
+
+  test('seizure entry records an aura when the patient reports it', async () => {
+    const recordSeizure = createCommand({ id: 102 });
+    render(
+      <SeizureEntryScreen
+        initialOccurredAt="2026-07-10T08:30:00.000Z"
+        patientId={PATIENT_ID}
+        recordSeizure={recordSeizure}
+      />,
+    );
+
+    fireEvent.press(screen.getByRole('radio', { name: 'Generalizada' }));
+    fireEvent.press(screen.getByRole('radio', { name: 'Sim' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Salvar crise' }));
+
+    await waitFor(() =>
+      expect(recordSeizure.execute).toHaveBeenCalledWith({
+        patientId: PATIENT_ID,
+        occurredAt: '2026-07-10T08:30:00.000Z',
+        occurrenceType: 'GENERALIZED',
+        feltAura: true,
+      }),
+    );
   });
 
   test('trigger entry reports required fields and confirms a successful save', async () => {

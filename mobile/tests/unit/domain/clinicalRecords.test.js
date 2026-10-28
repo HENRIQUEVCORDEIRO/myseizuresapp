@@ -55,6 +55,21 @@ describe('clinical record domain rules', () => {
       },
     );
 
+    test('defaults felt aura to false and retains an explicit boolean', () => {
+      expect(createSeizure().feltAura).toBe(false);
+      expect(createSeizure({ feltAura: true }).feltAura).toBe(true);
+      expect(createSeizure({ feltAura: false }).feltAura).toBe(false);
+    });
+
+    test.each([
+      ['a string aura value', { feltAura: 'true' }],
+      ['a numeric aura value', { feltAura: 1 }],
+    ])('rejects %s', (_case, overrides) => {
+      expect(() => createSeizure(overrides)).toThrow(
+        expect.objectContaining({ name: 'DomainValidationError', field: 'feltAura' }),
+      );
+    });
+
     test.each([
       ['missing occurrence type', { occurrenceType: undefined }, 'occurrenceType'],
       ['unknown occurrence type', { occurrenceType: 'ABSENCE' }, 'occurrenceType'],

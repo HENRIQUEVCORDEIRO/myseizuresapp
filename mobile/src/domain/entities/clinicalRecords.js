@@ -2,6 +2,7 @@ import { SeizureOccurrenceType, TriggerCause } from '../value-objects/enums.js';
 import {
   optionalEntityId,
   optionalString,
+  requireBoolean,
   requireEntityId,
   requireEnum,
   requireInteger,
@@ -10,11 +11,12 @@ import {
 } from '../value-objects/validation.js';
 
 export class SeizureRecord {
-  constructor({ id, patientId, occurredAt, occurrenceType, createdAt }) {
+  constructor({ id, patientId, occurredAt, occurrenceType, feltAura = false, createdAt }) {
     this.id = optionalEntityId(id);
     this.patientId = requireEntityId(patientId, 'patientId');
     this.occurredAt = requireTimestamp(occurredAt, 'occurredAt', { allowFuture: false });
     this.occurrenceType = requireEnum(occurrenceType, SeizureOccurrenceType, 'occurrenceType');
+    this.feltAura = requireBoolean(feltAura ?? false, 'feltAura');
     this.createdAt = requireTimestamp(createdAt, 'createdAt', { allowFuture: false });
     Object.freeze(this);
   }

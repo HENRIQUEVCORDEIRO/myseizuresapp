@@ -74,11 +74,15 @@ describe('critical-screen accessibility regressions', () => {
     const labels = labelledNodes(renderer);
     const dateIndex = labels.indexOf('Escolher data — Data e hora da crise');
     const typeIndex = labels.indexOf('Tipo de ocorrência');
+    const auraIndex = labels.indexOf('Sentiu que viria?');
     const saveIndex = labels.indexOf('Salvar crise');
 
     expect(dateIndex).toBeGreaterThanOrEqual(0);
     expect(typeIndex).toBeGreaterThan(dateIndex);
-    expect(saveIndex).toBeGreaterThan(typeIndex);
+    expect(auraIndex).toBeGreaterThan(typeIndex);
+    expect(saveIndex).toBeGreaterThan(auraIndex);
+    expect(accessibleNode(renderer, 'Tipo de ocorrência', 'radiogroup')).toBeTruthy();
+    expect(accessibleNode(renderer, 'Sentiu que viria?', 'radiogroup')).toBeTruthy();
     expect(
       renderer.root.findByProps({ accessibilityLabel: 'Escolher data — Data e hora da crise' })
         .props,

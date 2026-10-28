@@ -93,11 +93,12 @@ describe('clinical record SQLite repositories', () => {
     const triggerRepository = new TriggerRepository({ databaseProvider: firstLaunch.provider });
 
     const savedSeizure = await seizureRepository.saveSeizure(
-      seizure({ occurrenceType: SeizureOccurrenceType.GENERALIZED }),
+      seizure({ occurrenceType: SeizureOccurrenceType.GENERALIZED, feltAura: true }),
     );
     const savedTrigger = await triggerRepository.saveTrigger(trigger());
 
     expect(savedSeizure.id).toEqual(expect.any(Number));
+    expect(savedSeizure.feltAura).toBe(true);
     expect(savedTrigger.id).toEqual(expect.any(Number));
     await database.closeAsync();
     database = null;
@@ -177,6 +178,7 @@ describe('clinical record SQLite repositories', () => {
     const updatedSeizure = new SeizureRecord({
       ...savedSeizure,
       occurrenceType: SeizureOccurrenceType.GENERALIZED,
+      feltAura: true,
     });
     const updatedTrigger = new TriggerRecord({
       ...savedTrigger,

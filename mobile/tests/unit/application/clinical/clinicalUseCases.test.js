@@ -43,12 +43,18 @@ describe('clinical record use cases', () => {
       patientId: ACTIVE_PATIENT_ID,
       occurredAt: '2026-08-10T12:30:00.000Z',
       occurrenceType: SeizureOccurrenceType.FOCAL,
+      feltAura: true,
     });
 
     expect(saved).toBeInstanceOf(SeizureRecord);
-    expect(saved).toMatchObject({ id: 101, patientId: ACTIVE_PATIENT_ID, createdAt: NOW });
+    expect(saved).toMatchObject({
+      id: 101,
+      patientId: ACTIVE_PATIENT_ID,
+      feltAura: true,
+      createdAt: NOW,
+    });
     expect(seizureRepository.saveSeizure).toHaveBeenCalledWith(
-      expect.objectContaining({ patientId: ACTIVE_PATIENT_ID }),
+      expect.objectContaining({ patientId: ACTIVE_PATIENT_ID, feltAura: true }),
     );
   });
 
