@@ -1,0 +1,28 @@
+D4 N4 - SQLite evidence
+Source: /data/data/com.myseizures.app/files/SQLite/myseizures.db (pulled via adb run-as)
+
+== schema_migrations ==
+{'version': 1, 'name': 'identity', 'applied_at': '2026-10-26T03:17:49.163Z'}
+{'version': 2, 'name': 'clinical_records_and_treatments', 'applied_at': '2026-10-26T03:17:49.233Z'}
+{'version': 3, 'name': 'seizure_aura', 'applied_at': '2026-10-28T00:04:01.330Z'}
+{'version': 4, 'name': 'trigger_causes', 'applied_at': '2026-10-30T00:13:59.094Z'}
+
+== trigger_records ==
+{'id': 1, 'patient_id': 1, 'recorded_at': '2026-10-26T23:25:02.180Z', 'common_cause': 'SLEEP', 'other_description': None, 'sleep_quality': 2, 'mood': 3, 'created_at': '2026-10-26T23:26:01.392Z'}
+{'id': 2, 'patient_id': 1, 'recorded_at': '2026-10-30T00:16:17.813Z', 'common_cause': 'SLEEP', 'other_description': None, 'sleep_quality': 4, 'mood': 3, 'created_at': '2026-10-30T00:18:09.333Z'}
+{'id': 3, 'patient_id': 1, 'recorded_at': '2026-10-30T00:19:48.116Z', 'common_cause': 'OTHER', 'other_description': 'Viagem', 'sleep_quality': 2, 'mood': 4, 'created_at': '2026-10-30T00:21:55.698Z'}
+
+== trigger_causes ==
+{'id': 1, 'trigger_id': 1, 'cause': 'SLEEP'}
+{'id': 2, 'trigger_id': 2, 'cause': 'SLEEP'}
+{'id': 3, 'trigger_id': 2, 'cause': 'STRESS'}
+{'id': 4, 'trigger_id': 3, 'cause': 'OTHER'}
+
+== trigger_records + causes ==
+{'id': 1, 'recorded_at': '2026-10-26T23:25:02.180Z', 'common_cause': 'SLEEP', 'other_description': None, 'sleep_quality': 2, 'mood': 3, 'causes': 'SLEEP'}
+{'id': 2, 'recorded_at': '2026-10-30T00:16:17.813Z', 'common_cause': 'SLEEP', 'other_description': None, 'sleep_quality': 4, 'mood': 3, 'causes': 'SLEEP, STRESS'}
+{'id': 3, 'recorded_at': '2026-10-30T00:19:48.116Z', 'common_cause': 'OTHER', 'other_description': 'Viagem', 'sleep_quality': 2, 'mood': 4, 'causes': 'OTHER'}
+
+== trigger_causes indexes ==
+{'name': 'sqlite_autoindex_trigger_causes_1', 'sql': None}
+{'name': 'trigger_causes_trigger_index', 'sql': 'CREATE INDEX trigger_causes_trigger_index\n      ON trigger_causes (trigger_id)'}

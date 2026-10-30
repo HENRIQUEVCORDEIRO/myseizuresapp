@@ -34,7 +34,7 @@
 | **D1** | seg 20/10 | Documentação, design tokens, 10 primitivas de UI | — | ✅ 241 | ✅ | ✅ 17 | — | — | — | [d1](2026-10-20-d1.md) |
 | **D2** | ter 21/10 | Tab bar (4 abas) + home do paciente + fechamento D2.1 (identidade, doses, datas PT-BR) | ✅ | ✅ 260 | ✅ | ✅ | ✅ | — | ✅ | [d2](2026-10-21-d2.md) |
 | **D3** | qua 22/10 | Formulário de crise (agora, `ChoiceGroup`, `feltAura`) | ✅ | ✅ 267 | ✅ | ✅ | ✅ | — | — | [d3](2026-10-22-d3.md) |
-| D4 | qui 23/10 | Formulário de gatilho | | | | | | | | |
+| **D4** | qui 23/10 | Formulário de gatilho (agora, `SelectSheet` multi, sono/humor) | ✅ | ✅ 278 | ✅ | ✅ | ✅ | — | — | [d4](2026-10-23-d4.md) |
 | D5 | seg 26/10 | Assistente de tratamento em 3 passos | | | | | | | | |
 | **W** | ter 27/10 | Trilha web: `react-native-web` + composição por plataforma | | | | | | ✅ | | |
 | D6 | ter 27/10 | Home do profissional | | | | | | | | |
@@ -48,14 +48,14 @@
 
 ## 3. Estado acumulado
 
-| Métrica | D1 | D2 | D3 | Alvo em 30/10 |
-|---|---|---|---|---|
-| Suítes de teste | 38 | 43 | **43** | 46 |
-| Testes | 241 | 260 | **267** | ~300 |
-| Primitivas de UI | 10 | 10 | 10 | 12 |
-| Linhas de código de apresentação | 6.670 | +420 | +30 | — |
-| Documentos | 11 | 13 | **14** | 16 |
-| Funcionalidades da matriz implementadas (parcial ou total) | 8/13 | 8/13 | **8/13** | 11/13 |
+| Métrica | D1 | D2 | D3 | D4 | Alvo em 30/10 |
+|---|---|---|---|---|---|
+| Suítes de teste | 38 | 43 | 43 | **43** | 46 |
+| Testes | 241 | 260 | 267 | **278** | ~300 |
+| Primitivas de UI | 10 | 10 | 10 | 10 | 12 |
+| Linhas de código de apresentação | 6.670 | +420 | +30 | — | — |
+| Documentos | 11 | 13 | 14 | **15** | 16 |
+| Funcionalidades da matriz implementadas (parcial ou total) | 8/13 | 8/13 | 8/13 | **8/13** | 11/13 |
 
 ---
 
@@ -69,34 +69,41 @@
 O fechamento D2.1 já está no histórico (`6e2d8c7`), incluindo identidade local, PT-BR, doses,
 documentação e evidências. TalkBack validado pelo autor em 26/10.
 
-### 4.2 D3 — na árvore de trabalho
+### 4.2 D3 — commitado
+
+O D3 está no histórico (`87aab8e` e `3f40493`), incluindo aura, horário atual, migração 003,
+documentação e evidências. TalkBack validado no D2.
+
+### 4.3 D4 — na árvore de trabalho
 
 | Área | Arquivos principais | Alterado | Motivo |
 |---|---|---|---|
-| Domínio e persistência | `clinicalRecords.js`, `003_seizure_aura.js`, `migrations/index.js`, `SeizureRepository.js` | M/A | `feltAura` booleano e migração aditiva com backfill |
-| Aplicação | `RecordSeizure.js` | M | repassa `feltAura` do formulário para a entidade (defeito encontrado no N4) |
-| Formulário de crise | `mobile/app/(patient)/seizures/new.js`, `ChoiceGroup.js` | M | horário atual por padrão, tipo em `ChoiceGroup`, aura Sim/Não |
-| Histórico | `ClinicalEventItem.js` | M | exibe “Sentiu que viria: Sim/Não” |
-| Testes | domínio, aplicação, repositório, migração, formulário, calendário, acessibilidade e `ChoiceGroup` | M | 267 testes verdes, incluindo regressão de `feltAura` |
-| Documentação | `2026-10-22-d3.md`, `2026-10-21-d2.md`, `INDICE.md`, `plano-geral-outubro-2026.md`, `evidencias/d3/` | M/A | D3, N4 no aparelho, N6 validado e TalkBack fora da rotina |
+| Domínio e persistência | `clinicalRecords.js`, `004_trigger_causes.js`, `migrations/index.js`, `TriggerRepository.js` | M/A | `causes[]`, tabela `trigger_causes` e backfill |
+| Aplicação | `RecordTrigger.js` | M | repassa `causes` e mantém `commonCause` legado |
+| Formulário de gatilho | `mobile/app/(patient)/triggers/new.js`, `SelectSheet.js` | M | horário atual, causas múltiplas, “Outro” validado e resumo |
+| Histórico | `ClinicalEventItem.js` | M | exibe todas as causas |
+| Testes | domínio, aplicação, repositório, migração, formulário, calendário, `SelectSheet` e US1 | M | 278 testes verdes |
+| Documentação | `2026-10-23-d4.md`, `INDICE.md`, `evidencias/d4/` | A/M | D4 e N0–N4; capturas e dump SQLite |
 
 ```bash
-# Sugestão de agrupamento; o autor pode dividir em commits menores.
+# Código do D4; o autor pode dividir em commits menores.
 git add mobile
-git commit -m "feat: close D3 crisis form with aura and now-first entry"
+git commit -m "feat: close D4 trigger form with multi-cause sheet"
 
-git add docs/sprint-outubro/2026-10-22-d3.md docs/sprint-outubro/2026-10-21-d2.md docs/sprint-outubro/INDICE.md docs/plano-geral-outubro-2026.md docs/sprint-outubro/evidencias/d3
-git commit -m "docs(sprint): record D3 checks and TalkBack validation"
+# Evidências e resultado do N4.
+git add docs/sprint-outubro/2026-10-23-d4.md docs/sprint-outubro/INDICE.md docs/sprint-outubro/evidencias/d4
+git commit -m "docs(sprint): record D4 device checks"
 ```
 
 **Fora dos commits:** `.specify/`, `prompts/`, `docs/instructions/`, `docs/fix_pesquisa_TCC.pdf`.
 
-### 4.3 Próximo
+### 4.4 Próximo
 
-O D3 está fechado em N0–N4, com aura “Sim”/“Não” validada no aparelho e persistida no SQLite.
-Retomar **D4/D5** e, quando `react-native-web` estiver disponível, a trilha web (N5). A tradução
-PT-BR não é mais uma pendência separada; identificadores, domínio, API e testes de domínio
-permanecem em inglês.
+O D4 está concluído em N0–N4 e pronto para o commit manual. Seguir para **D5** e, quando
+`react-native-web` estiver disponível, a trilha web (N5). A tradução PT-BR não é uma pendência
+separada; identificadores, domínio, API e testes de domínio permanecem em inglês. A atualização
+automática do fim do período em **Registros** e o safe area do botão **Confirmar** da sheet ficam
+como melhorias de UX para D5/D8.
 
 **A** = adicionado · **M** = modificado · **R** = renomeado · **D** = removido
 
