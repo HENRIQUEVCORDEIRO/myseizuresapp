@@ -12,7 +12,7 @@ import {
   RecordSeizure,
   RecordTrigger,
 } from '../../src/application/use-cases/clinical/index.js';
-import { SeizureOccurrenceType, TriggerCause } from '../../src/domain/value-objects/index.js';
+import { SeizureOccurrenceType } from '../../src/domain/value-objects/index.js';
 import {
   SeizureRepository,
   TriggerRepository,
@@ -170,7 +170,9 @@ describe('US1 offline clinical-record journey', () => {
     journey.rerender(
       <OfflineJourneyStage recordTrigger={firstLaunchUseCases.recordTrigger} stage="trigger" />,
     );
-    fireEvent(journey.getByLabelText('Causa'), 'valueChange', TriggerCause.SLEEP);
+    fireEvent.press(journey.getByLabelText('Causas do gatilho'));
+    fireEvent.press(journey.getByLabelText('Sono'));
+    fireEvent.press(journey.getByLabelText('Confirmar seleção'));
     fireEvent.press(journey.getByRole('radio', { name: 'Qualidade do sono 2' }));
     fireEvent.press(journey.getByRole('radio', { name: 'Humor 3' }));
     fireEvent.press(journey.getByRole('button', { name: 'Salvar gatilho' }));

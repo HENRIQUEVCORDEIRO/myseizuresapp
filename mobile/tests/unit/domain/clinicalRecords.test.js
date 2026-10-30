@@ -98,10 +98,33 @@ describe('clinical record domain rules', () => {
       },
     );
 
+    test('accepts multiple causes and keeps the first one as the primary cause', () => {
+      const record = createTrigger({
+        causes: [TriggerCause.SLEEP, TriggerCause.STRESS, TriggerCause.ROUTINE],
+      });
+
+      expect(record.causes).toEqual([
+        TriggerCause.SLEEP,
+        TriggerCause.STRESS,
+        TriggerCause.ROUTINE,
+      ]);
+      expect(record.commonCause).toBe(TriggerCause.SLEEP);
+      expect(Object.isFrozen(record.causes)).toBe(true);
+    });
+
     test.each([
       ['missing cause', { commonCause: undefined }, 'commonCause'],
+      ['empty cause list', { causes: [] }, 'causes'],
+      ['non-array cause list', { causes: TriggerCause.SLEEP }, 'causes'],
       ['unknown cause', { commonCause: 'WEATHER' }, 'commonCause'],
+      ['unknown cause in list', { causes: ['WEATHER'] }, 'causes'],
+      ['duplicate causes', { causes: [TriggerCause.SLEEP, TriggerCause.SLEEP] }, 'causes'],
       ['OTHER without a description', { commonCause: TriggerCause.OTHER }, 'otherDescription'],
+      [
+        'OTHER in a multi-cause list without a description',
+        { causes: [TriggerCause.SLEEP, TriggerCause.OTHER] },
+        'otherDescription',
+      ],
       [
         'blank OTHER description',
         { commonCause: TriggerCause.OTHER, otherDescription: '  ' },

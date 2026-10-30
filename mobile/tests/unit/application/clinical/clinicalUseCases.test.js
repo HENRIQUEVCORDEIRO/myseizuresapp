@@ -92,7 +92,7 @@ describe('clinical record use cases', () => {
     const saved = await useCase.execute({
       patientId: ACTIVE_PATIENT_ID,
       recordedAt: '2026-08-10T13:00:00.000Z',
-      commonCause: TriggerCause.OTHER,
+      causes: [TriggerCause.SLEEP, TriggerCause.OTHER],
       otherDescription: 'Travel fatigue',
       sleepQuality: 2,
       mood: 3,
@@ -102,9 +102,39 @@ describe('clinical record use cases', () => {
     expect(saved).toMatchObject({
       id: 202,
       patientId: ACTIVE_PATIENT_ID,
+      causes: [TriggerCause.SLEEP, TriggerCause.OTHER],
+      commonCause: TriggerCause.SLEEP,
       otherDescription: 'Travel fatigue',
       createdAt: NOW,
     });
+    expect(triggerRepository.saveTrigger).toHaveBeenCalledWith(
+      expect.objectContaining({
+        causes: [TriggerCause.SLEEP, TriggerCause.OTHER],
+        commonCause: TriggerCause.SLEEP,
+      }),
+    );
+  });
+
+  test('RecordTrigger keeps accepting a single legacy commonCause', async () => {
+    const triggerRepository = {
+      saveTrigger: jest.fn(async (record) => new TriggerRecord({ ...record, id: 203 })),
+    };
+    const useCase = new RecordTrigger({
+      triggerRepository,
+      getActivePatientId: activePatient(),
+      now: () => NOW,
+    });
+
+    const saved = await useCase.execute({
+      patientId: ACTIVE_PATIENT_ID,
+      recordedAt: '2026-08-10T13:00:00.000Z',
+      commonCause: TriggerCause.STRESS,
+      sleepQuality: 4,
+      mood: 2,
+    });
+
+    expect(saved.causes).toEqual([TriggerCause.STRESS]);
+    expect(saved.commonCause).toBe(TriggerCause.STRESS);
   });
 
   test('RecordTrigger rejects invalid data and a different caller-selected patient', async () => {

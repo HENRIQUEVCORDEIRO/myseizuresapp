@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { colors, elevation, radius, spacing, touchTarget, typography } from '../../theme/tokens.js';
+import { FormFeedback } from '../forms/FormFeedback.js';
 
 const OTHER_VALUE = 'OTHER';
 
@@ -31,6 +32,13 @@ export function SelectSheet({
 }) {
   const [selection, setSelection] = useState([]);
   const [other, setOther] = useState(otherText);
+  const [otherError, setOtherError] = useState(null);
+
+  useEffect(() => {
+    if (!visible) {
+      setOtherError(null);
+    }
+  }, [visible]);
 
   useEffect(() => {
     if (!visible) {
@@ -43,13 +51,22 @@ export function SelectSheet({
       const next = multiple ? [...values] : value === undefined || value === null ? [] : [value];
       return sameValues(current, next) ? current : next;
     });
-    setOther((current) => (current === otherText ? current : otherText));
-  }, [multiple, otherText, value, values, visible]);
+  }, [multiple, value, values, visible]);
+
+  useEffect(() => {
+    if (visible) {
+      setOther(otherText);
+    }
+  }, [otherText, visible]);
 
   const selectedValues = selection;
   const hasOther = selectedValues.includes(OTHER_VALUE);
 
   function toggle(optionValue) {
+    if (optionValue === OTHER_VALUE) {
+      setOtherError(null);
+    }
+
     if (!multiple) {
       setSelection([optionValue]);
       return;
@@ -64,10 +81,18 @@ export function SelectSheet({
 
   function updateOther(text) {
     setOther(text);
+    if (otherError) setOtherError(null);
     if (typeof onOtherTextChange === 'function') onOtherTextChange(text);
   }
 
   function confirm() {
+    if (hasOther && !other.trim()) {
+      setOtherError('Descreva a outra causa.');
+      return;
+    }
+
+    setOtherError(null);
+
     if (typeof onConfirm !== 'function') {
       onClose();
       return;
@@ -112,7 +137,7 @@ export function SelectSheet({
                 <Pressable
                   accessibilityLabel={option.label}
                   accessibilityRole={multiple ? 'checkbox' : 'radio'}
-                  accessibilityState={{ checked: multiple, selected: !multiple && selected }}
+                  accessibilityState={{ checked: selected }}
                   key={option.value}
                   onPress={() => toggle(option.value)}
                   style={({ pressed }) => [
@@ -143,6 +168,7 @@ export function SelectSheet({
                   style={styles.otherInput}
                   value={other}
                 />
+                <FormFeedback message={otherError} />
               </View>
             ) : null}
           </ScrollView>

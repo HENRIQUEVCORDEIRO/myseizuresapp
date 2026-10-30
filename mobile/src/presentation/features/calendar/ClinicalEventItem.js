@@ -17,9 +17,15 @@ function presentationFor(event) {
   }
 
   if (event.eventType === ClinicalEventType.TRIGGER) {
+    const causes =
+      Array.isArray(event.record.causes) && event.record.causes.length > 0
+        ? event.record.causes
+        : [event.record.commonCause];
+    const causeLabels = causes.map((cause) => labelFor(TRIGGER_CAUSE_LABELS, cause)).join(', ');
+
     return {
       details: [
-        `Causa: ${labelFor(TRIGGER_CAUSE_LABELS, event.record.commonCause)}`,
+        `${causes.length > 1 ? 'Causas' : 'Causa'}: ${causeLabels}`,
         `Qualidade do sono: ${event.record.sleepQuality}`,
         `Humor: ${event.record.mood}`,
         ...(event.record.otherDescription ? [`Outra causa: ${event.record.otherDescription}`] : []),

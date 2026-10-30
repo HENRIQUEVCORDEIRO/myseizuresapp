@@ -24,6 +24,7 @@ export class RecordTrigger {
     const record = new TriggerRecord({
       patientId,
       recordedAt: input.recordedAt,
+      causes: input.causes,
       commonCause: input.commonCause,
       otherDescription: input.otherDescription,
       sleepQuality: input.sleepQuality,

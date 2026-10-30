@@ -196,7 +196,7 @@ describe('SelectSheet', () => {
     expect(screen.queryByLabelText('Descrição da outra opção')).toBeNull();
   });
 
-  it('requires a description when the free-form option is confirmed', () => {
+  it('requires a description before confirming the free-form option', () => {
     const onConfirm = jest.fn();
     render(
       <SelectSheet
@@ -210,11 +210,42 @@ describe('SelectSheet', () => {
     );
 
     fireEvent.press(screen.getByLabelText('Confirmar seleção'));
+
+    expect(screen.getByText('Descreva a outra causa.')).toBeOnTheScreen();
+    expect(onConfirm).not.toHaveBeenCalled();
+
+    fireEvent.changeText(screen.getByLabelText('Descrição da outra opção'), '  Viagem  ');
+    fireEvent.press(screen.getByLabelText('Confirmar seleção'));
+
     expect(onConfirm).toHaveBeenCalledWith({
-      other: '',
+      other: 'Viagem',
       value: 'OTHER',
       values: ['OTHER'],
     });
+  });
+
+  it('marks each option checked independently in multiple mode', () => {
+    render(
+      <SelectSheet
+        multiple
+        onClose={() => {}}
+        onConfirm={() => {}}
+        options={[
+          { label: 'Sono', value: 'SLEEP' },
+          { label: 'Estresse', value: 'STRESS' },
+        ]}
+        values={['SLEEP']}
+        visible
+      />,
+    );
+
+    expect(screen.getByLabelText('Sono').props.accessibilityState).toEqual({ checked: true });
+    expect(screen.getByLabelText('Estresse').props.accessibilityState).toEqual({ checked: false });
+
+    fireEvent.press(screen.getByLabelText('Estresse'));
+
+    expect(screen.getByLabelText('Sono').props.accessibilityState).toEqual({ checked: true });
+    expect(screen.getByLabelText('Estresse').props.accessibilityState).toEqual({ checked: true });
   });
 });
 

@@ -39,11 +39,12 @@ function requirePeriod(period) {
   return { periodStart, periodEnd };
 }
 
-function toEntity(row) {
+function toEntity(row, causes) {
   return new TriggerRecord({
     id: row.id,
     patientId: row.patient_id,
     recordedAt: row.recorded_at,
+    causes: causes.length > 0 ? causes : undefined,
     commonCause: row.common_cause,
     otherDescription: row.other_description,
     sleepQuality: row.sleep_quality,
@@ -53,6 +54,21 @@ function toEntity(row) {
 }
 
 export class TriggerRepository extends PatientScopedRepository {
+  async loadCausesForPatient(patientId, triggerId) {
+    const rows = await this.getAllForPatient(
+      patientId,
+      `SELECT trigger_causes.cause
+       FROM trigger_causes
+       INNER JOIN trigger_records ON trigger_records.id = trigger_causes.trigger_id
+       WHERE trigger_causes.trigger_id = $recordId
+         AND trigger_records.patient_id = $patientId
+       ORDER BY trigger_causes.id ASC;`,
+      { $recordId: requireRecordId(triggerId) },
+    );
+
+    return rows.map((row) => row.cause);
+  }
+
   async saveTrigger(value) {
     const record = requireTrigger(value);
     const parameters = {
@@ -64,38 +80,56 @@ export class TriggerRepository extends PatientScopedRepository {
       $createdAt: record.createdAt,
     };
 
-    if (record.id === null) {
-      const result = await this.runForPatient(
-        record.patientId,
-        `INSERT INTO trigger_records
-           (patient_id, recorded_at, common_cause, other_description,
-            sleep_quality, mood, created_at)
-         VALUES ($patientId, $recordedAt, $commonCause, $otherDescription,
-                 $sleepQuality, $mood, $createdAt);`,
-        parameters,
-      );
+    return this.withTransaction(async (database) => {
+      let triggerId = record.id;
 
-      return new TriggerRecord({ ...record, id: Number(result.lastInsertRowId) });
-    }
+      if (triggerId === null) {
+        const result = await database.runAsync(
+          `INSERT INTO trigger_records
+             (patient_id, recorded_at, common_cause, other_description,
+              sleep_quality, mood, created_at)
+           VALUES ($patientId, $recordedAt, $commonCause, $otherDescription,
+                   $sleepQuality, $mood, $createdAt);`,
+          { ...parameters, $patientId: record.patientId },
+        );
+        triggerId = Number(result.lastInsertRowId);
+      } else {
+        const result = await database.runAsync(
+          `UPDATE trigger_records
+           SET recorded_at = $recordedAt,
+               common_cause = $commonCause,
+               other_description = $otherDescription,
+               sleep_quality = $sleepQuality,
+               mood = $mood,
+               created_at = $createdAt
+           WHERE id = $recordId AND patient_id = $patientId;`,
+          { ...parameters, $recordId: triggerId, $patientId: record.patientId },
+        );
 
-    const result = await this.runForPatient(
-      record.patientId,
-      `UPDATE trigger_records
-       SET recorded_at = $recordedAt,
-           common_cause = $commonCause,
-           other_description = $otherDescription,
-           sleep_quality = $sleepQuality,
-           mood = $mood,
-           created_at = $createdAt
-       WHERE id = $recordId AND patient_id = $patientId;`,
-      { ...parameters, $recordId: record.id },
-    );
+        if (result.changes === 0) {
+          throw new Error('Trigger record was not found for this patient.');
+        }
 
-    if (result.changes === 0) {
-      throw new Error('Trigger record was not found for this patient.');
-    }
+        await database.runAsync('DELETE FROM trigger_causes WHERE trigger_id = $recordId;', {
+          $recordId: triggerId,
+        });
+      }
 
-    return new TriggerRecord({ ...record });
+      for (const cause of record.causes) {
+        await database.runAsync(
+          `INSERT INTO trigger_causes (trigger_id, cause)
+           SELECT $recordId, $cause
+           WHERE EXISTS (
+             SELECT 1
+             FROM trigger_records
+             WHERE id = $recordId AND patient_id = $patientId
+           );`,
+          { $recordId: triggerId, $cause: cause, $patientId: record.patientId },
+        );
+      }
+
+      return new TriggerRecord({ ...record, id: triggerId, causes: record.causes });
+    });
   }
 
   async findTriggerById(patientId, recordId) {
@@ -106,7 +140,12 @@ export class TriggerRepository extends PatientScopedRepository {
       { $recordId: requireRecordId(recordId) },
     );
 
-    return row ? toEntity(row) : null;
+    if (!row) {
+      return null;
+    }
+
+    const causes = await this.loadCausesForPatient(patientId, row.id);
+    return toEntity(row, causes);
   }
 
   async listTriggersByPeriod(patientId, period) {
@@ -121,7 +160,13 @@ export class TriggerRepository extends PatientScopedRepository {
       { $periodStart: periodStart, $periodEnd: periodEnd },
     );
 
-    return rows.map(toEntity);
+    const triggers = [];
+    for (const row of rows) {
+      const causes = await this.loadCausesForPatient(patientId, row.id);
+      triggers.push(toEntity(row, causes));
+    }
+
+    return triggers;
   }
 
   async deleteTrigger(patientId, recordId) {

@@ -14,6 +14,7 @@ const EXPECTED_TABLES = [
   'seizure_records',
   'treatment_times',
   'treatments',
+  'trigger_causes',
   'trigger_records',
   'users',
 ];
@@ -81,6 +82,7 @@ describe('database migration bootstrap', () => {
       { version: 1, name: 'identity' },
       { version: 2, name: 'clinical_records_and_treatments' },
       { version: 3, name: 'seizure_aura' },
+      { version: 4, name: 'trigger_causes' },
     ]);
     expect(seizureColumns).toContainEqual(
       expect.objectContaining({
@@ -92,7 +94,7 @@ describe('database migration bootstrap', () => {
     expect(openDatabase).toHaveBeenCalledTimes(1);
   });
 
-  test('adds the aura column without losing seizures created before the migration', async () => {
+  test('adds aura and trigger causes without losing records created before the migration', async () => {
     database = createSQLiteTestDatabase();
     await runMigrations(database, migrations.slice(0, 2));
 
@@ -111,6 +113,14 @@ describe('database migration bootstrap', () => {
       '2026-07-10T08:30:00.000Z',
       '2026-07-10T08:35:00.000Z',
     );
+    await database.runAsync(
+      `INSERT INTO trigger_records
+         (patient_id, recorded_at, common_cause, other_description,
+          sleep_quality, mood, created_at)
+       VALUES (1, ?, 'SLEEP', NULL, 2, 3, ?);`,
+      '2026-07-10T09:00:00.000Z',
+      '2026-07-10T09:05:00.000Z',
+    );
 
     await runMigrations(database, migrations);
 
@@ -118,8 +128,11 @@ describe('database migration bootstrap', () => {
       database.getFirstAsync('SELECT felt_aura FROM seizure_records WHERE id = 1;'),
     ).resolves.toEqual({ felt_aura: 0 });
     await expect(
+      database.getAllAsync('SELECT trigger_id, cause FROM trigger_causes ORDER BY trigger_id ASC;'),
+    ).resolves.toEqual([{ trigger_id: 1, cause: 'SLEEP' }]);
+    await expect(
       database.getAllAsync('SELECT version FROM schema_migrations ORDER BY version;'),
-    ).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }]);
+    ).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }]);
   });
 
   test('enforces identity foreign keys and one active authorization per pair', async () => {

@@ -120,6 +120,44 @@ describe('clinical record SQLite repositories', () => {
     ]);
   });
 
+  test('persists multiple causes and replaces them on update', async () => {
+    const launch = await createProvider(databasePath);
+    database = launch.database;
+    await seedPatients(database);
+    const triggerRepository = new TriggerRepository({ databaseProvider: launch.provider });
+
+    const savedTrigger = await triggerRepository.saveTrigger(
+      trigger({
+        causes: [TriggerCause.SLEEP, TriggerCause.STRESS],
+        otherDescription: null,
+      }),
+    );
+
+    expect(savedTrigger.causes).toEqual([TriggerCause.SLEEP, TriggerCause.STRESS]);
+    expect(savedTrigger.commonCause).toBe(TriggerCause.SLEEP);
+    await expect(triggerRepository.findTriggerById(1, savedTrigger.id)).resolves.toEqual(
+      savedTrigger,
+    );
+
+    const updatedTrigger = new TriggerRecord({
+      ...savedTrigger,
+      causes: [TriggerCause.ROUTINE],
+      commonCause: TriggerCause.ROUTINE,
+      otherDescription: null,
+    });
+
+    await triggerRepository.saveTrigger(updatedTrigger);
+    await expect(triggerRepository.findTriggerById(1, savedTrigger.id)).resolves.toEqual(
+      updatedTrigger,
+    );
+    await expect(
+      database.getAllAsync(
+        'SELECT cause FROM trigger_causes WHERE trigger_id = ? ORDER BY id ASC;',
+        savedTrigger.id,
+      ),
+    ).resolves.toEqual([{ cause: TriggerCause.ROUTINE }]);
+  });
+
   test('period queries are inclusive, chronological, and isolated by patient', async () => {
     const launch = await createProvider(databasePath);
     database = launch.database;
@@ -182,6 +220,7 @@ describe('clinical record SQLite repositories', () => {
     });
     const updatedTrigger = new TriggerRecord({
       ...savedTrigger,
+      causes: [TriggerCause.STRESS],
       commonCause: TriggerCause.STRESS,
       otherDescription: null,
       sleepQuality: 4,
@@ -204,5 +243,11 @@ describe('clinical record SQLite repositories', () => {
     await expect(triggerRepository.deleteTrigger(1, savedTrigger.id)).resolves.toBe(true);
     await expect(seizureRepository.findSeizureById(1, savedSeizure.id)).resolves.toBeNull();
     await expect(triggerRepository.findTriggerById(1, savedTrigger.id)).resolves.toBeNull();
+    await expect(
+      database.getAllAsync(
+        'SELECT cause FROM trigger_causes WHERE trigger_id = ?;',
+        savedTrigger.id,
+      ),
+    ).resolves.toEqual([]);
   });
 });

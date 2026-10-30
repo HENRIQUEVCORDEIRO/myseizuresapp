@@ -1,5 +1,6 @@
 import { SeizureOccurrenceType, TriggerCause } from '../value-objects/enums.js';
 import {
+  DomainValidationError,
   optionalEntityId,
   optionalString,
   requireBoolean,
@@ -9,6 +10,35 @@ import {
   requireString,
   requireTimestamp,
 } from '../value-objects/validation.js';
+
+function requireTriggerCauses({ causes, commonCause }) {
+  if (causes !== undefined && causes !== null && !Array.isArray(causes)) {
+    throw new DomainValidationError('causes', 'must be an array');
+  }
+
+  const usesLegacyCause = causes === undefined || causes === null;
+  const field = usesLegacyCause ? 'commonCause' : 'causes';
+  const values = usesLegacyCause
+    ? commonCause === undefined || commonCause === null
+      ? []
+      : [commonCause]
+    : causes;
+
+  if (values.length === 0) {
+    throw new DomainValidationError(field, 'must contain at least one cause');
+  }
+
+  const uniqueCauses = [];
+  for (const cause of values) {
+    const validCause = requireEnum(cause, TriggerCause, field);
+    if (uniqueCauses.includes(validCause)) {
+      throw new DomainValidationError(field, 'must not contain duplicate causes');
+    }
+    uniqueCauses.push(validCause);
+  }
+
+  return Object.freeze(uniqueCauses);
+}
 
 export class SeizureRecord {
   constructor({ id, patientId, occurredAt, occurrenceType, feltAura = false, createdAt }) {
@@ -28,6 +58,7 @@ export class TriggerRecord {
     patientId,
     recordedAt,
     commonCause,
+    causes,
     otherDescription,
     sleepQuality,
     mood,
@@ -36,13 +67,14 @@ export class TriggerRecord {
     this.id = optionalEntityId(id);
     this.patientId = requireEntityId(patientId, 'patientId');
     this.recordedAt = requireTimestamp(recordedAt, 'recordedAt', { allowFuture: false });
-    this.commonCause = requireEnum(commonCause, TriggerCause, 'commonCause');
+    this.causes = requireTriggerCauses({ causes, commonCause });
+    this.commonCause = this.causes[0];
     this.otherDescription = optionalString(otherDescription, 'otherDescription');
     this.sleepQuality = requireInteger(sleepQuality, 'sleepQuality');
     this.mood = requireInteger(mood, 'mood');
     this.createdAt = requireTimestamp(createdAt, 'createdAt', { allowFuture: false });
 
-    if (this.commonCause === TriggerCause.OTHER && !this.otherDescription) {
+    if (this.causes.includes(TriggerCause.OTHER) && !this.otherDescription) {
       requireString(this.otherDescription, 'otherDescription');
     }
 

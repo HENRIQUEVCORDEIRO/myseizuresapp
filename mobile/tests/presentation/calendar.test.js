@@ -69,6 +69,31 @@ describe('patient chronological calendar', () => {
     expect(screen.getByText('Sentiu que viria: Sim')).toBeOnTheScreen();
   });
 
+  test('lists every cause when a trigger has more than one', async () => {
+    const trigger = {
+      id: 14,
+      patientId: PATIENT_ID,
+      recordedAt: '2026-08-10T08:00:00.000Z',
+      commonCause: 'SLEEP',
+      causes: ['SLEEP', 'STRESS'],
+      sleepQuality: 2,
+      mood: 3,
+    };
+    const listChronologicalEvents = createQuery([
+      { eventType: 'TRIGGER', occurredAt: trigger.recordedAt, record: trigger },
+    ]);
+
+    render(
+      <CalendarScreen
+        initialPeriod={PERIOD}
+        listChronologicalEvents={listChronologicalEvents}
+        patientId={PATIENT_ID}
+      />,
+    );
+
+    expect(await screen.findByText('Causas: Sono, Estresse')).toBeOnTheScreen();
+  });
+
   test('validates a manually selected period before loading history', async () => {
     const listChronologicalEvents = createQuery([]);
 
