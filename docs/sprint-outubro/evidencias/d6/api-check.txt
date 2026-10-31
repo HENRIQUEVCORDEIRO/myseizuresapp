@@ -1,0 +1,38 @@
+{
+  "created": {
+    "status": 201,
+    "body": {
+      "id": 2,
+      "patientId": 1,
+      "medicCaretakerId": 1,
+      "grantedAt": "2026-10-31T01:07:49.479Z",
+      "revokedAt": null
+    }
+  },
+  "listed": {
+    "status": 200,
+    "body": [
+      {
+        "id": 2,
+        "patientId": 1,
+        "medicCaretakerId": 1,
+        "grantedAt": "2026-10-31T01:07:49.479Z",
+        "revokedAt": null
+      }
+    ]
+  },
+  "revoked": {
+    "status": 200,
+    "body": {
+      "id": 2,
+      "patientId": 1,
+      "medicCaretakerId": 1,
+      "grantedAt": "2026-10-31T01:07:49.479Z",
+      "revokedAt": "2026-10-31T01:07:49.488Z"
+    }
+  },
+  "after": {
+    "status": 200,
+    "body": []
+  }
+}
