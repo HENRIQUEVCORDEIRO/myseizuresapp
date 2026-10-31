@@ -23,6 +23,7 @@ export class AccessGrantService {
   constructor({ repository, now = () => new Date().toISOString() }) {
     const methods = [
       'listByPatient',
+      'listActiveByProfessional',
       'findActive',
       'findActiveById',
       'medicCaretakerExists',
@@ -49,6 +50,14 @@ export class AccessGrantService {
     const patient = requirePositiveInteger(patientId, 'patientId');
     this.requireOwner(patient, actor);
     return this.repository.listByPatient(patient);
+  }
+
+  listAuthorizedPatients({ actor: actorValue }) {
+    const actor = requireActor(actorValue);
+    if (actor.role !== UserRole.MEDIC_CARETAKER) {
+      throw apiError(403, 'FORBIDDEN', 'Access is not permitted.');
+    }
+    return this.repository.listActiveByProfessional(actor.medicCaretakerId);
   }
 
   createGrant({ patientId, medicCaretakerId, actor }) {

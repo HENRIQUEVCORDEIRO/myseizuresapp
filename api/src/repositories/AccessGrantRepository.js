@@ -27,6 +27,14 @@ export class AccessGrantRepository {
     return this.grants.filter((grant) => grant.patientId === id).map(cloneGrant);
   }
 
+  listActiveByProfessional(medicCaretakerId) {
+    const professional = requirePositiveInteger(medicCaretakerId, 'medicCaretakerId');
+    return this.grants
+      .filter((grant) => grant.medicCaretakerId === professional && grant.revokedAt === null)
+      .map(cloneGrant)
+      .sort((left, right) => right.grantedAt.localeCompare(left.grantedAt) || right.id - left.id);
+  }
+
   findActive(patientId, medicCaretakerId) {
     const patient = requirePositiveInteger(patientId, 'patientId');
     const professional = requirePositiveInteger(medicCaretakerId, 'medicCaretakerId');

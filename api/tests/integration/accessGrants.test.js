@@ -130,6 +130,69 @@ describe('access-grant REST contract', () => {
     },
   );
 
+  test(
+    'lists active authorized patients for the authenticated professional',
+    { skip: IMPLEMENTATION_PENDING },
+    async () => {
+      const { baseUrl } = await createHarness();
+      const patientToken = await login(baseUrl, 'patient@example.com', 'Patient123!');
+      const professionalToken = await login(
+        baseUrl,
+        'professional@example.com',
+        'Professional123!',
+      );
+
+      const empty = await requestJson(
+        baseUrl,
+        '/professionals/me/patients',
+        authenticated(professionalToken),
+      );
+      assert.equal(empty.response.status, 200);
+      assert.deepEqual(empty.body, []);
+
+      const create = await requestJson(
+        baseUrl,
+        '/patients/1/grants',
+        authenticated(patientToken, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ medicCaretakerId: 1 }),
+        }),
+      );
+      assert.equal(create.response.status, 201);
+
+      const listed = await requestJson(
+        baseUrl,
+        '/professionals/me/patients',
+        authenticated(professionalToken),
+      );
+      assert.equal(listed.response.status, 200);
+      assert.deepEqual(listed.body, [create.body]);
+
+      await requestJson(
+        baseUrl,
+        '/patients/1/grants/1',
+        authenticated(patientToken, { method: 'DELETE' }),
+      );
+      const afterRevoke = await requestJson(
+        baseUrl,
+        '/professionals/me/patients',
+        authenticated(professionalToken),
+      );
+      assert.deepEqual(afterRevoke.body, []);
+
+      const forbidden = await requestJson(
+        baseUrl,
+        '/professionals/me/patients',
+        authenticated(patientToken),
+      );
+      assert.equal(forbidden.response.status, 403);
+      assert.deepEqual(forbidden.body, {
+        error: { code: 'FORBIDDEN', message: 'Access is not permitted.' },
+      });
+    },
+  );
+
   test('does not expose grants to a non-owner', { skip: IMPLEMENTATION_PENDING }, async () => {
     const { baseUrl } = await createHarness();
     const professionalToken = await login(baseUrl, 'professional@example.com', 'Professional123!');

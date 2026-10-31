@@ -16,7 +16,13 @@ function parseId(value, field) {
 }
 
 function requireService(service) {
-  const methods = ['listGrants', 'createGrant', 'revokeGrant', 'hasAccess'];
+  const methods = [
+    'listGrants',
+    'listAuthorizedPatients',
+    'createGrant',
+    'revokeGrant',
+    'hasAccess',
+  ];
   if (methods.some((method) => typeof service?.[method] !== 'function')) {
     throw new TypeError('Access-grant routes require a complete service.');
   }
@@ -27,6 +33,15 @@ export function createAccessGrantRoutes({ authService, accessGrantService }) {
   const service = requireService(accessGrantService);
   const router = Router();
   router.use(authenticate({ authService }));
+
+  router.get('/professionals/me/patients', (request, response, next) => {
+    try {
+      const patients = service.listAuthorizedPatients({ actor: request.auth });
+      response.status(200).json(patients);
+    } catch (error) {
+      next(error);
+    }
+  });
 
   router.get('/patients/:patientId/grants', (request, response, next) => {
     try {
