@@ -4,6 +4,7 @@ import {
   AuthorizePatientAccess,
   GrantAccess,
   ListAccessGrants,
+  ListAuthorizedPatients,
   RevokeAccess,
 } from '../../src/application/use-cases/access/index.js';
 import {
@@ -33,11 +34,15 @@ function createLocalAccessAdapter(service) {
   return {
     async request(path, { method = 'GET', token, body } = {}) {
       const actor = actors[token];
+      const professionalPatientsPath = path.match(/^\/professionals\/me\/patients$/);
       const grantPath = path.match(/^\/patients\/(\d+)\/grants$/);
       const revokePath = path.match(/^\/patients\/(\d+)\/grants\/(\d+)$/);
       const accessPath = path.match(/^\/patients\/(\d+)\/access$/);
 
       try {
+        if (professionalPatientsPath && method === 'GET') {
+          return service.listAuthorizedPatients({ actor });
+        }
         if (grantPath && method === 'GET') {
           return service.listGrants({ patientId: Number(grantPath[1]), actor });
         }
@@ -93,6 +98,10 @@ test('grant, report, and revoke journey denies every subsequent clinical report 
     accessGrantClient,
     getSessionToken: async () => PROFESSIONAL_TOKEN,
   });
+  const listAuthorizedPatients = new ListAuthorizedPatients({
+    accessGrantClient,
+    getSessionToken: async () => PROFESSIONAL_TOKEN,
+  });
   const listAccessGrants = new ListAccessGrants(patientOptions);
   const grantAccess = new GrantAccess(patientOptions);
   const revokeAccess = new RevokeAccess(patientOptions);
@@ -126,6 +135,10 @@ test('grant, report, and revoke journey denies every subsequent clinical report 
   const created = await grantAccess.execute({ medicCaretakerId: PROFESSIONAL_ID });
   expect(created.ok).toBe(true);
   await expect(listAccessGrants.execute()).resolves.toEqual({ ok: true, value: [created.value] });
+  await expect(listAuthorizedPatients.execute()).resolves.toEqual({
+    ok: true,
+    value: [created.value],
+  });
   await expect(authorizePatientAccess.execute({ patientId: PATIENT_ID })).resolves.toEqual({
     ok: true,
     value: { allowed: true },
@@ -152,6 +165,7 @@ test('grant, report, and revoke journey denies every subsequent clinical report 
     ok: true,
     value: { allowed: false },
   });
+  await expect(listAuthorizedPatients.execute()).resolves.toEqual({ ok: true, value: [] });
 
   const queriesBeforeDeniedAttempt = Object.values(clinicalRepositories).map(
     (repository) => Object.values(repository)[0].mock.calls.length,

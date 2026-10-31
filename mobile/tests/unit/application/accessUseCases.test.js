@@ -2,6 +2,7 @@ import {
   AuthorizePatientAccess,
   GrantAccess,
   ListAccessGrants,
+  ListAuthorizedPatients,
   RevokeAccess,
 } from '../../../src/application/use-cases/access/index.js';
 import { AccessGrantClient } from '../../../src/infrastructure/api/AccessGrantClient.js';
@@ -12,6 +13,7 @@ const TOKEN = 'test-session-token';
 function createAdapter() {
   return {
     listAccessGrants: jest.fn().mockResolvedValue({ ok: true, value: [] }),
+    listAuthorizedPatients: jest.fn().mockResolvedValue({ ok: true, value: [] }),
     createAccessGrant: jest.fn().mockResolvedValue({ ok: true, value: { id: 1 } }),
     revokeAccessGrant: jest.fn().mockResolvedValue({ ok: true, value: { id: 1 } }),
     hasPatientAccess: jest.fn().mockResolvedValue({ ok: true, value: { allowed: true } }),
@@ -32,6 +34,17 @@ describe('mobile access-grant application boundary', () => {
     expect(accessGrantClient.listAccessGrants).toHaveBeenCalledWith(7, TOKEN);
     expect(accessGrantClient.createAccessGrant).toHaveBeenCalledWith(7, 3, TOKEN);
     expect(accessGrantClient.revokeAccessGrant).toHaveBeenCalledWith(7, 9, TOKEN);
+  });
+
+  test('professional lists authorized patients using only the current session', async () => {
+    const accessGrantClient = createAdapter();
+    const useCase = new ListAuthorizedPatients({
+      accessGrantClient,
+      getSessionToken: () => TOKEN,
+    });
+
+    await expect(useCase.execute()).resolves.toEqual({ ok: true, value: [] });
+    expect(accessGrantClient.listAuthorizedPatients).toHaveBeenCalledWith(TOKEN);
   });
 
   test('authorization checks the selected patient using the current session', async () => {

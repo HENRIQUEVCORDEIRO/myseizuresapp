@@ -24,6 +24,7 @@ export const TreatmentRepositoryPort = definePort('TreatmentRepositoryPort', [
 
 export const AccessGrantRepositoryPort = definePort('AccessGrantRepositoryPort', [
   'listAccessGrants',
+  'listAuthorizedPatients',
   'createAccessGrant',
   'revokeAccessGrant',
   'hasPatientAccess',

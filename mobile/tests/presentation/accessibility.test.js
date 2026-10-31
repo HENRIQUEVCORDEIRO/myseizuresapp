@@ -2,12 +2,12 @@ import { act, create } from 'react-test-renderer';
 import { StyleSheet } from 'react-native';
 
 import { SeizureEntryForm } from '../../app/(patient)/seizures/new.js';
-import { ProfessionalPatientAccess } from '../../app/(professional)/patients/index.js';
 import {
   AccessibleButton,
   FormFeedback,
   SelectField,
 } from '../../src/presentation/components/index.js';
+import { ProfessionalPatientList } from '../../src/presentation/features/professional/index.js';
 import { ClinicalAlertList } from '../../src/presentation/features/reports/ClinicalAlertList.js';
 
 const MINIMUM_TOUCH_TARGET = 48;
@@ -100,27 +100,37 @@ describe('critical-screen accessibility regressions', () => {
     );
   });
 
-  test('professional patient-access controls are labelled and ordered before private results', () => {
-    const renderer = render(
-      <ProfessionalPatientAccess
-        authorizePatientAccess={{ execute: jest.fn().mockResolvedValue({ ok: true }) }}
-      />,
-    );
+  test('professional patient list labels authorized cards and actions', async () => {
+    const grant = {
+      id: 4,
+      patientId: 1,
+      medicCaretakerId: 1,
+      grantedAt: '2026-08-26T12:00:00.000Z',
+      revokedAt: null,
+    };
+    let renderer;
+
+    await act(async () => {
+      renderer = create(
+        <ProfessionalPatientList
+          listAuthorizedPatients={{
+            execute: jest.fn().mockResolvedValue({ ok: true, value: [grant] }),
+          }}
+          onOpenPatient={jest.fn()}
+          onSignOut={jest.fn()}
+        />,
+      );
+    });
+
     const labels = labelledNodes(renderer);
 
-    expect(labels.indexOf('Identificador do paciente')).toBeGreaterThanOrEqual(0);
-    expect(labels.indexOf('Verificar acesso do paciente')).toBeGreaterThan(
-      labels.indexOf('Identificador do paciente'),
-    );
-    expect(
-      renderer.root.findByProps({ accessibilityLabel: 'Identificador do paciente' }).props,
-    ).toEqual(
+    expect(labels).toContain('Pacientes com acesso');
+    expect(labels).toContain('Abrir relatório do paciente 1');
+    expect(labels).toContain('Sair');
+    expect(accessibleNode(renderer, 'Abrir relatório do paciente 1', 'button').props).toEqual(
       expect.objectContaining({
-        accessibilityHint: expect.stringMatching(/identificador numérico/i),
+        accessibilityHint: expect.stringMatching(/relatório semanal/i),
       }),
-    );
-    expect(accessibleNode(renderer, 'Verificar acesso do paciente', 'button').props).toEqual(
-      expect.objectContaining({ accessibilityRole: 'button' }),
     );
   });
 });

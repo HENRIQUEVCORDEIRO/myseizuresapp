@@ -3,6 +3,7 @@ import {
   AuthorizePatientAccess,
   GrantAccess,
   ListAccessGrants,
+  ListAuthorizedPatients,
   RevokeAccess,
 } from '../application/use-cases/access/index.js';
 import {
@@ -190,6 +191,10 @@ export function createContainer({
     clinicalForPatient,
     config,
     database: requireDatabase(database),
+    listAuthorizedPatients: new ListAuthorizedPatients({
+      accessGrantClient,
+      getSessionToken,
+    }),
     reportForPatient,
     sessionStore: sessionStoreAdapter,
     signIn: new SignIn({

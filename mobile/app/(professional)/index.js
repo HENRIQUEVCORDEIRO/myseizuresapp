@@ -1,35 +1,37 @@
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
 
-import { AccessibleButton } from '../../src/presentation/components/index.js';
+import { getContainer } from '../../src/composition/container.js';
+import { ProfessionalPatientList } from '../../src/presentation/features/professional/index.js';
 import { useAuthSession } from '../../src/presentation/navigation/index.js';
 
 export default function ProfessionalHomeScreen() {
-  const { signOut, user } = useAuthSession();
+  const router = useRouter();
+  const { signOut } = useAuthSession();
+  const [refreshSignal, setRefreshSignal] = useState(0);
+  const firstFocus = useRef(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (firstFocus.current) {
+        firstFocus.current = false;
+        return;
+      }
+      setRefreshSignal((current) => current + 1);
+    }, []),
+  );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.content}>
-        <Text accessibilityRole="header" style={styles.title}>
-          Área do profissional
-        </Text>
-        <Text style={styles.description}>
-          Bem-vindo(a), {user?.name}. As ferramentas de cuidado autorizadas estão prontas.
-        </Text>
-        <AccessibleButton
-          accessibilityHint="Encerra sua sessão e retorna à tela de entrada"
-          accessibilityLabel="Sair"
-          onPress={signOut}
-          title="Sair"
-          variant="secondary"
-        />
-      </View>
-    </SafeAreaView>
+    <ProfessionalPatientList
+      listAuthorizedPatients={getContainer().listAuthorizedPatients}
+      onOpenPatient={(patientId) =>
+        router.push({
+          pathname: '/(professional)/reports/[patientId]',
+          params: { patientId: String(patientId) },
+        })
+      }
+      onSignOut={signOut}
+      refreshSignal={refreshSignal}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: { backgroundColor: '#FFFFFF', flex: 1 },
-  content: { flex: 1, gap: 16, justifyContent: 'center', padding: 24 },
-  title: { color: '#17324D', fontSize: 28, fontWeight: '700' },
-  description: { color: '#334155', fontSize: 17, lineHeight: 26 },
-});

@@ -103,6 +103,25 @@ export class AccessGrantClient {
     );
   }
 
+  listAuthorizedPatients(token) {
+    return this.execute(
+      {
+        path: '/professionals/me/patients',
+        options: { method: 'GET', token: requireToken(token) },
+      },
+      (value) => {
+        if (!Array.isArray(value)) {
+          throw new RestClientError({
+            status: null,
+            code: 'INVALID_RESPONSE',
+            message: SAFE_MESSAGES.INVALID_RESPONSE,
+          });
+        }
+        return Object.freeze(value.map(requireGrant));
+      },
+    );
+  }
+
   createAccessGrant(patientId, medicCaretakerId, token) {
     const patient = requirePositiveInteger(patientId, 'patientId');
     const professional = requirePositiveInteger(medicCaretakerId, 'medicCaretakerId');

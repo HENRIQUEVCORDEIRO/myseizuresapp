@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import SharingScreen from '../../app/(patient)/(tabs)/sharing.js';
-import ProfessionalPatientsScreen from '../../app/(professional)/patients/index.js';
+import { ProfessionalPatientList } from '../../src/presentation/features/professional/index.js';
 
 function result(value) {
   return Promise.resolve({ ok: true, value });
@@ -39,22 +39,37 @@ describe('sharing management and professional patient access', () => {
     expect(commands.revokeAccess.execute).toHaveBeenCalledWith({ grantId: 4 });
   });
 
-  test('professional sees a report link only while access is active', async () => {
-    const authorizePatientAccess = {
+  test('professional sees only currently authorized patients', async () => {
+    const grant = {
+      id: 4,
+      patientId: 1,
+      medicCaretakerId: 1,
+      grantedAt: '2026-08-26T12:00:00.000Z',
+      revokedAt: null,
+    };
+    const listAuthorizedPatients = {
       execute: jest
         .fn()
-        .mockResolvedValueOnce({ ok: true, value: { allowed: false } })
-        .mockResolvedValueOnce({ ok: true, value: { allowed: true } }),
+        .mockResolvedValueOnce({ ok: true, value: [grant] })
+        .mockResolvedValueOnce({ ok: true, value: [] }),
     };
-    render(<ProfessionalPatientsScreen authorizePatientAccess={authorizePatientAccess} />);
+    const onOpenPatient = jest.fn();
 
-    fireEvent.changeText(screen.getByLabelText('Identificador do paciente'), '1');
-    fireEvent.press(screen.getByRole('button', { name: 'Verificar acesso do paciente' }));
-    expect(await screen.findByText('Acesso negado')).toBeOnTheScreen();
-    expect(screen.queryByText('Abrir relatório')).not.toBeOnTheScreen();
+    render(
+      <ProfessionalPatientList
+        listAuthorizedPatients={listAuthorizedPatients}
+        onOpenPatient={onOpenPatient}
+        onSignOut={jest.fn()}
+      />,
+    );
 
-    fireEvent.press(screen.getByRole('button', { name: 'Verificar acesso do paciente' }));
-    await waitFor(() => expect(screen.getByText('Acesso ativo confirmado')).toBeOnTheScreen());
-    expect(screen.getByLabelText('Abrir relatório do paciente 1')).toBeOnTheScreen();
+    expect(await screen.findByText('Paciente 1')).toBeOnTheScreen();
+    fireEvent.press(screen.getByLabelText('Abrir relatório do paciente 1'));
+    expect(onOpenPatient).toHaveBeenCalledWith(1);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Atualizar' }));
+    await waitFor(() =>
+      expect(screen.getByText('Nenhum paciente compartilhou dados')).toBeOnTheScreen(),
+    );
   });
 });
