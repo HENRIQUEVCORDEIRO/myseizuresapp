@@ -1,0 +1,35 @@
+--- schema_migrations
+{'version': 1, 'name': 'identity'}
+{'version': 2, 'name': 'clinical_records_and_treatments'}
+{'version': 3, 'name': 'seizure_aura'}
+{'version': 4, 'name': 'trigger_causes'}
+{'version': 5, 'name': 'treatment_details'}
+
+--- treatments
+{'id': 1, 'patient_id': 1, 'type': 'MEDICATION', 'name': 'Levetiracetam', 'reason': None, 'dose_amount': None, 'start_date': None, 'end_date': None, 'daily_frequency': 2, 'active': 1}
+{'id': 2, 'patient_id': 1, 'type': 'THERAPY', 'name': 'Levetiracetam', 'reason': 'Epilepsia', 'dose_amount': '500mg', 'start_date': '2026-10-29', 'end_date': '2026-11-30', 'daily_frequency': 3, 'active': 1}
+
+--- treatment_times
+{'id': 1, 'treatment_id': 1, 'scheduled_time': '08:00'}
+{'id': 2, 'treatment_id': 1, 'scheduled_time': '20:00'}
+{'id': 3, 'treatment_id': 2, 'scheduled_time': '08:00'}
+{'id': 4, 'treatment_id': 2, 'scheduled_time': '12:00'}
+{'id': 5, 'treatment_id': 2, 'scheduled_time': '20:00'}
+
+--- reminders por status
+{'status': 'MISSED', 'total': 1, 'primeiro': '2026-10-28T11:00:00.000Z', 'ultimo': '2026-10-28T11:00:00.000Z'}
+{'status': 'SCHEDULED', 'total': 26, 'primeiro': '2026-10-29T11:00:00.000Z', 'ultimo': '2026-11-04T23:00:00.000Z'}
+{'status': 'TAKEN', 'total': 3, 'primeiro': '2026-10-27T11:00:00.000Z', 'ultimo': '2026-10-28T23:00:00.000Z'}
+
+--- adherence
+{'id': 1, 'reminder_id': 1, 'confirmed_at': '2026-10-26T23:31:20.078Z', 'consumption_status': 'TAKEN'}
+{'id': 2, 'reminder_id': 2, 'confirmed_at': '2026-10-26T23:51:55.424Z', 'consumption_status': 'TAKEN'}
+{'id': 3, 'reminder_id': 3, 'confirmed_at': '2026-10-30T01:24:30.626Z', 'consumption_status': 'MISSED'}
+{'id': 4, 'reminder_id': 4, 'confirmed_at': '2026-10-30T01:43:19.158Z', 'consumption_status': 'TAKEN'}
+
+--- ultimos lembretes confirmados
+{'id': 4, 'treatment_id': 1, 'scheduled_at': '2026-10-28T23:00:00.000Z', 'status': 'TAKEN'}
+{'id': 3, 'treatment_id': 1, 'scheduled_at': '2026-10-28T11:00:00.000Z', 'status': 'MISSED'}
+{'id': 2, 'treatment_id': 1, 'scheduled_at': '2026-10-27T23:00:00.000Z', 'status': 'TAKEN'}
+{'id': 1, 'treatment_id': 1, 'scheduled_at': '2026-10-27T11:00:00.000Z', 'status': 'TAKEN'}
+

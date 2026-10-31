@@ -35,7 +35,7 @@
 | **D2** | ter 21/10 | Tab bar (4 abas) + home do paciente + fechamento D2.1 (identidade, doses, datas PT-BR) | ✅ | ✅ 260 | ✅ | ✅ | ✅ | — | ✅ | [d2](2026-10-21-d2.md) |
 | **D3** | qua 22/10 | Formulário de crise (agora, `ChoiceGroup`, `feltAura`) | ✅ | ✅ 267 | ✅ | ✅ | ✅ | — | — | [d3](2026-10-22-d3.md) |
 | **D4** | qui 23/10 | Formulário de gatilho (agora, `SelectSheet` multi, sono/humor) | ✅ | ✅ 278 | ✅ | ✅ | ✅ | — | — | [d4](2026-10-23-d4.md) |
-| D5 | seg 26/10 | Assistente de tratamento em 3 passos | | | | | | | | |
+| **D5** | seg 26/10 | Assistente de tratamento em 3 passos + dose em 1 toque | ✅ | ✅ 287 | ✅ | ✅ | ✅ | — | — | [d5](2026-10-29-d5.md) |
 | **W** | ter 27/10 | Trilha web: `react-native-web` + composição por plataforma | | | | | | ✅ | | |
 | D6 | ter 27/10 | Home do profissional | | | | | | | | |
 | D7 | qua 28/10 | Relatório unificado com export | | | | | | | | |
@@ -51,10 +51,10 @@
 | Métrica | D1 | D2 | D3 | D4 | Alvo em 30/10 |
 |---|---|---|---|---|---|
 | Suítes de teste | 38 | 43 | 43 | **43** | 46 |
-| Testes | 241 | 260 | 267 | **278** | ~300 |
+| Testes | 241 | 260 | 267 | **287** | ~300 |
 | Primitivas de UI | 10 | 10 | 10 | 10 | 12 |
 | Linhas de código de apresentação | 6.670 | +420 | +30 | — | — |
-| Documentos | 11 | 13 | 14 | **15** | 16 |
+| Documentos | 11 | 13 | 14 | **16** | 16 |
 | Funcionalidades da matriz implementadas (parcial ou total) | 8/13 | 8/13 | 8/13 | **8/13** | 11/13 |
 
 ---
@@ -74,36 +74,44 @@ documentação e evidências. TalkBack validado pelo autor em 26/10.
 O D3 está no histórico (`87aab8e` e `3f40493`), incluindo aura, horário atual, migração 003,
 documentação e evidências. TalkBack validado no D2.
 
-### 4.3 D4 — na árvore de trabalho
+### 4.3 D4 — commitado
+
+O D4 está no histórico (`b8b35c6` e `0df33cb`), incluindo formulário de gatilho, causas múltiplas,
+migração 004, documentação e evidências. O TalkBack não foi repetido; permanece validado no D2.
+
+### 4.4 D5 — na árvore de trabalho
 
 | Área | Arquivos principais | Alterado | Motivo |
 |---|---|---|---|
-| Domínio e persistência | `clinicalRecords.js`, `004_trigger_causes.js`, `migrations/index.js`, `TriggerRepository.js` | M/A | `causes[]`, tabela `trigger_causes` e backfill |
-| Aplicação | `RecordTrigger.js` | M | repassa `causes` e mantém `commonCause` legado |
-| Formulário de gatilho | `mobile/app/(patient)/triggers/new.js`, `SelectSheet.js` | M | horário atual, causas múltiplas, “Outro” validado e resumo |
-| Histórico | `ClinicalEventItem.js` | M | exibe todas as causas |
-| Testes | domínio, aplicação, repositório, migração, formulário, calendário, `SelectSheet` e US1 | M | 278 testes verdes |
-| Documentação | `2026-10-23-d4.md`, `INDICE.md`, `evidencias/d4/` | A/M | D4 e N0–N4; capturas e dump SQLite |
+| Domínio e regras | `treatment.js`, `treatmentRules.js` | M | motivo, dose, período e filtro da agenda |
+| Migração | `005_treatment_details.js`, `migrations/index.js` | A/M | colunas de motivo, dose e período |
+| Persistência | `TreatmentRepository.js` | M | lê/grava os novos campos nos dois caminhos |
+| Assistente | `mobile/app/(patient)/treatments/new.js` | M | fluxo em 3 passos, atalhos, datas e resumo |
+| Home | `mobile/app/(patient)/(tabs)/index.js` | M | próxima dose e confirmação em 1 toque |
+| Lista | `mobile/app/(patient)/(tabs)/treatments.js` | M | exibe motivo, dose e período |
+| Componentes | `CalendarDateField.js`, `formatters/dateTime.js` | A/M | seletor de data e datas de calendário |
+| Testes | domínio, regras, migração, repositório, formatadores, assistente e home | M | 287 testes verdes |
+| Documentação | `2026-10-29-d5.md`, `INDICE.md`, `evidencias/d5/` | A/M | D5 e N0–N4; capturas e dump SQLite |
 
 ```bash
-# Código do D4; o autor pode dividir em commits menores.
+# Código do D5; o autor pode dividir em commits menores.
 git add mobile
-git commit -m "feat: close D4 trigger form with multi-cause sheet"
+git commit -m "feat: add 3-step treatment wizard and one-tap dose confirmation"
 
 # Evidências e resultado do N4.
-git add docs/sprint-outubro/2026-10-23-d4.md docs/sprint-outubro/INDICE.md docs/sprint-outubro/evidencias/d4
-git commit -m "docs(sprint): record D4 device checks"
+git add docs/sprint-outubro/2026-10-29-d5.md docs/sprint-outubro/INDICE.md docs/sprint-outubro/evidencias/d5
+git commit -m "docs(sprint): record D5 device checks"
 ```
 
 **Fora dos commits:** `.specify/`, `prompts/`, `docs/instructions/`, `docs/fix_pesquisa_TCC.pdf`.
 
-### 4.4 Próximo
+### 4.5 Próximo
 
-O D4 está concluído em N0–N4 e pronto para o commit manual. Seguir para **D5** e, quando
+O D5 está concluído em N0–N4 e pronto para o commit manual. Seguir para **D7/D8** e, quando
 `react-native-web` estiver disponível, a trilha web (N5). A tradução PT-BR não é uma pendência
 separada; identificadores, domínio, API e testes de domínio permanecem em inglês. A atualização
 automática do fim do período em **Registros** e o safe area do botão **Confirmar** da sheet ficam
-como melhorias de UX para D5/D8.
+como melhorias de UX para D8.
 
 **A** = adicionado · **M** = modificado · **R** = renomeado · **D** = removido
 
