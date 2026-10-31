@@ -82,6 +82,35 @@ describe('shared domain validation', () => {
     expect(() => new Treatment({ ...treatment, baseTimes: ['25:00'] })).toThrow(/baseTimes/);
   });
 
+  test('normalizes optional treatment details and rejects an inverted period', () => {
+    const treatment = {
+      patientId: 1,
+      type: TreatmentType.MEDICATION,
+      name: 'Medication',
+      dailyFrequency: 1,
+      baseTimes: ['08:00'],
+    };
+
+    expect(
+      new Treatment({
+        ...treatment,
+        reason: '  Epilepsia  ',
+        doseAmount: '  500 mg  ',
+        startDate: '2026-08-01',
+        endDate: '2026-12-31',
+      }),
+    ).toMatchObject({
+      reason: 'Epilepsia',
+      doseAmount: '500 mg',
+      startDate: '2026-08-01',
+      endDate: '2026-12-31',
+    });
+    expect(
+      () => new Treatment({ ...treatment, startDate: '2026-09-01', endDate: '2026-08-31' }),
+    ).toThrow(/endDate/);
+    expect(() => new Treatment({ ...treatment, startDate: '2026-02-30' })).toThrow(/startDate/);
+  });
+
   test('rejects invalid reminder and adherence statuses', () => {
     expect(
       () => new Reminder({ treatmentId: 1, scheduledAt: pastTimestamp, status: 'INVALID' }),

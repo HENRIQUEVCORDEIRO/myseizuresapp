@@ -2,7 +2,9 @@ import { ConsumptionStatus, ReminderStatus, TreatmentType } from '../value-objec
 import { DailyFrequency } from '../value-objects/DailyFrequency.js';
 import {
   DomainValidationError,
+  optionalCalendarDate,
   optionalEntityId,
+  optionalString,
   requireBoolean,
   requireClockTime,
   requireEntityId,
@@ -26,17 +28,38 @@ function requireBaseTimes(baseTimes) {
 }
 
 export class Treatment {
-  constructor({ id, patientId, type, name, dailyFrequency, baseTimes, active = true }) {
+  constructor({
+    id,
+    patientId,
+    type,
+    name,
+    reason,
+    dailyFrequency,
+    baseTimes,
+    doseAmount,
+    startDate,
+    endDate,
+    active = true,
+  }) {
     this.id = optionalEntityId(id);
     this.patientId = requireEntityId(patientId, 'patientId');
     this.type = requireEnum(type, TreatmentType, 'type');
     this.name = requireString(name, 'name');
+    this.reason = optionalString(reason, 'reason');
     this.dailyFrequency = new DailyFrequency(dailyFrequency);
     this.baseTimes = requireBaseTimes(baseTimes);
+    this.doseAmount = optionalString(doseAmount, 'doseAmount');
+    this.startDate = optionalCalendarDate(startDate, 'startDate');
+    this.endDate = optionalCalendarDate(endDate, 'endDate');
 
     if (this.baseTimes.length !== this.dailyFrequency.value) {
       throw new DomainValidationError('baseTimes', 'must match dailyFrequency');
     }
+
+    if (this.startDate && this.endDate && this.endDate < this.startDate) {
+      throw new DomainValidationError('endDate', 'must not be before startDate');
+    }
+
     this.active = requireBoolean(active, 'active');
     Object.freeze(this);
   }

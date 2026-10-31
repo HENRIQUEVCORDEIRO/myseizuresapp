@@ -81,8 +81,12 @@ function toTreatment(row, baseTimes) {
     patientId: row.patient_id,
     type: row.type,
     name: row.name,
+    reason: row.reason,
     dailyFrequency: row.daily_frequency,
     baseTimes,
+    doseAmount: row.dose_amount,
+    startDate: row.start_date,
+    endDate: row.end_date,
     active: Boolean(row.active),
   });
 }
@@ -146,14 +150,20 @@ export class TreatmentRepository extends PatientScopedRepository {
       if (treatmentId === null) {
         const result = await database.runAsync(
           `INSERT INTO treatments
-             (patient_id, type, name, daily_frequency, active, created_at, updated_at)
+             (patient_id, type, name, reason, daily_frequency, dose_amount,
+              start_date, end_date, active, created_at, updated_at)
            VALUES
-             ($patientId, $type, $name, $dailyFrequency, $active, $createdAt, $updatedAt);`,
+             ($patientId, $type, $name, $reason, $dailyFrequency, $doseAmount,
+              $startDate, $endDate, $active, $createdAt, $updatedAt);`,
           {
             $patientId: treatment.patientId,
             $type: treatment.type,
             $name: treatment.name,
+            $reason: treatment.reason,
             $dailyFrequency: treatment.dailyFrequency.value,
+            $doseAmount: treatment.doseAmount,
+            $startDate: treatment.startDate,
+            $endDate: treatment.endDate,
             $active: treatment.active ? 1 : 0,
             $createdAt: timestamp,
             $updatedAt: timestamp,
@@ -165,7 +175,11 @@ export class TreatmentRepository extends PatientScopedRepository {
           `UPDATE treatments
            SET type = $type,
                name = $name,
+               reason = $reason,
                daily_frequency = $dailyFrequency,
+               dose_amount = $doseAmount,
+               start_date = $startDate,
+               end_date = $endDate,
                active = $active,
                updated_at = $updatedAt
            WHERE id = $treatmentId AND patient_id = $patientId;`,
@@ -174,7 +188,11 @@ export class TreatmentRepository extends PatientScopedRepository {
             $patientId: treatment.patientId,
             $type: treatment.type,
             $name: treatment.name,
+            $reason: treatment.reason,
             $dailyFrequency: treatment.dailyFrequency.value,
+            $doseAmount: treatment.doseAmount,
+            $startDate: treatment.startDate,
+            $endDate: treatment.endDate,
             $active: treatment.active ? 1 : 0,
             $updatedAt: timestamp,
           },
@@ -208,13 +226,20 @@ export class TreatmentRepository extends PatientScopedRepository {
       if (treatmentId === null) {
         const result = await database.runAsync(
           `INSERT INTO treatments
-             (patient_id, type, name, daily_frequency, active, created_at, updated_at)
-           VALUES ($patientId, $type, $name, $dailyFrequency, $active, $createdAt, $updatedAt);`,
+             (patient_id, type, name, reason, daily_frequency, dose_amount,
+              start_date, end_date, active, created_at, updated_at)
+           VALUES
+             ($patientId, $type, $name, $reason, $dailyFrequency, $doseAmount,
+              $startDate, $endDate, $active, $createdAt, $updatedAt);`,
           {
             $patientId: treatment.patientId,
             $type: treatment.type,
             $name: treatment.name,
+            $reason: treatment.reason,
             $dailyFrequency: treatment.dailyFrequency.value,
+            $doseAmount: treatment.doseAmount,
+            $startDate: treatment.startDate,
+            $endDate: treatment.endDate,
             $active: treatment.active ? 1 : 0,
             $createdAt: timestamp,
             $updatedAt: timestamp,
@@ -223,15 +248,21 @@ export class TreatmentRepository extends PatientScopedRepository {
         treatmentId = Number(result.lastInsertRowId);
       } else {
         const result = await database.runAsync(
-          `UPDATE treatments SET type = $type, name = $name,
-             daily_frequency = $dailyFrequency, active = $active, updated_at = $updatedAt
+          `UPDATE treatments SET type = $type, name = $name, reason = $reason,
+             daily_frequency = $dailyFrequency, dose_amount = $doseAmount,
+             start_date = $startDate, end_date = $endDate,
+             active = $active, updated_at = $updatedAt
            WHERE id = $treatmentId AND patient_id = $patientId;`,
           {
             $treatmentId: treatmentId,
             $patientId: treatment.patientId,
             $type: treatment.type,
             $name: treatment.name,
+            $reason: treatment.reason,
             $dailyFrequency: treatment.dailyFrequency.value,
+            $doseAmount: treatment.doseAmount,
+            $startDate: treatment.startDate,
+            $endDate: treatment.endDate,
             $active: treatment.active ? 1 : 0,
             $updatedAt: timestamp,
           },
@@ -276,7 +307,8 @@ export class TreatmentRepository extends PatientScopedRepository {
     const safeTreatmentId = requirePositiveInteger(treatmentId, 'treatmentId');
     const row = await this.getFirstForPatient(
       patientId,
-      `SELECT id, patient_id, type, name, daily_frequency, active
+      `SELECT id, patient_id, type, name, reason, daily_frequency, dose_amount,
+              start_date, end_date, active
        FROM treatments
        WHERE id = $treatmentId AND patient_id = $patientId;`,
       { $treatmentId: safeTreatmentId },

@@ -81,3 +81,25 @@ export function dateToTimeValue(value) {
 export function formatTimeList(values) {
   return Array.isArray(values) && values.length ? values.join(', ') : '—';
 }
+
+export function formatCalendarDate(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value ?? ''));
+  if (!match) return '—';
+
+  return `${match[3]}/${match[2]}/${match[1]}`;
+}
+
+export function calendarDateToDate(value, fallback = new Date()) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value ?? ''));
+  if (!match) return new Date(fallback);
+
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return Number.isNaN(date.getTime()) ? new Date(fallback) : date;
+}
+
+export function dateToCalendarDate(value) {
+  const date = asDate(value);
+  if (!date) return '';
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}

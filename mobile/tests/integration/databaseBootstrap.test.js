@@ -76,6 +76,7 @@ describe('database migration bootstrap', () => {
       'SELECT version, name FROM schema_migrations ORDER BY version;',
     );
     const seizureColumns = await database.getAllAsync('PRAGMA table_info(seizure_records);');
+    const treatmentColumns = await database.getAllAsync('PRAGMA table_info(treatments);');
 
     expect(tables.map(({ name }) => name)).toEqual(EXPECTED_TABLES);
     expect(versions).toEqual([
@@ -83,6 +84,7 @@ describe('database migration bootstrap', () => {
       { version: 2, name: 'clinical_records_and_treatments' },
       { version: 3, name: 'seizure_aura' },
       { version: 4, name: 'trigger_causes' },
+      { version: 5, name: 'treatment_details' },
     ]);
     expect(seizureColumns).toContainEqual(
       expect.objectContaining({
@@ -90,6 +92,9 @@ describe('database migration bootstrap', () => {
         notnull: 1,
         dflt_value: '0',
       }),
+    );
+    expect(treatmentColumns.map(({ name }) => name)).toEqual(
+      expect.arrayContaining(['reason', 'dose_amount', 'start_date', 'end_date']),
     );
     expect(openDatabase).toHaveBeenCalledTimes(1);
   });
@@ -121,6 +126,13 @@ describe('database migration bootstrap', () => {
       '2026-07-10T09:00:00.000Z',
       '2026-07-10T09:05:00.000Z',
     );
+    await database.runAsync(
+      `INSERT INTO treatments
+         (patient_id, type, name, daily_frequency, active, created_at, updated_at)
+       VALUES (1, 'MEDICATION', 'Levetiracetam', 1, 1, ?, ?);`,
+      '2026-07-10T10:00:00.000Z',
+      '2026-07-10T10:00:00.000Z',
+    );
 
     await runMigrations(database, migrations);
 
@@ -131,8 +143,26 @@ describe('database migration bootstrap', () => {
       database.getAllAsync('SELECT trigger_id, cause FROM trigger_causes ORDER BY trigger_id ASC;'),
     ).resolves.toEqual([{ trigger_id: 1, cause: 'SLEEP' }]);
     await expect(
+      database.getFirstAsync(
+        `SELECT reason, dose_amount, start_date, end_date
+         FROM treatments
+         WHERE id = 1;`,
+      ),
+    ).resolves.toEqual({
+      reason: null,
+      dose_amount: null,
+      start_date: null,
+      end_date: null,
+    });
+    await expect(
       database.getAllAsync('SELECT version FROM schema_migrations ORDER BY version;'),
-    ).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }]);
+    ).resolves.toEqual([
+      { version: 1 },
+      { version: 2 },
+      { version: 3 },
+      { version: 4 },
+      { version: 5 },
+    ]);
   });
 
   test('enforces identity foreign keys and one active authorization per pair', async () => {

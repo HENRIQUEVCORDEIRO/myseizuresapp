@@ -1,5 +1,8 @@
 export {
+  calendarDateToDate,
+  dateToCalendarDate,
   dateToTimeValue,
+  formatCalendarDate,
   formatDate,
   formatDateLong,
   formatDateTime,

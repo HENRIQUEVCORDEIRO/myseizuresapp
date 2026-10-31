@@ -2,6 +2,8 @@ import { act, create } from 'react-test-renderer';
 
 import { PatientHome } from '../../app/(patient)/(tabs)/index.js';
 import { ReportPeriodType } from '../../src/domain/rules/reportingRules.js';
+import { ConsumptionStatus } from '../../src/domain/value-objects/index.js';
+import { formatDateTime } from '../../src/presentation/formatters/index.js';
 
 function createGenerateReport(overrides = {}) {
   return {
@@ -18,8 +20,14 @@ function createGenerateReport(overrides = {}) {
 }
 
 function renderHome({
+  confirmDose = { execute: jest.fn().mockResolvedValue({}) },
   generateReport = createGenerateReport(),
-  listReminders = { execute: jest.fn().mockResolvedValue([{ id: 1 }, { id: 2 }]) },
+  listReminders = {
+    execute: jest.fn().mockResolvedValue([
+      { id: 1, scheduledAt: '2026-08-20T20:00:00.000Z' },
+      { id: 2, scheduledAt: '2026-08-21T08:00:00.000Z' },
+    ]),
+  },
   onNavigate = jest.fn(),
   onSwitchProfile = jest.fn(),
 } = {}) {
@@ -28,6 +36,7 @@ function renderHome({
   act(() => {
     renderer = create(
       <PatientHome
+        confirmDose={confirmDose}
         generateReport={generateReport}
         listReminders={listReminders}
         onNavigate={onNavigate}
@@ -38,7 +47,7 @@ function renderHome({
     );
   });
 
-  return { generateReport, listReminders, onNavigate, onSwitchProfile, renderer };
+  return { confirmDose, generateReport, listReminders, onNavigate, onSwitchProfile, renderer };
 }
 
 describe('patient home', () => {
@@ -72,6 +81,59 @@ describe('patient home', () => {
 
     expect(
       renderer.root.findByProps({ accessibilityLabel: '2 doses para confirmar' }),
+    ).toBeTruthy();
+  });
+
+  test('asks only for doses that are due and confirms the next one in one tap', async () => {
+    const confirmDose = { execute: jest.fn().mockResolvedValue({}) };
+    const { listReminders, renderer } = renderHome({ confirmDose });
+
+    await act(async () => {});
+
+    expect(listReminders.execute).toHaveBeenCalledWith({ through: expect.any(String) });
+
+    const scheduledAt = formatDateTime('2026-08-20T20:00:00.000Z');
+    const taken = renderer.root.findByProps({
+      accessibilityLabel: `Confirmar dose de ${scheduledAt} como tomada`,
+    });
+
+    await act(async () => {
+      taken.props.onPress();
+    });
+
+    expect(confirmDose.execute).toHaveBeenCalledWith({
+      reminderId: 1,
+      consumptionStatus: ConsumptionStatus.TAKEN,
+    });
+    expect(
+      renderer.root.findByProps({ accessibilityLabel: 'Sucesso: Dose confirmada.' }),
+    ).toBeTruthy();
+  });
+
+  test('keeps the dose visible when the one-tap confirmation fails', async () => {
+    const confirmDose = { execute: jest.fn().mockRejectedValue(new Error('database unavailable')) };
+    const { renderer } = renderHome({ confirmDose });
+
+    await act(async () => {});
+
+    const scheduledAt = formatDateTime('2026-08-20T20:00:00.000Z');
+    await act(async () => {
+      renderer.root
+        .findByProps({
+          accessibilityLabel: `Confirmar dose de ${scheduledAt} como não tomada`,
+        })
+        .props.onPress();
+    });
+
+    expect(
+      renderer.root.findByProps({
+        accessibilityLabel: 'Erro: Não foi possível confirmar a dose. Tente novamente.',
+      }),
+    ).toBeTruthy();
+    expect(
+      renderer.root.findByProps({
+        accessibilityLabel: `Confirmar dose de ${scheduledAt} como tomada`,
+      }),
     ).toBeTruthy();
   });
 

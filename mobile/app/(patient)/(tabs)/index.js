@@ -4,14 +4,17 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { getContainer } from '../../../src/composition/container.js';
 import { ReportPeriodType } from '../../../src/domain/rules/reportingRules.js';
+import { ConsumptionStatus } from '../../../src/domain/value-objects/index.js';
 import {
   Button,
   Card,
+  FormFeedback,
   Screen,
   SegmentedControl,
   StatTile,
   StatTileTones,
 } from '../../../src/presentation/components/index.js';
+import { formatDateTime } from '../../../src/presentation/formatters/index.js';
 import { useAuthSession } from '../../../src/presentation/navigation/index.js';
 import { colors, spacing, typography } from '../../../src/presentation/theme/tokens.js';
 
@@ -78,6 +81,7 @@ function adherenceTile(adherence) {
 }
 
 export function PatientHome({
+  confirmDose,
   generateReport,
   listReminders,
   onNavigate,
@@ -88,7 +92,9 @@ export function PatientHome({
 }) {
   const [periodType, setPeriodType] = useState(ReportPeriodType.WEEKLY);
   const [summary, setSummary] = useState(null);
-  const [pendingDoses, setPendingDoses] = useState(0);
+  const [reminders, setReminders] = useState([]);
+  const [doseFeedback, setDoseFeedback] = useState(null);
+  const [doseBusy, setDoseBusy] = useState(false);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState(null);
 
@@ -97,15 +103,16 @@ export function PatientHome({
     setError(null);
 
     try {
-      const [report, reminders] = await Promise.all([
+      const [report, nextReminders] = await Promise.all([
         generateReport.execute({ patientId, periodType, periodEnd: new Date().toISOString() }),
-        listReminders.execute(),
+        listReminders.execute({ through: new Date().toISOString() }),
       ]);
       setSummary(report);
-      setPendingDoses(reminders.length);
+      setReminders(nextReminders);
       setStatus('success');
     } catch {
       setSummary(null);
+      setReminders([]);
       setError('Não foi possível carregar o resumo do cuidado.');
       setStatus('error');
     }
@@ -115,7 +122,38 @@ export function PatientHome({
     void load();
   }, [load]);
 
+  async function confirmNextDose(consumptionStatus) {
+    const nextReminder = reminders[0];
+    if (!nextReminder || doseBusy) return;
+
+    setDoseBusy(true);
+    setDoseFeedback(null);
+    try {
+      await confirmDose.execute({
+        reminderId: nextReminder.id,
+        consumptionStatus,
+      });
+      setDoseFeedback({
+        variant: 'success',
+        message:
+          consumptionStatus === ConsumptionStatus.TAKEN
+            ? 'Dose confirmada.'
+            : 'Dose registrada como não tomada.',
+      });
+      await load();
+    } catch {
+      setDoseFeedback({
+        variant: 'error',
+        message: 'Não foi possível confirmar a dose. Tente novamente.',
+      });
+    } finally {
+      setDoseBusy(false);
+    }
+  }
+
   const adherence = summary ? adherenceTile(summary.adherence) : null;
+  const pendingDoses = reminders.length;
+  const nextDose = reminders[0] ?? null;
 
   return (
     <Screen subtitle={`Bem-vindo(a), ${user?.name ?? ''}.`} title="Início">
@@ -140,6 +178,39 @@ export function PatientHome({
             ) : null}
           </Card>
         ))}
+      </View>
+
+      <View style={styles.section}>
+        <Text accessibilityRole="header" style={styles.sectionTitle}>
+          Próxima dose
+        </Text>
+        {nextDose ? (
+          <Card title={`Dose de ${formatDateTime(nextDose.scheduledAt)}`}>
+            <Text style={styles.actionDescription}>
+              {pendingDoses === 1
+                ? '1 dose aguardando confirmação.'
+                : `${pendingDoses} doses aguardando confirmação.`}
+            </Text>
+            <View style={styles.doseActions}>
+              <Button
+                accessibilityLabel={`Confirmar dose de ${formatDateTime(nextDose.scheduledAt)} como tomada`}
+                busy={doseBusy}
+                onPress={() => confirmNextDose(ConsumptionStatus.TAKEN)}
+                title="Tomei"
+              />
+              <Button
+                accessibilityLabel={`Confirmar dose de ${formatDateTime(nextDose.scheduledAt)} como não tomada`}
+                busy={doseBusy}
+                onPress={() => confirmNextDose(ConsumptionStatus.MISSED)}
+                title="Não tomei"
+                variant="secondary"
+              />
+            </View>
+          </Card>
+        ) : (
+          <Text style={styles.actionDescription}>Nenhuma dose pendente agora.</Text>
+        )}
+        <FormFeedback {...doseFeedback} />
       </View>
 
       <View style={styles.section}>
@@ -248,16 +319,18 @@ export default function PatientHomeScreen(props) {
     }
   }
 
-  if (props?.generateReport && props?.listReminders) {
+  if (props?.confirmDose && props?.generateReport && props?.listReminders) {
     return <PatientHome {...props} />;
   }
 
   const container = getContainer();
+  const treatment = container.treatmentForPatient(patientId);
 
   return (
     <PatientHome
+      confirmDose={treatment.confirmDose}
       generateReport={container.reportForPatient(patientId).generateReport}
-      listReminders={container.treatmentForPatient(patientId).listReminders}
+      listReminders={treatment.listReminders}
       onNavigate={(href) => router.push(href)}
       onSwitchProfile={switchProfile}
       patientId={patientId}
@@ -283,6 +356,7 @@ const styles = StyleSheet.create({
   },
   section: { gap: spacing.md },
   sectionTitle: { ...typography.subtitle, color: colors.textPrimary },
+  doseActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   loading: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xl },
   loadingText: { ...typography.caption, color: colors.textTertiary },
   error: {

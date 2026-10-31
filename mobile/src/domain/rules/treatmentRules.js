@@ -53,6 +53,21 @@ function scheduledTimestamp(day, baseTime, offsetMinutes) {
   return new Date(localDate.getTime() + offsetMinutes * 60_000).toISOString();
 }
 
+function calendarDateBoundary(value, offsetMinutes, endOfDay = false) {
+  const [year, month, day] = value.split('-').map(Number);
+  const utc = Date.UTC(
+    year,
+    month - 1,
+    day,
+    endOfDay ? 23 : 0,
+    endOfDay ? 59 : 0,
+    endOfDay ? 59 : 0,
+    endOfDay ? 999 : 0,
+  );
+
+  return new Date(utc + offsetMinutes * 60_000).toISOString();
+}
+
 export function generateReminderSchedule({ treatment, from, days = 1, timeZoneOffsetMinutes = 0 }) {
   const validTreatment = requireTreatment(treatment);
   const fromTimestamp = requireTimestamp(from, 'from');
@@ -67,6 +82,12 @@ export function generateReminderSchedule({ treatment, from, days = 1, timeZoneOf
   }
 
   const firstDay = startOfLocalDay(fromTimestamp, offset);
+  const startBoundary = validTreatment.startDate
+    ? calendarDateBoundary(validTreatment.startDate, offset)
+    : null;
+  const endBoundary = validTreatment.endDate
+    ? calendarDateBoundary(validTreatment.endDate, offset, true)
+    : null;
   const reminders = [];
 
   for (let dayOffset = 0; dayOffset < numberOfDays; dayOffset += 1) {
@@ -76,14 +97,24 @@ export function generateReminderSchedule({ treatment, from, days = 1, timeZoneOf
     for (const baseTime of validTreatment.baseTimes) {
       const scheduledAt = scheduledTimestamp(day, baseTime, offset);
 
-      if (scheduledAt >= fromTimestamp) {
-        reminders.push(
-          new Reminder({
-            treatmentId: validTreatment.id,
-            scheduledAt,
-          }),
-        );
+      if (scheduledAt < fromTimestamp) {
+        continue;
       }
+
+      if (startBoundary && scheduledAt < startBoundary) {
+        continue;
+      }
+
+      if (endBoundary && scheduledAt > endBoundary) {
+        continue;
+      }
+
+      reminders.push(
+        new Reminder({
+          treatmentId: validTreatment.id,
+          scheduledAt,
+        }),
+      );
     }
   }
 

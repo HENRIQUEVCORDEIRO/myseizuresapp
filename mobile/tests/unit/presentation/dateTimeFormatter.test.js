@@ -1,5 +1,8 @@
 import {
+  calendarDateToDate,
+  dateToCalendarDate,
   dateToTimeValue,
+  formatCalendarDate,
   formatDate,
   formatDateLong,
   formatDateTime,
@@ -35,5 +38,16 @@ describe('presentation date and time formatting', () => {
     expect(dateToTimeValue(date)).toBe('08:30');
     expect(formatTimeList(['08:00', '20:00'])).toBe('08:00, 20:00');
     expect(formatTimeList([])).toBe('—');
+  });
+
+  test('keeps calendar dates on the same local day', () => {
+    expect(formatCalendarDate('2026-10-25')).toBe('25/10/2026');
+    expect(formatCalendarDate('')).toBe('—');
+
+    const date = calendarDateToDate('2026-10-25');
+    expect(date.getFullYear()).toBe(2026);
+    expect(date.getMonth()).toBe(9);
+    expect(date.getDate()).toBe(25);
+    expect(dateToCalendarDate(date)).toBe('2026-10-25');
   });
 });

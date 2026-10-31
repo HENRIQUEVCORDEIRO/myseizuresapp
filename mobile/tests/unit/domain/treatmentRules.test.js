@@ -148,6 +148,39 @@ describe('treatment domain rules', () => {
       ).toEqual([]);
     });
 
+    test('respects the treatment start and end dates', () => {
+      const reminders = generateReminderSchedule({
+        treatment: createTreatment({
+          startDate: '2026-08-21',
+          endDate: '2026-08-21',
+        }),
+        from: '2026-08-20T12:00:00.000Z',
+        days: 3,
+      });
+
+      expect(reminders.map((reminder) => reminder.scheduledAt)).toEqual([
+        '2026-08-21T08:00:00.000Z',
+        '2026-08-21T20:00:00.000Z',
+      ]);
+    });
+
+    test('applies the treatment period in the device time zone', () => {
+      const reminders = generateReminderSchedule({
+        treatment: createTreatment({
+          startDate: '2026-08-21',
+          endDate: '2026-08-21',
+        }),
+        from: '2026-08-20T12:00:00.000Z',
+        days: 3,
+        timeZoneOffsetMinutes: 180,
+      });
+
+      expect(reminders.map((reminder) => reminder.scheduledAt)).toEqual([
+        '2026-08-21T11:00:00.000Z',
+        '2026-08-21T23:00:00.000Z',
+      ]);
+    });
+
     test.each([
       ['an unsaved treatment', { treatment: createTreatment({ id: undefined }), from: NOW }],
       ['a malformed start time', { treatment: createTreatment(), from: '2026-08-20' }],

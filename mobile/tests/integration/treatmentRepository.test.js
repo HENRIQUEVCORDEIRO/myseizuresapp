@@ -145,6 +145,62 @@ describe('treatment SQLite repository transactions', () => {
     ).resolves.toEqual([{ scheduled_time: '08:00' }, { scheduled_time: '20:00' }]);
   });
 
+  test('persists the treatment reason, dose, and period details', async () => {
+    const saved = await repository.saveTreatment(
+      createTreatment({
+        reason: 'Epilepsia',
+        doseAmount: '500 mg',
+        startDate: '2026-08-01',
+        endDate: '2026-12-31',
+      }),
+    );
+
+    await expect(
+      database.getFirstAsync(
+        `SELECT reason, dose_amount, start_date, end_date
+         FROM treatments
+         WHERE id = $treatmentId;`,
+        { $treatmentId: saved.id },
+      ),
+    ).resolves.toEqual({
+      reason: 'Epilepsia',
+      dose_amount: '500 mg',
+      start_date: '2026-08-01',
+      end_date: '2026-12-31',
+    });
+    await expect(repository.findTreatmentById(1, saved.id)).resolves.toEqual(saved);
+  });
+
+  test('persists the treatment details through the reminder save path', async () => {
+    const result = await repository.saveTreatmentWithReminders(
+      createTreatment({
+        reason: 'Epilepsia',
+        doseAmount: '500 mg',
+        startDate: '2026-08-20',
+        endDate: '2026-08-21',
+      }),
+      { from: NOW, days: 2 },
+    );
+
+    await expect(
+      database.getFirstAsync(
+        `SELECT reason, dose_amount, start_date, end_date
+         FROM treatments
+         WHERE id = $treatmentId;`,
+        { $treatmentId: result.treatment.id },
+      ),
+    ).resolves.toEqual({
+      reason: 'Epilepsia',
+      dose_amount: '500 mg',
+      start_date: '2026-08-20',
+      end_date: '2026-08-21',
+    });
+    expect(result.reminders.length).toBeGreaterThan(0);
+    await expect(repository.findTreatmentById(1, result.treatment.id)).resolves.toEqual(
+      result.treatment,
+    );
+  });
+
   test('finds and lists complete treatments only within the patient scope', async () => {
     const active = await repository.saveTreatment(createTreatment({ name: 'Active treatment' }));
     const inactive = await repository.saveTreatment(
