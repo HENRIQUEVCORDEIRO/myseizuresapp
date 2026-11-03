@@ -1,10 +1,11 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { getContainer } from '../../../src/composition/container.js';
 import { ApplicationState } from '../../../src/presentation/components/index.js';
 import { ProfessionalReport } from '../../../src/presentation/features/reports/index.js';
 
 function ConnectedProfessionalReport() {
+  const router = useRouter();
   const { patientId: patientValue } = useLocalSearchParams();
   const patientId = Number(Array.isArray(patientValue) ? patientValue[0] : patientValue);
 
@@ -21,6 +22,16 @@ function ConnectedProfessionalReport() {
   return (
     <ProfessionalReport
       generateReport={getContainer().reportForPatient(patientId).generateReport}
+      onExport={({ periodType, periodEnd }) =>
+        router.push({
+          pathname: '/report-export',
+          params: {
+            patientId: String(patientId),
+            periodType,
+            periodEnd,
+          },
+        })
+      }
       patientId={patientId}
     />
   );

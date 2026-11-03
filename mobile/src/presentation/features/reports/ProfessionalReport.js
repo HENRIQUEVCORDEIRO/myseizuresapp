@@ -29,21 +29,25 @@ export function ProfessionalReport({
   initialPeriodEnd = new Date().toISOString(),
   initialPeriodType = ReportPeriodType.WEEKLY,
   loadOnMount = true,
+  onExport,
   patientId,
 }) {
   const initialSelection = useRef({ periodEnd: initialPeriodEnd, periodType: initialPeriodType });
   const [periodType, setPeriodType] = useState(initialSelection.current.periodType);
   const [periodEnd, setPeriodEnd] = useState(initialSelection.current.periodEnd);
   const [periodEndError, setPeriodEndError] = useState(null);
+  const [loadedSelection, setLoadedSelection] = useState(null);
   const [report, setReport] = useState(null);
   const [status, setStatus] = useState('idle');
 
   const loadReport = useCallback(
     async (selection) => {
+      setLoadedSelection(null);
       setReport(null);
       setStatus('loading');
       try {
         const value = await generateReport.execute({ patientId, ...selection });
+        setLoadedSelection(Object.freeze({ ...selection }));
         setReport(value);
         setStatus('success');
       } catch (error) {
@@ -146,8 +150,18 @@ export function ProfessionalReport({
               <Text>De {formatDateTime(report.period.periodStart)}</Text>
               <Text>Até {formatDateTime(report.period.periodEnd)}</Text>
               <Text>Crises: {report.seizures.length}</Text>
+              <Text style={styles.note}>
+                Contagem de crises registradas no período; registros ausentes não são inferidos.
+              </Text>
               <Text>Possíveis gatilhos: {report.triggers.length}</Text>
+              <Text style={styles.note}>
+                Contagem de gatilhos registrados; não representa causa confirmada.
+              </Text>
               <Text>Adesão global: {adherenceText(report.adherence)}</Text>
+              <Text style={styles.note}>
+                Calculada sobre doses com confirmação final; doses sem confirmação não entram no
+                cálculo.
+              </Text>
             </View>
             <ReportSummaryChart report={report} />
             <View style={styles.summary}>
@@ -167,6 +181,24 @@ export function ProfessionalReport({
             <ClinicalAlertList alerts={report.alerts} />
           </View>
         ) : null}
+
+        {status === 'success' && loadedSelection && typeof onExport === 'function' ? (
+          <AccessibleButton
+            accessibilityHint="Abre a exportação JSON do mesmo período deste relatório"
+            accessibilityLabel="Exportar relatório em JSON"
+            onPress={() => onExport({ patientId, ...loadedSelection })}
+            title="Exportar JSON"
+            variant="secondary"
+          />
+        ) : null}
+
+        {status === 'success' ? (
+          <Text accessibilityRole="text" style={styles.disclaimer}>
+            Estes indicadores são informativos. Não são diagnósticos, orientação de emergência nem
+            substituto do julgamento clínico. Converse qualquer mudança de tratamento com o seu
+            médico.
+          </Text>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -182,4 +214,6 @@ const styles = StyleSheet.create({
   report: { gap: 18 },
   summary: { backgroundColor: '#FFFFFF', borderRadius: 8, gap: 6, padding: 16 },
   sectionTitle: { color: '#17324D', fontSize: 20, fontWeight: '700' },
+  note: { color: '#475467', fontSize: 13, lineHeight: 18 },
+  disclaimer: { color: '#334155', fontSize: 14, fontWeight: '600', lineHeight: 20 },
 });

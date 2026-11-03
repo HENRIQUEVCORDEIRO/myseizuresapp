@@ -61,10 +61,6 @@ export function ClinicalAlertList({ alerts }) {
           })}
         </View>
       )}
-      <Text style={styles.disclaimer}>
-        Estes indicadores do protótipo são apenas informativos. Não são diagnósticos, orientações de
-        emergência ou substitutos do julgamento clínico.
-      </Text>
     </View>
   );
 }
@@ -85,5 +81,4 @@ const styles = StyleSheet.create({
   reason: { color: '#334155', fontSize: 15, lineHeight: 21 },
   version: { color: '#475467', fontSize: 13 },
   empty: { color: '#475467', fontSize: 15 },
-  disclaimer: { color: '#334155', fontSize: 14, fontWeight: '600', lineHeight: 20 },
 });
