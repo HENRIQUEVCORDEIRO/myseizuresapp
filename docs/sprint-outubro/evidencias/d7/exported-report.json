@@ -1,0 +1,56 @@
+{
+  "formatVersion": "1.0",
+  "generatedAt": "2026-11-03T00:38:24.029Z",
+  "reportPeriod": {
+    "start": "2026-10-28T00:00:00.000Z",
+    "end": "2026-11-03T00:36:31.935Z"
+  },
+  "patient": {
+    "id": 1,
+    "birthDate": "1990-01-01"
+  },
+  "seizures": [
+    {
+      "occurredAt": "2026-10-28T00:08:32.373Z",
+      "occurrenceType": "GENERALIZED"
+    },
+    {
+      "occurredAt": "2026-10-28T00:17:31.191Z",
+      "occurrenceType": "GENERALIZED"
+    },
+    {
+      "occurredAt": "2026-10-28T00:19:22.142Z",
+      "occurrenceType": "FOCAL"
+    }
+  ],
+  "triggers": [
+    {
+      "recordedAt": "2026-10-30T00:16:17.813Z",
+      "cause": "SLEEP",
+      "sleepQuality": 4,
+      "mood": 3
+    },
+    {
+      "recordedAt": "2026-10-30T00:19:48.116Z",
+      "cause": "OTHER",
+      "sleepQuality": 2,
+      "mood": 4,
+      "otherDescription": "Viagem"
+    }
+  ],
+  "adherence": {
+    "finalDoses": 2,
+    "takenDoses": 1,
+    "rate": 50
+  },
+  "alerts": [
+    {
+      "severity": "HIGH",
+      "reason": "At least 3 seizures were recorded in the selected period. This is an informational prototype indicator, not a diagnosis."
+    },
+    {
+      "severity": "MEDIUM",
+      "reason": "Recorded adherence is below 80% for final dose confirmations. This is an informational prototype indicator, not a diagnosis."
+    }
+  ]
+}

@@ -38,7 +38,7 @@
 | **D5** | seg 26/10 | Assistente de tratamento em 3 passos + dose em 1 toque | ✅ | ✅ 287 | ✅ | ✅ | ✅ | — | — | [d5](2026-10-29-d5.md) |
 | **W** | ter 27/10 | Trilha web: `react-native-web` + composição por plataforma | | | | | | ✅ | | |
 | **D6** | ter 27/10 | Home do profissional com lista de pacientes autorizados | ✅ | ✅ 292 | ✅ | ✅ | ✅ | — | — | [d6](2026-10-30-d6.md) |
-| D7 | qua 28/10 | Relatório unificado com export | | | | | | | | |
+| **D7** | qua 28/10 | Relatório unificado com export, disclaimer e notas de rodapé | ✅ | ✅ 293 | ✅ | ✅ | ✅ | — | — | [d7](2026-11-02-d7.md) |
 | D8 | qui 29/10 | Offline real, rascunho, `Undo`, métrica de auras | | | | | | | |
 | D9 | sex 30/10 | Acessibilidade, rede de apoio, evidência, entrega | | | | | | | | |
 
@@ -48,13 +48,13 @@
 
 ## 3. Estado acumulado
 
-| Métrica | D1 | D2 | D3 | D6 | Alvo em 30/10 |
-|---|---|---|---|---|
+| Métrica | D1 | D2 | D3 | D7 | Alvo em 30/10 |
+|---|---|---|---|---|---|
 | Suítes de teste | 38 | 43 | 43 | **44** | 46 |
-| Testes | 241 | 260 | 267 | **292** | ~300 |
+| Testes | 241 | 260 | 267 | **293** | ~300 |
 | Primitivas de UI | 10 | 10 | 10 | 10 | 12 |
 | Linhas de código de apresentação | 6.670 | +420 | +30 | — | — |
-| Documentos | 11 | 13 | 14 | **17** | 16 |
+| Documentos | 11 | 13 | 14 | **18** | 16 |
 | Funcionalidades da matriz implementadas (parcial ou total) | 8/13 | 8/13 | 8/13 | **8/13** | 11/13 |
 
 ---
@@ -84,59 +84,47 @@ migração 004, documentação e evidências. O TalkBack não foi repetido; perm
 O D5 está no histórico (`06b913c` e `5b2c1bd`), incluindo o assistente de tratamento, a confirmação
 de dose em 1 toque, a migração 005, a documentação e as evidências.
 
-### 4.5 D6 — na árvore de trabalho
+### 4.5 D6 — commitado
+
+O D6 está no histórico (`1881779`, `6407940` e `a664ae3`), incluindo endpoint do profissional,
+home com lista de pacientes autorizados, alias sem ID, testes, documentação e evidências.
+
+### 4.6 D7 — na árvore de trabalho
 
 | Área | Arquivos principais | Alterado | Motivo |
 |---|---|---|---|
-| API | `AccessGrantRepository.js`, `AccessGrantService.js`, `accessGrantRoutes.js` | M | listar grants ativos do profissional autenticado |
-| Porta e cliente | `repositoryPorts.js`, `AccessGrantClient.js` | M | novo contrato `listAuthorizedPatients` |
-| Caso de uso | `ListAuthorizedPatients.js`, `access/index.js` | A/M | lista profissional sem paciente ativo |
-| Composição | `container.js` | M | expõe `listAuthorizedPatients` |
-| UI | `ProfessionalPatientList.js`, `(professional)/index.js`, `(professional)/patients/index.js` | A/M | home com lista, estados e alias sem ID |
-| Testes | API, caso de uso, US3, home, compartilhamento e acessibilidade | M/A | 292 testes verdes |
-| Documentação | `2026-10-30-d6.md`, `INDICE.md`, `evidencias/d6/` | A/M | D6 e N0–N4; capturas e checagem da API |
+| Relatório | `ProfessionalReport.js` | M | export do período carregado, notas por métrica e disclaimer fixo |
+| Alertas | `ClinicalAlertList.js` | M | remove disclaimer duplicado, mantido no rodapé do relatório |
+| Rota | `(professional)/reports/[patientId].js` | M | encaminha paciente e período ao export |
+| Testes | `professionalReport.test.js` | M | notas, disclaimer, export, vazio e período carregado |
+| Documentação | `2026-11-02-d7.md`, `INDICE.md`, `evidencias/d7/` | A/M | D7 e N0–N4; capturas e JSON exportado |
 
 ```bash
-# Código do D6; o autor pode dividir em commits menores.
+# Código do D7.
 git add \
-  api/src/repositories/AccessGrantRepository.js \
-  api/src/services/AccessGrantService.js \
-  api/src/routes/accessGrantRoutes.js \
-  api/tests/integration/accessGrants.test.js \
-  mobile/src/application/ports/repositoryPorts.js \
-  mobile/src/infrastructure/api/AccessGrantClient.js \
-  mobile/src/application/use-cases/access/ListAuthorizedPatients.js \
-  mobile/src/application/use-cases/access/index.js \
-  mobile/src/composition/container.js \
-  mobile/src/presentation/features/professional/ProfessionalPatientList.js \
-  mobile/src/presentation/features/professional/index.js \
-  'mobile/app/(professional)/index.js' \
-  'mobile/app/(professional)/patients/index.js' \
-  mobile/tests/unit/application/accessUseCases.test.js \
-  mobile/tests/integration/us3-sharing-report-flow.test.js \
-  mobile/tests/presentation/professionalHome.test.js \
-  mobile/tests/presentation/sharingManagement.test.js \
-  mobile/tests/presentation/accessibility.test.js
-git commit -m "feat: list authorized patients on professional home"
+  'mobile/app/(professional)/reports/[patientId].js' \
+  mobile/src/presentation/features/reports/ProfessionalReport.js \
+  mobile/src/presentation/features/reports/ClinicalAlertList.js \
+  mobile/tests/presentation/professionalReport.test.js
+git commit -m "feat: unify report export with notes and disclaimer"
 
 # Evidências e resultado do N4.
 git add \
-  docs/sprint-outubro/2026-10-30-d6.md \
+  docs/sprint-outubro/2026-11-02-d7.md \
   docs/sprint-outubro/INDICE.md \
-  docs/sprint-outubro/evidencias/d6
-git commit -m "docs(sprint): record D6 device checks"
+  docs/sprint-outubro/evidencias/d7
+git commit -m "docs(sprint): record D7 device checks"
 ```
 
 **Fora dos commits:** `.specify/`, `prompts/`, `docs/instructions/`, `docs/fix_pesquisa_TCC.pdf`.
 
-### 4.6 Próximo
+### 4.7 Próximo
 
-O D6 está concluído em N0–N4 e pronto para o commit manual. Seguir para **D7** (relatório unificado
-com export, disclaimer e notas de rodapé) e depois **D8**. Quando `react-native-web` estiver
-disponível, retomar a trilha web (N5). A tradução PT-BR não é uma pendência separada;
-identificadores, domínio, API e testes de domínio permanecem em inglês. A atualização automática do
-fim do período em **Registros** e o safe area do botão **Confirmar** da sheet ficam como melhorias
-de UX para D8.
+O D7 está concluído em N0–N4 e pronto para o commit manual. Seguir para **D8** (offline real,
+rascunho, `Undo` e métrica de auras) e depois **D9**. Quando `react-native-web` estiver disponível,
+retomar a trilha web (N5). A tradução PT-BR não é uma pendência separada; identificadores, domínio,
+API e testes de domínio permanecem em inglês. A atualização automática do fim do período em
+**Registros** e o safe area do botão **Confirmar** da sheet ficam como melhorias de UX para D8.
 
 **A** = adicionado · **M** = modificado · **R** = renomeado · **D** = removido
 
