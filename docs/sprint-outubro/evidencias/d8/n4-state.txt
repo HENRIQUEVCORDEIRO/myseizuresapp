@@ -1,0 +1,25 @@
+D8 — estado local observado no SM-A145M (03/11/2026)
+
+Rascunho de crise
+- payload: {"feltAura":true,"occurredAt":"2026-11-04T01:18:46.792Z","occurrenceType":"UNKNOWN"}
+- restaurado após force-stop e reabertura sem API
+- formulário voltou com "Rascunho restaurado. Continue o preenchimento."
+- "Desconhecida" e "Sim" marcados
+
+Crise offline
+- gravação local: seizure_count 8, drafts 0
+- undo local: seizure_count 8 após criar e desfazer o registro
+- undo com barra de navegação visível: "Registro desfeito." e contagem estável
+
+Gatilho offline
+- undo local: trigger_count 3 após criar e desfazer o registro
+- undo com barra de navegação visível: "Registro desfeito." e contagem estável
+
+Relatório
+- métrica exibida: 33.3% (1 de 3 crises com aura)
+- nota: "Percentual de crises registradas com aura; não representa risco clínico."
+- export JSON permaneceu sem o campo de aura
+
+Sessão
+- force-stop do app + API encerrada + reverse tcp:3000 removido
+- reabertura restaurou "Bem-vindo(a), Demo Patient."
