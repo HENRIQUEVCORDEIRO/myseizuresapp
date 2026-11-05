@@ -65,16 +65,16 @@ async function seedSelectedPeriod(database) {
     `INSERT INTO patients (id, user_id, birth_date, diagnosis_date)
      VALUES (1, 1, '1980-01-01', '2020-01-01');`,
   );
-  for (const [occurredAt, occurrenceType] of [
-    ['2026-08-23T08:00:00.000Z', 'FOCAL'],
-    ['2026-08-24T09:00:00.000Z', 'GENERALIZED'],
-    ['2026-08-25T10:00:00.000Z', 'FOCAL'],
+  for (const [occurredAt, occurrenceType, description] of [
+    ['2026-08-23T08:00:00.000Z', 'FOCAL', 'Formigamento no braço esquerdo'],
+    ['2026-08-24T09:00:00.000Z', 'GENERALIZED', null],
+    ['2026-08-25T10:00:00.000Z', 'FOCAL', null],
   ]) {
     await database.runAsync(
       `INSERT INTO seizure_records
-         (patient_id, occurred_at, occurrence_type, created_at)
-       VALUES (1, $occurredAt, $occurrenceType, $occurredAt);`,
-      { $occurredAt: occurredAt, $occurrenceType: occurrenceType },
+         (patient_id, occurred_at, occurrence_type, description, created_at)
+       VALUES (1, $occurredAt, $occurrenceType, $description, $occurredAt);`,
+      { $occurredAt: occurredAt, $occurrenceType: occurrenceType, $description: description },
     );
   }
   await database.runAsync(
@@ -129,6 +129,11 @@ test('authorized export is local and redacted while denied export creates no fil
       adherence: { finalDoses: 0, takenDoses: 0 },
     });
     expect(redactedSample.seizures).toHaveLength(3);
+    expect(redactedSample.seizures[0]).toEqual({
+      occurredAt: '2026-08-23T08:00:00.000Z',
+      occurrenceType: 'FOCAL',
+      description: 'Formigamento no braço esquerdo',
+    });
     expect(redactedSample.triggers).toHaveLength(1);
     expect(redactedSample.alerts).toEqual([
       expect.objectContaining({ severity: 'HIGH', reason: expect.any(String) }),

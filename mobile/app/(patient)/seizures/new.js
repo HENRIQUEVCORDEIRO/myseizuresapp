@@ -8,6 +8,7 @@ import {
   AccessibleButton,
   ChoiceGroup,
   FormFeedback,
+  FormField,
   NativeDateTimeField,
 } from '../../../src/presentation/components/index.js';
 import { OCCURRENCE_TYPE_LABELS } from '../../../src/presentation/labels.js';
@@ -56,6 +57,7 @@ export function SeizureEntryForm({
   const [occurredAt, setOccurredAt] = useState(() => initialOccurredAt ?? new Date().toISOString());
   const [occurrenceType, setOccurrenceType] = useState(null);
   const [feltAura, setFeltAura] = useState(false);
+  const [description, setDescription] = useState('');
   const [errors, setErrors] = useState({});
   const [feedback, setFeedback] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -81,6 +83,7 @@ export function SeizureEntryForm({
         : null,
     );
     setFeltAura(typeof payload.feltAura === 'boolean' ? payload.feltAura : false);
+    setDescription(typeof payload.description === 'string' ? payload.description : '');
   }
 
   const { clearDraft, draftRestored } = useFormDraft({
@@ -88,7 +91,7 @@ export function SeizureEntryForm({
     manageFormDraft,
     onRestore: restoreDraft,
     patientId,
-    payload: { feltAura, occurredAt, occurrenceType },
+    payload: { description, feltAura, occurredAt, occurrenceType },
   });
 
   async function submit() {
@@ -104,17 +107,22 @@ export function SeizureEntryForm({
     setBusy(true);
 
     try {
-      const saved = await recordSeizure.execute({
+      const input = {
         patientId,
         occurredAt,
         occurrenceType,
         feltAura,
-      });
+      };
+      if (description.trim()) {
+        input.description = description;
+      }
+      const saved = await recordSeizure.execute(input);
       await clearDraft();
       setFeedback({ message: 'Crise salva.', variant: 'success' });
       setUndoRecordId(deleteSeizure && Number.isInteger(saved?.id) ? saved.id : null);
       setOccurrenceType(null);
       setFeltAura(false);
+      setDescription('');
       setOccurredAt(new Date().toISOString());
     } catch {
       setFeedback({
@@ -188,6 +196,16 @@ export function SeizureEntryForm({
           options={AURA_OPTIONS}
           value={feltAura}
         />
+        <FormField
+          accessibilityHint="Descreva com suas palavras como foi a crise. Este campo é opcional."
+          inputStyle={styles.descriptionInput}
+          label="Descrição da crise (opcional)"
+          multiline
+          numberOfLines={4}
+          onChangeText={setDescription}
+          textAlignVertical="top"
+          value={description}
+        />
         <FormFeedback message={feedback?.message} variant={feedback?.variant} />
         {undoRecordId !== null ? (
           <AccessibleButton
@@ -241,5 +259,6 @@ const styles = StyleSheet.create({
   heading: { gap: 8, marginBottom: 4 },
   title: { color: '#17324D', fontSize: 28, fontWeight: '700' },
   description: { color: '#334155', fontSize: 16, lineHeight: 24 },
+  descriptionInput: { minHeight: 120, paddingTop: 12 },
   draftNotice: { color: '#175CD3', fontSize: 14, lineHeight: 20 },
 });

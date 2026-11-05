@@ -4,6 +4,8 @@ import { seizureAuraMigration } from './003_seizure_aura.js';
 import { triggerCausesMigration } from './004_trigger_causes.js';
 import { treatmentDetailsMigration } from './005_treatment_details.js';
 import { formDraftsMigration } from './006_form_drafts.js';
+import { seizureDescriptionMigration } from './007_seizure_description.js';
+import { supportContactMigration } from './008_support_contact.js';
 
 export const migrations = Object.freeze([
   identityMigration,
@@ -12,4 +14,6 @@ export const migrations = Object.freeze([
   triggerCausesMigration,
   treatmentDetailsMigration,
   formDraftsMigration,
+  seizureDescriptionMigration,
+  supportContactMigration,
 ]);

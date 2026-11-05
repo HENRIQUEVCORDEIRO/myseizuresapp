@@ -2,7 +2,7 @@ import { SeizureRecord } from '../../../domain/entities/index.js';
 import { PatientScopedRepository } from './PatientScopedRepository.js';
 
 const SELECT_COLUMNS = `
-  SELECT id, patient_id, occurred_at, occurrence_type, felt_aura, created_at
+  SELECT id, patient_id, occurred_at, occurrence_type, felt_aura, description, created_at
   FROM seizure_records
 `;
 
@@ -45,6 +45,7 @@ function toEntity(row) {
     occurredAt: row.occurred_at,
     occurrenceType: row.occurrence_type,
     feltAura: row.felt_aura === 1,
+    description: row.description,
     createdAt: row.created_at,
   });
 }
@@ -56,6 +57,7 @@ export class SeizureRepository extends PatientScopedRepository {
       $occurredAt: record.occurredAt,
       $occurrenceType: record.occurrenceType,
       $feltAura: record.feltAura ? 1 : 0,
+      $description: record.description,
       $createdAt: record.createdAt,
     };
 
@@ -63,8 +65,8 @@ export class SeizureRepository extends PatientScopedRepository {
       const result = await this.runForPatient(
         record.patientId,
         `INSERT INTO seizure_records
-           (patient_id, occurred_at, occurrence_type, felt_aura, created_at)
-         VALUES ($patientId, $occurredAt, $occurrenceType, $feltAura, $createdAt);`,
+           (patient_id, occurred_at, occurrence_type, felt_aura, description, created_at)
+         VALUES ($patientId, $occurredAt, $occurrenceType, $feltAura, $description, $createdAt);`,
         parameters,
       );
 
@@ -77,6 +79,7 @@ export class SeizureRepository extends PatientScopedRepository {
        SET occurred_at = $occurredAt,
            occurrence_type = $occurrenceType,
            felt_aura = $feltAura,
+           description = $description,
            created_at = $createdAt
        WHERE id = $recordId AND patient_id = $patientId;`,
       { ...parameters, $recordId: record.id },

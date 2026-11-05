@@ -26,6 +26,7 @@ export class RecordSeizure {
       occurredAt: input.occurredAt,
       occurrenceType: input.occurrenceType,
       feltAura: input.feltAura,
+      description: input.description,
       createdAt: this.now(),
     });
 

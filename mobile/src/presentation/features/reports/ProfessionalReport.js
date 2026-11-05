@@ -9,7 +9,7 @@ import {
   SelectField,
 } from '../../components/index.js';
 import { formatDateTime } from '../../formatters/index.js';
-import { labelFor, TRIGGER_CAUSE_LABELS } from '../../labels.js';
+import { labelFor, OCCURRENCE_TYPE_LABELS, TRIGGER_CAUSE_LABELS } from '../../labels.js';
 import { ClinicalAlertList } from './ClinicalAlertList.js';
 import { ReportSummaryChart } from './ReportSummaryChart.js';
 
@@ -192,6 +192,40 @@ export function ProfessionalReport({
                 Percentual de crises registradas com aura; não representa risco clínico.
               </Text>
             </View>
+            <View accessibilityRole="summary" style={styles.summary}>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>
+                Crises registradas
+              </Text>
+              {report.seizures.length ? (
+                report.seizures.map((seizure, index) => (
+                  <View
+                    accessibilityLabel={`Crise de ${formatDateTime(seizure.occurredAt)}, ${labelFor(
+                      OCCURRENCE_TYPE_LABELS,
+                      seizure.occurrenceType,
+                    )}, aura ${seizure.feltAura ? 'sim' : 'não'}${
+                      seizure.description ? `, descrição: ${seizure.description}` : ''
+                    }`}
+                    accessibilityRole="text"
+                    key={seizure.id ?? `${seizure.occurredAt}-${index}`}
+                    style={styles.seizureItem}
+                  >
+                    <Text style={styles.seizureTitle}>
+                      {formatDateTime(seizure.occurredAt)} ·{' '}
+                      {labelFor(OCCURRENCE_TYPE_LABELS, seizure.occurrenceType)}
+                    </Text>
+                    <Text style={styles.seizureMeta}>Aura: {seizure.feltAura ? 'Sim' : 'Não'}</Text>
+                    {seizure.description ? (
+                      <Text style={styles.seizureDescription}>{seizure.description}</Text>
+                    ) : null}
+                  </View>
+                ))
+              ) : (
+                <Text>Nenhuma crise registrada neste período.</Text>
+              )}
+              <Text style={styles.note}>
+                Descrições são registradas pela própria pessoa e não representam diagnóstico.
+              </Text>
+            </View>
             <ClinicalAlertList alerts={report.alerts} />
           </View>
         ) : null}
@@ -220,7 +254,7 @@ export function ProfessionalReport({
 
 const styles = StyleSheet.create({
   safeArea: { backgroundColor: '#F8FAFC', flex: 1 },
-  content: { flexGrow: 1, gap: 20, padding: 24 },
+  content: { flexGrow: 1, gap: 20, padding: 24, paddingBottom: 96 },
   heading: { gap: 8 },
   title: { color: '#17324D', fontSize: 28, fontWeight: '700' },
   description: { color: '#334155', fontSize: 16, lineHeight: 24 },
@@ -228,6 +262,10 @@ const styles = StyleSheet.create({
   report: { gap: 18 },
   summary: { backgroundColor: '#FFFFFF', borderRadius: 8, gap: 6, padding: 16 },
   sectionTitle: { color: '#17324D', fontSize: 20, fontWeight: '700' },
+  seizureItem: { borderTopColor: '#E2E8F0', borderTopWidth: 1, gap: 3, paddingTop: 8 },
+  seizureTitle: { color: '#17324D', fontSize: 16, fontWeight: '700' },
+  seizureMeta: { color: '#334155', fontSize: 14 },
+  seizureDescription: { color: '#0F172A', fontSize: 15, lineHeight: 22 },
   note: { color: '#475467', fontSize: 13, lineHeight: 18 },
   disclaimer: { color: '#334155', fontSize: 14, fontWeight: '600', lineHeight: 20 },
 });

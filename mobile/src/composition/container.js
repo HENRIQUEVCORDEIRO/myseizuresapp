@@ -16,6 +16,7 @@ import {
 import { ManageFormDraft } from '../application/use-cases/drafts/index.js';
 import { ExportReport } from '../application/use-cases/export/index.js';
 import { GenerateReport } from '../application/use-cases/reporting/index.js';
+import { ManageSupportContact } from '../application/use-cases/support/index.js';
 import {
   ConfirmDose,
   GetTreatment,
@@ -32,6 +33,7 @@ import {
   LocalIdentityRepository,
   PatientRepository,
   SeizureRepository,
+  SupportContactRepository,
   TreatmentRepository,
   TriggerRepository,
 } from '../infrastructure/persistence/repositories/index.js';
@@ -67,6 +69,7 @@ export function createContainer({
   const treatmentCommands = new Map();
   const accessCommands = new Map();
   const reportCommands = new Map();
+  const supportCommands = new Map();
   const getSessionToken = async () => (await sessionStoreAdapter.loadSession())?.token;
   const getActivePatientId = async () => {
     const user = (await sessionStoreAdapter.loadSession())?.user;
@@ -164,6 +167,27 @@ export function createContainer({
     return accessCommands.get(patientId);
   }
 
+  function supportForPatient(patientId) {
+    if (!Number.isInteger(patientId) || patientId < 1) {
+      throw new TypeError('Support commands require a positive patient id.');
+    }
+
+    if (!supportCommands.has(patientId)) {
+      const supportContactRepository = new SupportContactRepository({ databaseProvider: database });
+      supportCommands.set(
+        patientId,
+        Object.freeze({
+          manageSupportContact: new ManageSupportContact({
+            supportContactRepository,
+            getActivePatientId: () => patientId,
+          }),
+        }),
+      );
+    }
+
+    return supportCommands.get(patientId);
+  }
+
   function reportForPatient(patientId) {
     if (!Number.isInteger(patientId) || patientId < 1) {
       throw new TypeError('Report commands require a positive patient id.');
@@ -218,6 +242,7 @@ export function createContainer({
       authentication: authenticationAdapter,
       sessionStore: sessionStoreAdapter,
     }),
+    supportForPatient,
     synchronizeIdentity: (user) => localIdentityRepository.synchronize(user),
     treatmentForPatient,
   });

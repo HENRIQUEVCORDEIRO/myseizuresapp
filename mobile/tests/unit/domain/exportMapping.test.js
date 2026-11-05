@@ -28,6 +28,7 @@ function exportInput() {
           patientId: 1,
           occurredAt: '2026-08-10T12:00:00.000Z',
           occurrenceType: 'GENERALIZED',
+          description: '  Perda de consciência por cerca de um minuto  ',
           createdAt: '2026-08-10T12:05:00.000Z',
         },
       ],
@@ -79,6 +80,7 @@ describeMapper('RNDS/e-SUS report export mapping', () => {
         {
           occurredAt: '2026-08-10T12:00:00.000Z',
           occurrenceType: 'GENERALIZED',
+          description: 'Perda de consciência por cerca de um minuto',
         },
       ],
       triggers: [
@@ -106,9 +108,11 @@ describeMapper('RNDS/e-SUS report export mapping', () => {
       mood: 2,
     });
     input.report.adherence = { finalDoses: 0, takenDoses: 0, rate: undefined };
+    input.report.seizures[0].description = null;
 
     const output = mapper().map(input);
 
+    expect(output.seizures[0]).not.toHaveProperty('description');
     expect(output.triggers[0]).not.toHaveProperty('otherDescription');
     expect(output.triggers[1]).toHaveProperty('otherDescription', 'Flashing light');
     expect(output.adherence).toEqual({ finalDoses: 0, takenDoses: 0 });
@@ -135,6 +139,13 @@ describeMapper('RNDS/e-SUS report export mapping', () => {
     const input = exportInput();
     removeField(input);
     expect(() => mapper().map(input)).toThrow();
+  });
+
+  test('rejects a blank seizure description when the field is present', () => {
+    const input = exportInput();
+    input.report.seizures[0].description = '   ';
+
+    expect(() => mapper().map(input)).toThrow(/description/);
   });
 
   test('rejects an invalid generated timestamp before producing serializable output', () => {
