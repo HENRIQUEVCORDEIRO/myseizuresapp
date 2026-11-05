@@ -7,10 +7,13 @@ import {
   RevokeAccess,
 } from '../application/use-cases/access/index.js';
 import {
+  DeleteSeizure,
+  DeleteTrigger,
   ListChronologicalEvents,
   RecordSeizure,
   RecordTrigger,
 } from '../application/use-cases/clinical/index.js';
+import { ManageFormDraft } from '../application/use-cases/drafts/index.js';
 import { ExportReport } from '../application/use-cases/export/index.js';
 import { GenerateReport } from '../application/use-cases/reporting/index.js';
 import {
@@ -25,6 +28,7 @@ import { AccessGrantClient } from '../infrastructure/api/AccessGrantClient.js';
 import { ExpoNotificationService } from '../infrastructure/notifications/ExpoNotificationService.js';
 import { ReportFileExporter, RndsExportMapper } from '../infrastructure/export/index.js';
 import {
+  FormDraftRepository,
   LocalIdentityRepository,
   PatientRepository,
   SeizureRepository,
@@ -78,13 +82,26 @@ export function createContainer({
       const getActivePatientId = () => patientId;
       const seizureRepository = new SeizureRepository({ databaseProvider: database });
       const triggerRepository = new TriggerRepository({ databaseProvider: database });
+      const formDraftRepository = new FormDraftRepository({ databaseProvider: database });
 
       clinicalCommands.set(
         patientId,
         Object.freeze({
+          deleteSeizure: new DeleteSeizure({
+            seizureRepository,
+            getActivePatientId,
+          }),
+          deleteTrigger: new DeleteTrigger({
+            triggerRepository,
+            getActivePatientId,
+          }),
           listChronologicalEvents: new ListChronologicalEvents({
             seizureRepository,
             triggerRepository,
+            getActivePatientId,
+          }),
+          manageFormDraft: new ManageFormDraft({
+            formDraftRepository,
             getActivePatientId,
           }),
           recordSeizure: new RecordSeizure({

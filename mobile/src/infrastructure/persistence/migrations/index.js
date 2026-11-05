@@ -3,6 +3,7 @@ import { clinicalMigration } from './002_clinical.js';
 import { seizureAuraMigration } from './003_seizure_aura.js';
 import { triggerCausesMigration } from './004_trigger_causes.js';
 import { treatmentDetailsMigration } from './005_treatment_details.js';
+import { formDraftsMigration } from './006_form_drafts.js';
 
 export const migrations = Object.freeze([
   identityMigration,
@@ -10,4 +11,5 @@ export const migrations = Object.freeze([
   seizureAuraMigration,
   triggerCausesMigration,
   treatmentDetailsMigration,
+  formDraftsMigration,
 ]);

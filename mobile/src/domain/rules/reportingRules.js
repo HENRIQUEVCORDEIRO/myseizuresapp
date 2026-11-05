@@ -75,6 +75,27 @@ export function aggregateAdherence(confirmations) {
   });
 }
 
+export function aggregateAura(seizures) {
+  const records = requireArray(seizures, 'seizures');
+  let withAura = 0;
+
+  records.forEach((seizure, index) => {
+    if (typeof seizure?.feltAura !== 'boolean') {
+      throw new TypeError(`seizures[${index}].feltAura must be a boolean.`);
+    }
+
+    if (seizure.feltAura) withAura += 1;
+  });
+
+  const totalSeizures = records.length;
+
+  return Object.freeze({
+    totalSeizures,
+    withAura,
+    rate: totalSeizures === 0 ? undefined : (withAura / totalSeizures) * 100,
+  });
+}
+
 export function calculateTriggerTrends(triggers) {
   const counts = new Map();
   for (const trigger of requireArray(triggers, 'triggers')) {

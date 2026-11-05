@@ -1,6 +1,8 @@
 import {
   ActivePatientScopeError,
   ClinicalEventType,
+  DeleteSeizure,
+  DeleteTrigger,
   ListChronologicalEvents,
   RecordSeizure,
   RecordTrigger,
@@ -163,6 +165,40 @@ describe('clinical record use cases', () => {
       }),
     ).rejects.toBeInstanceOf(ActivePatientScopeError);
     expect(triggerRepository.saveTrigger).not.toHaveBeenCalled();
+  });
+
+  test('DeleteSeizure removes only a positive record id for the active patient', async () => {
+    const seizureRepository = { deleteSeizure: jest.fn().mockResolvedValue(true) };
+    const useCase = new DeleteSeizure({
+      seizureRepository,
+      getActivePatientId: activePatient(),
+    });
+
+    await expect(useCase.execute({ patientId: ACTIVE_PATIENT_ID, recordId: 101 })).resolves.toBe(
+      true,
+    );
+    expect(seizureRepository.deleteSeizure).toHaveBeenCalledWith(ACTIVE_PATIENT_ID, 101);
+    await expect(useCase.execute({ patientId: 99, recordId: 101 })).rejects.toBeInstanceOf(
+      ActivePatientScopeError,
+    );
+    await expect(useCase.execute({ recordId: 0 })).rejects.toBeInstanceOf(TypeError);
+  });
+
+  test('DeleteTrigger removes only a positive record id for the active patient', async () => {
+    const triggerRepository = { deleteTrigger: jest.fn().mockResolvedValue(true) };
+    const useCase = new DeleteTrigger({
+      triggerRepository,
+      getActivePatientId: activePatient(),
+    });
+
+    await expect(useCase.execute({ patientId: ACTIVE_PATIENT_ID, recordId: 202 })).resolves.toBe(
+      true,
+    );
+    expect(triggerRepository.deleteTrigger).toHaveBeenCalledWith(ACTIVE_PATIENT_ID, 202);
+    await expect(useCase.execute({ patientId: 99, recordId: 202 })).rejects.toBeInstanceOf(
+      ActivePatientScopeError,
+    );
+    await expect(useCase.execute({ recordId: -1 })).rejects.toBeInstanceOf(TypeError);
   });
 
   test('ListChronologicalEvents returns only active-patient events in timestamp order', async () => {

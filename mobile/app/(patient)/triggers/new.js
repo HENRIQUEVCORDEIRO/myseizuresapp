@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { FormDraftType } from '../../../src/application/use-cases/drafts/index.js';
 import { getContainer } from '../../../src/composition/container.js';
 import { TriggerCause } from '../../../src/domain/value-objects/index.js';
 import {
@@ -11,6 +12,7 @@ import {
   SelectSheet,
 } from '../../../src/presentation/components/index.js';
 import { TRIGGER_CAUSE_LABELS } from '../../../src/presentation/labels.js';
+import { useFormDraft } from '../../../src/presentation/hooks/useFormDraft.js';
 import { useAuthSession } from '../../../src/presentation/navigation/index.js';
 
 const CAUSE_OPTIONS = Object.freeze(
@@ -22,6 +24,14 @@ const CAUSE_OPTIONS = Object.freeze(
 
 function nowTimestamp() {
   return new Date().toISOString();
+}
+
+function isValidTimestamp(value) {
+  return typeof value === 'string' && !Number.isNaN(Date.parse(value));
+}
+
+function validRating(value) {
+  return Number.isInteger(value) && value >= 1 && value <= 5 ? value : null;
 }
 
 function causeSummary(causes) {
@@ -43,7 +53,13 @@ function requireFields({ causes, mood, otherDescription, recordedAt, sleepQualit
   return errors;
 }
 
-export function TriggerEntryForm({ initialRecordedAt = null, patientId, recordTrigger }) {
+export function TriggerEntryForm({
+  deleteTrigger,
+  initialRecordedAt = null,
+  manageFormDraft,
+  patientId,
+  recordTrigger,
+}) {
   const [recordedAt, setRecordedAt] = useState(() => initialRecordedAt ?? nowTimestamp());
   const [causes, setCauses] = useState([]);
   const [otherDescription, setOtherDescription] = useState('');
@@ -53,6 +69,47 @@ export function TriggerEntryForm({ initialRecordedAt = null, patientId, recordTr
   const [errors, setErrors] = useState({});
   const [feedback, setFeedback] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [undoRecordId, setUndoRecordId] = useState(null);
+
+  useEffect(() => {
+    if (undoRecordId === null) return undefined;
+
+    const timer = setTimeout(() => setUndoRecordId(null), 5000);
+
+    return () => clearTimeout(timer);
+  }, [undoRecordId]);
+
+  function restoreDraft(payload) {
+    setRecordedAt(
+      isValidTimestamp(payload.recordedAt)
+        ? payload.recordedAt
+        : (initialRecordedAt ?? nowTimestamp()),
+    );
+    setCauses(
+      Array.isArray(payload.causes)
+        ? [
+            ...new Set(
+              payload.causes.filter((cause) =>
+                CAUSE_OPTIONS.some((option) => option.value === cause),
+              ),
+            ),
+          ]
+        : [],
+    );
+    setOtherDescription(
+      typeof payload.otherDescription === 'string' ? payload.otherDescription : '',
+    );
+    setSleepQuality(validRating(payload.sleepQuality));
+    setMood(validRating(payload.mood));
+  }
+
+  const { clearDraft, draftRestored } = useFormDraft({
+    formType: FormDraftType.TRIGGER,
+    manageFormDraft,
+    onRestore: restoreDraft,
+    patientId,
+    payload: { causes, mood, otherDescription, recordedAt, sleepQuality },
+  });
 
   function clearCauseErrors() {
     setErrors((current) => {
@@ -77,13 +134,14 @@ export function TriggerEntryForm({ initialRecordedAt = null, patientId, recordTr
     const validationErrors = requireFields(values);
     setErrors(validationErrors);
     setFeedback(null);
+    setUndoRecordId(null);
 
     if (Object.keys(validationErrors).length > 0) return;
 
     setBusy(true);
 
     try {
-      await recordTrigger.execute({
+      const saved = await recordTrigger.execute({
         patientId,
         recordedAt,
         causes,
@@ -93,7 +151,9 @@ export function TriggerEntryForm({ initialRecordedAt = null, patientId, recordTr
         sleepQuality,
         mood,
       });
+      await clearDraft();
       setFeedback({ message: 'Gatilho salvo.', variant: 'success' });
+      setUndoRecordId(deleteTrigger && Number.isInteger(saved?.id) ? saved.id : null);
       setCauses([]);
       setOtherDescription('');
       setSleepQuality(null);
@@ -102,6 +162,25 @@ export function TriggerEntryForm({ initialRecordedAt = null, patientId, recordTr
     } catch {
       setFeedback({
         message: 'Não foi possível salvar o gatilho. Tente novamente.',
+        variant: 'error',
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function undo() {
+    if (!deleteTrigger || undoRecordId === null) return;
+
+    setBusy(true);
+
+    try {
+      await deleteTrigger.execute({ patientId, recordId: undoRecordId });
+      setUndoRecordId(null);
+      setFeedback({ message: 'Registro desfeito.', variant: 'info' });
+    } catch {
+      setFeedback({
+        message: 'Não foi possível desfazer o registro. Tente novamente.',
         variant: 'error',
       });
     } finally {
@@ -123,6 +202,11 @@ export function TriggerEntryForm({ initialRecordedAt = null, patientId, recordTr
             Informe contextos possíveis, como causas, qualidade do sono e humor. Este registro é
             salvo neste aparelho.
           </Text>
+          {draftRestored ? (
+            <Text accessibilityLiveRegion="polite" style={styles.draftNotice}>
+              Rascunho restaurado. Continue o preenchimento.
+            </Text>
+          ) : null}
         </View>
         <NativeDateTimeField
           accessibilityHint="Escolha quando o possível gatilho ocorreu"
@@ -179,6 +263,16 @@ export function TriggerEntryForm({ initialRecordedAt = null, patientId, recordTr
           value={mood}
         />
         <FormFeedback message={feedback?.message} variant={feedback?.variant} />
+        {undoRecordId !== null ? (
+          <AccessibleButton
+            accessibilityHint="Remove o gatilho que você acabou de salvar"
+            accessibilityLabel="Desfazer registro do gatilho"
+            busy={busy}
+            onPress={undo}
+            title="Desfazer"
+            variant="secondary"
+          />
+        ) : null}
         <AccessibleButton
           accessibilityHint="Valida e salva este gatilho no aparelho"
           accessibilityLabel="Salvar gatilho"
@@ -206,9 +300,17 @@ export function TriggerEntryForm({ initialRecordedAt = null, patientId, recordTr
 function ConnectedTriggerEntryScreen() {
   const { user } = useAuthSession();
   const patientId = user?.patientId ?? user?.id;
-  const { recordTrigger } = getContainer().clinicalForPatient(patientId);
+  const { deleteTrigger, manageFormDraft, recordTrigger } =
+    getContainer().clinicalForPatient(patientId);
 
-  return <TriggerEntryForm patientId={patientId} recordTrigger={recordTrigger} />;
+  return (
+    <TriggerEntryForm
+      deleteTrigger={deleteTrigger}
+      manageFormDraft={manageFormDraft}
+      patientId={patientId}
+      recordTrigger={recordTrigger}
+    />
+  );
 }
 
 export default function TriggerEntryScreen(props) {
@@ -221,10 +323,11 @@ export default function TriggerEntryScreen(props) {
 
 const styles = StyleSheet.create({
   safeArea: { backgroundColor: '#F8FAFC', flex: 1 },
-  content: { flexGrow: 1, gap: 20, padding: 24 },
+  content: { flexGrow: 1, gap: 20, padding: 24, paddingBottom: 96 },
   heading: { gap: 8, marginBottom: 4 },
   title: { color: '#17324D', fontSize: 28, fontWeight: '700' },
   description: { color: '#334155', fontSize: 16, lineHeight: 24 },
+  draftNotice: { color: '#175CD3', fontSize: 14, lineHeight: 20 },
   field: { gap: 8 },
   label: { color: '#17324D', fontSize: 15, fontWeight: '600' },
   select: {

@@ -7,6 +7,7 @@ import { createSQLiteTestDatabase } from '../unit/factories/sqliteTestDatabase.j
 const EXPECTED_TABLES = [
   'access_grants',
   'adherence',
+  'form_drafts',
   'medic_caretakers',
   'patients',
   'reminders',
@@ -85,6 +86,7 @@ describe('database migration bootstrap', () => {
       { version: 3, name: 'seizure_aura' },
       { version: 4, name: 'trigger_causes' },
       { version: 5, name: 'treatment_details' },
+      { version: 6, name: 'form_drafts' },
     ]);
     expect(seizureColumns).toContainEqual(
       expect.objectContaining({
@@ -162,6 +164,7 @@ describe('database migration bootstrap', () => {
       { version: 3 },
       { version: 4 },
       { version: 5 },
+      { version: 6 },
     ]);
   });
 

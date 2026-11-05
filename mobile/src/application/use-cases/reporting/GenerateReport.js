@@ -1,5 +1,6 @@
 import {
   aggregateAdherence,
+  aggregateAura,
   calculateTriggerTrends,
   evaluateClinicalAlerts,
   selectReportPeriod,
@@ -36,6 +37,7 @@ export class GenerateReport {
       this.treatmentRepository.listAdherenceByPeriod(patientId, period),
     ]);
     const adherence = aggregateAdherence(confirmations);
+    const aura = aggregateAura(seizures);
     const alerts = evaluateClinicalAlerts({
       seizureCount: seizures.length,
       adherenceRate: adherence.rate,
@@ -47,6 +49,7 @@ export class GenerateReport {
       triggers: Object.freeze([...triggers]),
       triggerTrends: calculateTriggerTrends(triggers),
       adherence,
+      aura,
       alerts,
       empty: seizures.length === 0 && triggers.length === 0 && adherence.finalDoses === 0,
     });

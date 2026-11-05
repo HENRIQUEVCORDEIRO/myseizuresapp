@@ -1,5 +1,6 @@
 import {
   aggregateAdherence,
+  aggregateAura,
   evaluateClinicalAlerts,
   REPORTING_ALERT_RULES,
   selectReportPeriod,
@@ -29,6 +30,27 @@ describe('reporting period and clinical indicator rules', () => {
         { reminderId: 3, consumptionStatus: 'SCHEDULED' },
       ]),
     ).toEqual({ finalDoses: 2, takenDoses: 1, rate: 50 });
+  });
+
+  test('calculates the aura percentage over recorded seizures only', () => {
+    expect(aggregateAura([])).toEqual({
+      totalSeizures: 0,
+      withAura: 0,
+      rate: undefined,
+    });
+    expect(aggregateAura([{ feltAura: true }, { feltAura: false }, { feltAura: false }])).toEqual({
+      totalSeizures: 3,
+      withAura: 1,
+      rate: (1 / 3) * 100,
+    });
+    expect(aggregateAura([{ feltAura: true }, { feltAura: true }])).toEqual({
+      totalSeizures: 2,
+      withAura: 2,
+      rate: 100,
+    });
+    expect(() => aggregateAura([{ feltAura: 'yes' }])).toThrow(
+      'seizures[0].feltAura must be a boolean.',
+    );
   });
 
   test('applies seizure and adherence indicators exactly at their documented boundaries', () => {

@@ -9,10 +9,15 @@ function report(overrides = {}) {
   return {
     patientId: 1,
     period: { periodStart: '2026-08-20T00:00:00.000Z', periodEnd: PERIOD_END },
-    seizures: [{ id: 1 }, { id: 2 }, { id: 3 }],
+    seizures: [
+      { id: 1, feltAura: true },
+      { id: 2, feltAura: false },
+      { id: 3, feltAura: false },
+    ],
     triggers: [{ id: 1, commonCause: 'SLEEP' }],
     triggerTrends: [{ cause: 'SLEEP', count: 1 }],
     adherence: { finalDoses: 2, takenDoses: 1, rate: 50 },
+    aura: { totalSeizures: 3, withAura: 1, rate: 100 / 3 },
     alerts: [
       {
         id: 'LOW_ADHERENCE',
@@ -50,6 +55,10 @@ describe('professional selected-period report', () => {
       screen.getByLabelText(/Gráfico do período: Crises 3, Possíveis gatilhos 1, Doses finais 2/),
     ).toBeOnTheScreen();
     expect(screen.getByText('Sono: 1')).toBeOnTheScreen();
+    expect(screen.getByText('33.3% (1 de 3 crises com aura)')).toBeOnTheScreen();
+    expect(
+      screen.getByText('Percentual de crises registradas com aura; não representa risco clínico.'),
+    ).toBeOnTheScreen();
     expect(screen.getByText('[Média] BAIXA ADESÃO')).toBeOnTheScreen();
     expect(
       screen.getByText(

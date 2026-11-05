@@ -108,9 +108,9 @@ test('grant, report, and revoke journey denies every subsequent clinical report 
   const clinicalRepositories = {
     seizureRepository: {
       listSeizuresByPeriod: jest.fn().mockResolvedValue([
-        { id: 1, occurredAt: '2026-08-21T08:00:00.000Z' },
-        { id: 2, occurredAt: '2026-08-22T08:00:00.000Z' },
-        { id: 3, occurredAt: '2026-08-23T08:00:00.000Z' },
+        { id: 1, occurredAt: '2026-08-21T08:00:00.000Z', feltAura: true },
+        { id: 2, occurredAt: '2026-08-22T08:00:00.000Z', feltAura: false },
+        { id: 3, occurredAt: '2026-08-23T08:00:00.000Z', feltAura: false },
       ]),
     },
     triggerRepository: {
@@ -150,6 +150,7 @@ test('grant, report, and revoke journey denies every subsequent clinical report 
     periodEnd: PERIOD_END,
   });
   expect(authorizedReport.seizures).toHaveLength(3);
+  expect(authorizedReport.aura).toEqual({ totalSeizures: 3, withAura: 1, rate: (1 / 3) * 100 });
   expect(authorizedReport.triggerTrends).toEqual([{ cause: 'SLEEP', count: 1 }]);
   expect(authorizedReport.alerts.map((alert) => alert.id)).toEqual([
     'SEIZURE_FREQUENCY',

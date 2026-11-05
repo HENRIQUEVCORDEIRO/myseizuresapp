@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 
 import SeizureEntryScreen from '../../app/(patient)/seizures/new.js';
 import TriggerEntryScreen from '../../app/(patient)/triggers/new.js';
+import { FormDraftType } from '../../src/application/use-cases/drafts/index.js';
 import { formatDateTime } from '../../src/presentation/formatters/index.js';
 
 jest.mock('@react-native-community/datetimepicker', () => {
@@ -16,6 +17,22 @@ const PATIENT_ID = 7;
 function createCommand(result) {
   return {
     execute: jest.fn().mockResolvedValue(result),
+  };
+}
+
+function createDraftStore(draft = null) {
+  let current = draft;
+
+  return {
+    load: jest.fn(async () => current),
+    save: jest.fn(async ({ formType, payload }) => {
+      current = { formType, payload };
+      return current;
+    }),
+    clear: jest.fn(async () => {
+      current = null;
+      return true;
+    }),
   };
 }
 
@@ -98,6 +115,110 @@ describe('patient clinical-record entry flows', () => {
         feltAura: true,
       }),
     );
+  });
+
+  test('restores and clears a saved seizure draft after a successful save', async () => {
+    const manageFormDraft = createDraftStore({
+      formType: FormDraftType.SEIZURE,
+      payload: {
+        feltAura: true,
+        occurredAt: '2026-07-10T08:30:00.000Z',
+        occurrenceType: 'GENERALIZED',
+      },
+    });
+    const recordSeizure = createCommand({ id: 103 });
+    render(
+      <SeizureEntryScreen
+        manageFormDraft={manageFormDraft}
+        patientId={PATIENT_ID}
+        recordSeizure={recordSeizure}
+      />,
+    );
+
+    expect(
+      await screen.findByText('Rascunho restaurado. Continue o preenchimento.'),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByRole('radio', { name: 'Generalizada' }).props.accessibilityState,
+    ).toMatchObject({ checked: true });
+    expect(screen.getByRole('radio', { name: 'Sim' }).props.accessibilityState).toMatchObject({
+      checked: true,
+    });
+
+    fireEvent.press(screen.getByRole('button', { name: 'Salvar crise' }));
+
+    await waitFor(() =>
+      expect(recordSeizure.execute).toHaveBeenCalledWith({
+        patientId: PATIENT_ID,
+        occurredAt: '2026-07-10T08:30:00.000Z',
+        occurrenceType: 'GENERALIZED',
+        feltAura: true,
+      }),
+    );
+    await waitFor(() =>
+      expect(manageFormDraft.clear).toHaveBeenCalledWith({
+        patientId: PATIENT_ID,
+        formType: FormDraftType.SEIZURE,
+      }),
+    );
+  });
+
+  test('autosaves a seizure draft after the patient changes a restored field', async () => {
+    const manageFormDraft = createDraftStore({
+      formType: FormDraftType.SEIZURE,
+      payload: {
+        feltAura: false,
+        occurredAt: '2026-07-10T08:30:00.000Z',
+        occurrenceType: 'FOCAL',
+      },
+    });
+    render(
+      <SeizureEntryScreen
+        manageFormDraft={manageFormDraft}
+        patientId={PATIENT_ID}
+        recordSeizure={createCommand({ id: 104 })}
+      />,
+    );
+
+    await screen.findByText('Rascunho restaurado. Continue o preenchimento.');
+    fireEvent.press(screen.getByRole('radio', { name: 'Generalizada' }));
+
+    await waitFor(() =>
+      expect(manageFormDraft.save).toHaveBeenCalledWith({
+        patientId: PATIENT_ID,
+        formType: FormDraftType.SEIZURE,
+        payload: expect.objectContaining({ occurrenceType: 'GENERALIZED' }),
+      }),
+    );
+  });
+
+  test('offers undo for a just-saved seizure and removes the record', async () => {
+    const deleteSeizure = { execute: jest.fn().mockResolvedValue(true) };
+    const recordSeizure = createCommand({ id: 105 });
+    render(
+      <SeizureEntryScreen
+        deleteSeizure={deleteSeizure}
+        initialOccurredAt="2026-07-10T08:30:00.000Z"
+        patientId={PATIENT_ID}
+        recordSeizure={recordSeizure}
+      />,
+    );
+
+    fireEvent.press(screen.getByRole('radio', { name: 'Focal' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Salvar crise' }));
+
+    const undoButton = await screen.findByRole('button', {
+      name: 'Desfazer registro da crise',
+    });
+    fireEvent.press(undoButton);
+
+    await waitFor(() =>
+      expect(deleteSeizure.execute).toHaveBeenCalledWith({
+        patientId: PATIENT_ID,
+        recordId: 105,
+      }),
+    );
+    expect(await screen.findByText('Registro desfeito.')).toBeOnTheScreen();
   });
 
   test('starts a new trigger at the current instant', () => {
@@ -194,5 +315,88 @@ describe('patient clinical-record entry flows', () => {
         mood: 3,
       }),
     );
+  });
+
+  test('restores and clears a saved trigger draft after a successful save', async () => {
+    const manageFormDraft = createDraftStore({
+      formType: FormDraftType.TRIGGER,
+      payload: {
+        causes: ['SLEEP', 'STRESS'],
+        mood: 3,
+        otherDescription: '',
+        recordedAt: '2026-07-10T09:00:00.000Z',
+        sleepQuality: 2,
+      },
+    });
+    const recordTrigger = createCommand({ id: 205 });
+    render(
+      <TriggerEntryScreen
+        manageFormDraft={manageFormDraft}
+        patientId={PATIENT_ID}
+        recordTrigger={recordTrigger}
+      />,
+    );
+
+    expect(
+      await screen.findByText('Rascunho restaurado. Continue o preenchimento.'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('Sono, Estresse')).toBeOnTheScreen();
+    expect(
+      screen.getByRole('radio', { name: 'Qualidade do sono 2' }).props.accessibilityState,
+    ).toMatchObject({ checked: true });
+    expect(screen.getByRole('radio', { name: 'Humor 3' }).props.accessibilityState).toMatchObject({
+      checked: true,
+    });
+
+    fireEvent.press(screen.getByRole('button', { name: 'Salvar gatilho' }));
+
+    await waitFor(() =>
+      expect(recordTrigger.execute).toHaveBeenCalledWith({
+        patientId: PATIENT_ID,
+        recordedAt: '2026-07-10T09:00:00.000Z',
+        causes: ['SLEEP', 'STRESS'],
+        sleepQuality: 2,
+        mood: 3,
+      }),
+    );
+    await waitFor(() =>
+      expect(manageFormDraft.clear).toHaveBeenCalledWith({
+        patientId: PATIENT_ID,
+        formType: FormDraftType.TRIGGER,
+      }),
+    );
+  });
+
+  test('offers undo for a just-saved trigger and removes the record', async () => {
+    const deleteTrigger = { execute: jest.fn().mockResolvedValue(true) };
+    const recordTrigger = createCommand({ id: 206 });
+    render(
+      <TriggerEntryScreen
+        deleteTrigger={deleteTrigger}
+        initialRecordedAt="2026-07-10T09:00:00.000Z"
+        patientId={PATIENT_ID}
+        recordTrigger={recordTrigger}
+      />,
+    );
+
+    fireEvent.press(screen.getByLabelText('Causas do gatilho'));
+    fireEvent.press(screen.getByLabelText('Sono'));
+    fireEvent.press(screen.getByLabelText('Confirmar seleção'));
+    fireEvent.press(screen.getByRole('radio', { name: 'Qualidade do sono 2' }));
+    fireEvent.press(screen.getByRole('radio', { name: 'Humor 3' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Salvar gatilho' }));
+
+    const undoButton = await screen.findByRole('button', {
+      name: 'Desfazer registro do gatilho',
+    });
+    fireEvent.press(undoButton);
+
+    await waitFor(() =>
+      expect(deleteTrigger.execute).toHaveBeenCalledWith({
+        patientId: PATIENT_ID,
+        recordId: 206,
+      }),
+    );
+    expect(await screen.findByText('Registro desfeito.')).toBeOnTheScreen();
   });
 });

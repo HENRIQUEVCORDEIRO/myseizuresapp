@@ -3,6 +3,7 @@ export {
   PatientScopedRepository,
   PatientScopeError,
 } from './PatientScopedRepository.js';
+export { FormDraftRepository } from './FormDraftRepository.js';
 export { LocalIdentityRepository } from './LocalIdentityRepository.js';
 export { PatientRepository } from './PatientRepository.js';
 export { SeizureRepository } from './SeizureRepository.js';

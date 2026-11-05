@@ -17,7 +17,11 @@ function repositories({ seizures = [], triggers = [], confirmations = [] } = {})
 describe('GenerateReport', () => {
   test('derives period records, trends, adherence, and alerts without persisting a snapshot', async () => {
     const adapters = repositories({
-      seizures: [{ id: 1 }, { id: 2 }, { id: 3 }],
+      seizures: [
+        { id: 1, feltAura: true },
+        { id: 2, feltAura: false },
+        { id: 3, feltAura: false },
+      ],
       triggers: [{ commonCause: 'SLEEP' }, { commonCause: 'STRESS' }, { commonCause: 'SLEEP' }],
       confirmations: [
         { reminderId: 1, consumptionStatus: 'TAKEN' },
@@ -35,6 +39,7 @@ describe('GenerateReport', () => {
       { cause: 'STRESS', count: 1 },
     ]);
     expect(report.adherence).toEqual({ finalDoses: 2, takenDoses: 1, rate: 50 });
+    expect(report.aura).toEqual({ totalSeizures: 3, withAura: 1, rate: (1 / 3) * 100 });
     expect(report.alerts.map((alert) => alert.id)).toEqual(['SEIZURE_FREQUENCY', 'LOW_ADHERENCE']);
     expect(report.empty).toBe(false);
     expect(Object.keys(adapters).some((name) => /save|store/i.test(name))).toBe(false);
@@ -48,6 +53,21 @@ describe('GenerateReport', () => {
     expect(report.empty).toBe(true);
     expect(report.adherence.rate).toBeUndefined();
     expect(report.alerts).toEqual([]);
+  });
+
+  test('resolves patient self-access locally without calling the access API', async () => {
+    const adapters = repositories({
+      seizures: [{ id: 1, feltAura: false }],
+    });
+    const authorizePatientAccess = { execute: jest.fn() };
+    const report = await new GenerateReport({
+      ...adapters,
+      authorizePatientAccess,
+      getActivePatientId: () => 1,
+    }).execute({ patientId: 1, periodType: ReportPeriodType.WEEKLY, periodEnd: END });
+
+    expect(report.patientId).toBe(1);
+    expect(authorizePatientAccess.execute).not.toHaveBeenCalled();
   });
 
   test('requires authorization before querying another patient', async () => {

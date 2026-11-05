@@ -24,6 +24,11 @@ function adherenceText(adherence) {
   return `${adherence.rate.toFixed(1)}% (${adherence.takenDoses} de ${adherence.finalDoses} doses finais tomadas)`;
 }
 
+function auraText(aura) {
+  if (aura.rate === undefined) return 'Não disponível: nenhuma crise registrada.';
+  return `${aura.rate.toFixed(1)}% (${aura.withAura} de ${aura.totalSeizures} crises com aura)`;
+}
+
 export function ProfessionalReport({
   generateReport,
   initialPeriodEnd = new Date().toISOString(),
@@ -177,6 +182,15 @@ export function ProfessionalReport({
               ) : (
                 <Text>Nenhuma tendência de gatilho neste período.</Text>
               )}
+            </View>
+            <View accessibilityRole="summary" style={styles.summary}>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>
+                Auras
+              </Text>
+              <Text>{auraText(report.aura)}</Text>
+              <Text style={styles.note}>
+                Percentual de crises registradas com aura; não representa risco clínico.
+              </Text>
             </View>
             <ClinicalAlertList alerts={report.alerts} />
           </View>
