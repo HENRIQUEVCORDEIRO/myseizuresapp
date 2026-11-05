@@ -10,27 +10,9 @@ function report(overrides = {}) {
     patientId: 1,
     period: { periodStart: '2026-08-20T00:00:00.000Z', periodEnd: PERIOD_END },
     seizures: [
-      {
-        id: 1,
-        occurredAt: '2026-08-21T10:00:00.000Z',
-        occurrenceType: 'FOCAL',
-        feltAura: true,
-        description: 'Formigamento no braço esquerdo',
-      },
-      {
-        id: 2,
-        occurredAt: '2026-08-23T14:30:00.000Z',
-        occurrenceType: 'GENERALIZED',
-        feltAura: false,
-        description: null,
-      },
-      {
-        id: 3,
-        occurredAt: '2026-08-25T08:15:00.000Z',
-        occurrenceType: 'UNKNOWN',
-        feltAura: false,
-        description: null,
-      },
+      { id: 1, feltAura: true },
+      { id: 2, feltAura: false },
+      { id: 3, feltAura: false },
     ],
     triggers: [{ id: 1, commonCause: 'SLEEP' }],
     triggerTrends: [{ cause: 'SLEEP', count: 1 }],
@@ -76,13 +58,6 @@ describe('professional selected-period report', () => {
     expect(screen.getByText('33.3% (1 de 3 crises com aura)')).toBeOnTheScreen();
     expect(
       screen.getByText('Percentual de crises registradas com aura; não representa risco clínico.'),
-    ).toBeOnTheScreen();
-    expect(screen.getByText('Crises registradas')).toBeOnTheScreen();
-    expect(screen.getByText('Formigamento no braço esquerdo')).toBeOnTheScreen();
-    expect(
-      screen.getByLabelText(
-        /Crise de .*Focal, aura sim, descrição: Formigamento no braço esquerdo/,
-      ),
     ).toBeOnTheScreen();
     expect(screen.getByText('[Média] BAIXA ADESÃO')).toBeOnTheScreen();
     expect(

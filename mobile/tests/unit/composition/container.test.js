@@ -46,9 +46,6 @@ describe('mobile composition container', () => {
     const reportCommands = container.reportForPatient(7);
     expect(reportCommands.generateReport.authorizePatientAccess).toBeTruthy();
     expect(container.reportForPatient(7)).toBe(reportCommands);
-    const supportCommands = container.supportForPatient(7);
-    expect(supportCommands.manageSupportContact.getActivePatientId()).toBe(7);
-    expect(container.supportForPatient(7)).toBe(supportCommands);
     expect(container.config.apiBaseUrl).toBe('https://api.example.test');
     expect(Object.isFrozen(container)).toBe(true);
   });

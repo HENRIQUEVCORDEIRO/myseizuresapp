@@ -1,5 +1,4 @@
 import { act, create } from 'react-test-renderer';
-import { StyleSheet } from 'react-native';
 
 import {
   AccessibleButton,
@@ -45,30 +44,6 @@ describe('accessible presentation components', () => {
 
     const input = renderer.root.findByProps({ accessibilityLabel: 'Email' });
     expect(input.props.accessibilityHint).toBe('Enter your account email');
-  });
-
-  test('form field supports a multiline input style for longer descriptions', () => {
-    let renderer;
-
-    act(() => {
-      renderer = create(
-        <FormField
-          inputStyle={{ minHeight: 120, paddingTop: 12 }}
-          label="Description"
-          multiline
-          onChangeText={jest.fn()}
-          textAlignVertical="top"
-          value=""
-        />,
-      );
-    });
-
-    const input = renderer.root.findByProps({ accessibilityLabel: 'Description' });
-    const style = StyleSheet.flatten(input.props.style);
-    expect(input.props.multiline).toBe(true);
-    expect(input.props.textAlignVertical).toBe('top');
-    expect(style.minHeight).toBe(120);
-    expect(style.paddingTop).toBe(12);
   });
 
   test('error state is announced and offers an accessible recovery action', () => {

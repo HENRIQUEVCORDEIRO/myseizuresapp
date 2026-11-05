@@ -13,7 +13,6 @@ const EXPECTED_TABLES = [
   'reminders',
   'schema_migrations',
   'seizure_records',
-  'support_contacts',
   'treatment_times',
   'treatments',
   'trigger_causes',
@@ -88,19 +87,12 @@ describe('database migration bootstrap', () => {
       { version: 4, name: 'trigger_causes' },
       { version: 5, name: 'treatment_details' },
       { version: 6, name: 'form_drafts' },
-      { version: 7, name: 'seizure_description' },
-      { version: 8, name: 'support_contact' },
     ]);
     expect(seizureColumns).toContainEqual(
       expect.objectContaining({
         name: 'felt_aura',
         notnull: 1,
         dflt_value: '0',
-      }),
-    );
-    expect(seizureColumns).toContainEqual(
-      expect.objectContaining({
-        name: 'description',
       }),
     );
     expect(treatmentColumns.map(({ name }) => name)).toEqual(
@@ -147,8 +139,8 @@ describe('database migration bootstrap', () => {
     await runMigrations(database, migrations);
 
     await expect(
-      database.getFirstAsync('SELECT felt_aura, description FROM seizure_records WHERE id = 1;'),
-    ).resolves.toEqual({ felt_aura: 0, description: null });
+      database.getFirstAsync('SELECT felt_aura FROM seizure_records WHERE id = 1;'),
+    ).resolves.toEqual({ felt_aura: 0 });
     await expect(
       database.getAllAsync('SELECT trigger_id, cause FROM trigger_causes ORDER BY trigger_id ASC;'),
     ).resolves.toEqual([{ trigger_id: 1, cause: 'SLEEP' }]);
@@ -173,8 +165,6 @@ describe('database migration bootstrap', () => {
       { version: 4 },
       { version: 5 },
       { version: 6 },
-      { version: 7 },
-      { version: 8 },
     ]);
   });
 

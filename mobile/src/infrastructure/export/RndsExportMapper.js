@@ -90,7 +90,7 @@ function mapPeriod(report) {
 function mapSeizure(value, patientId, period, index) {
   const seizure = requireObject(value, `report.seizures[${index}]`);
   requirePatientScope(seizure.patientId, patientId, `report.seizures[${index}]`);
-  const mapped = {
+  return {
     occurredAt: requireWithinPeriod(
       seizure.occurredAt,
       period,
@@ -102,13 +102,6 @@ function mapSeizure(value, patientId, period, index) {
       `report.seizures[${index}].occurrenceType`,
     ),
   };
-  if (seizure.description !== undefined && seizure.description !== null) {
-    mapped.description = requireString(
-      seizure.description,
-      `report.seizures[${index}].description`,
-    );
-  }
-  return mapped;
 }
 
 function mapTrigger(value, patientId, period, index) {

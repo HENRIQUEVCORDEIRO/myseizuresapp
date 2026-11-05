@@ -9,19 +9,13 @@ import {
   FormField,
 } from '../../../src/presentation/components/index.js';
 import { formatDateTime } from '../../../src/presentation/formatters/index.js';
-import { SupportContactSection } from '../../../src/presentation/features/sharing/index.js';
 import { useAuthSession } from '../../../src/presentation/navigation/index.js';
 
 function activeGrants(grants) {
   return grants.filter((grant) => grant.revokedAt === null);
 }
 
-export function SharingManagement({
-  grantAccess,
-  listAccessGrants,
-  manageSupportContact,
-  revokeAccess,
-}) {
+export function SharingManagement({ grantAccess, listAccessGrants, revokeAccess }) {
   const [grants, setGrants] = useState([]);
   const [professionalId, setProfessionalId] = useState('');
   const [fieldError, setFieldError] = useState(null);
@@ -197,9 +191,6 @@ export function SharingManagement({
             ))}
           </View>
         ) : null}
-        {manageSupportContact ? (
-          <SupportContactSection manageSupportContact={manageSupportContact} />
-        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -208,14 +199,7 @@ export function SharingManagement({
 function ConnectedSharingScreen() {
   const { user } = useAuthSession();
   const patientId = user?.patientId ?? user?.id;
-  const { manageSupportContact } = getContainer().supportForPatient(patientId);
-
-  return (
-    <SharingManagement
-      {...getContainer().accessForPatient(patientId)}
-      manageSupportContact={manageSupportContact}
-    />
-  );
+  return <SharingManagement {...getContainer().accessForPatient(patientId)} />;
 }
 
 export default function SharingScreen(props) {
@@ -224,7 +208,7 @@ export default function SharingScreen(props) {
 
 const styles = StyleSheet.create({
   safeArea: { backgroundColor: '#F8FAFC', flex: 1 },
-  content: { flexGrow: 1, gap: 18, padding: 24, paddingBottom: 96 },
+  content: { flexGrow: 1, gap: 18, padding: 24 },
   heading: { gap: 8 },
   title: { color: '#17324D', fontSize: 28, fontWeight: '700' },
   description: { color: '#334155', fontSize: 16, lineHeight: 24 },

@@ -9,7 +9,6 @@ import {
 } from '../../src/presentation/components/index.js';
 import { ProfessionalPatientList } from '../../src/presentation/features/professional/index.js';
 import { ClinicalAlertList } from '../../src/presentation/features/reports/ClinicalAlertList.js';
-import { SupportContactSection } from '../../src/presentation/features/sharing/index.js';
 
 const MINIMUM_TOUCH_TARGET = 48;
 const MINIMUM_NORMAL_TEXT_CONTRAST = 4.5;
@@ -76,24 +75,14 @@ describe('critical-screen accessibility regressions', () => {
     const dateIndex = labels.indexOf('Escolher data — Data e hora da crise');
     const typeIndex = labels.indexOf('Tipo de ocorrência');
     const auraIndex = labels.indexOf('Sentiu que viria?');
-    const descriptionIndex = labels.indexOf('Descrição da crise (opcional)');
     const saveIndex = labels.indexOf('Salvar crise');
 
     expect(dateIndex).toBeGreaterThanOrEqual(0);
     expect(typeIndex).toBeGreaterThan(dateIndex);
     expect(auraIndex).toBeGreaterThan(typeIndex);
-    expect(descriptionIndex).toBeGreaterThan(auraIndex);
-    expect(saveIndex).toBeGreaterThan(descriptionIndex);
+    expect(saveIndex).toBeGreaterThan(auraIndex);
     expect(accessibleNode(renderer, 'Tipo de ocorrência', 'radiogroup')).toBeTruthy();
     expect(accessibleNode(renderer, 'Sentiu que viria?', 'radiogroup')).toBeTruthy();
-    expect(
-      renderer.root.findByProps({ accessibilityLabel: 'Descrição da crise (opcional)' }).props,
-    ).toEqual(
-      expect.objectContaining({
-        accessibilityHint: expect.stringMatching(/descreva com suas palavras/i),
-        multiline: true,
-      }),
-    );
     expect(
       renderer.root.findByProps({ accessibilityLabel: 'Escolher data — Data e hora da crise' })
         .props,
@@ -109,39 +98,6 @@ describe('critical-screen accessibility regressions', () => {
         accessibilityRole: 'button',
       }),
     );
-  });
-
-  test('trusted contact section exposes labelled fields and actions', async () => {
-    const manageSupportContact = {
-      load: jest.fn().mockResolvedValue({
-        name: 'Maria',
-        relationship: 'Mãe',
-        phone: '11999990000',
-      }),
-      save: jest.fn(),
-      clear: jest.fn(),
-    };
-    let renderer;
-
-    await act(async () => {
-      renderer = create(<SupportContactSection manageSupportContact={manageSupportContact} />);
-    });
-
-    expect(labelledNodes(renderer)).toEqual(
-      expect.arrayContaining([
-        'Nome do contato',
-        'Relação',
-        'Telefone',
-        'Salvar contato de confiança',
-        'Remover contato de confiança',
-      ]),
-    );
-    expect(accessibleNode(renderer, 'Salvar contato de confiança', 'button').props).toEqual(
-      expect.objectContaining({
-        accessibilityHint: expect.stringMatching(/apenas neste aparelho/i),
-      }),
-    );
-    expect(accessibleNode(renderer, 'Remover contato de confiança', 'button')).toBeTruthy();
   });
 
   test('professional patient list labels authorized cards and actions', async () => {

@@ -46,7 +46,6 @@ describe('clinical record use cases', () => {
       occurredAt: '2026-08-10T12:30:00.000Z',
       occurrenceType: SeizureOccurrenceType.FOCAL,
       feltAura: true,
-      description: '  Visão embaçada por alguns segundos  ',
     });
 
     expect(saved).toBeInstanceOf(SeizureRecord);
@@ -54,15 +53,10 @@ describe('clinical record use cases', () => {
       id: 101,
       patientId: ACTIVE_PATIENT_ID,
       feltAura: true,
-      description: 'Visão embaçada por alguns segundos',
       createdAt: NOW,
     });
     expect(seizureRepository.saveSeizure).toHaveBeenCalledWith(
-      expect.objectContaining({
-        patientId: ACTIVE_PATIENT_ID,
-        feltAura: true,
-        description: 'Visão embaçada por alguns segundos',
-      }),
+      expect.objectContaining({ patientId: ACTIVE_PATIENT_ID, feltAura: true }),
     );
   });
 

@@ -29,7 +29,6 @@ function report() {
         patientId: PATIENT_ID,
         occurredAt: '2026-08-24T12:00:00.000Z',
         occurrenceType: 'FOCAL',
-        description: 'Perda de consciência por cerca de um minuto',
       },
     ],
     triggers: [],
@@ -110,11 +109,6 @@ describeExport('authorized local-only report export', () => {
         start: '2026-08-21T00:00:00.000Z',
         end: PERIOD_END,
       },
-      seizures: [
-        expect.objectContaining({
-          description: 'Perda de consciência por cerca de um minuto',
-        }),
-      ],
     });
     expect(global.fetch).not.toHaveBeenCalled();
   });
