@@ -3,7 +3,7 @@
 > Roteiro, termo de consentimento, métricas e modo de reportar os resultados do teste que valida
 > as SC-001, SC-002 e SC-003.
 >
-> **Status:** v1.0 · **Data:** 20/10/2026 · **Sprint de execução:** novembro de 2026
+> **Status:** v1.1 · **Data:** 20/10/2026 · **Revisão:** 05/11/2026 · **Sprint de execução:** novembro de 2026
 > **Relacionado:** `docs/plano-geral-outubro-2026.md` · `specs/001-manage-epilepsy-care/spec.md` ·
 > `docs/visual-design-system.md`
 
@@ -51,7 +51,7 @@ duas personas, medindo tempo de conclusão, taxa de sucesso e erros.
 | Perfil | N recomendado | Recrutamento | Perfil de fundo |
 |---|---|---|---|
 | Paciente (P) | 5 – 8 | Pessoas com epilepsia diagnosticada, ou cuidadores/familiares que convivem com o uso de medicação | Usuário real do produto, não enviesado por familiaridade técnica |
-| Profissional (M) | 2 – 3 | Neur Logging, residente, enfermeiro de UBS, cuidador profissional | Usuário derelatórios, não necessariamente técnico |
+| Profissional (M) | 2 – 3 | Neurologista, residente, enfermeiro de UBS, cuidador profissional | Usuário de relatórios, não necessariamente técnico |
 | Observador (O) | 1 | Moderador, não conduz | — |
 
 **Justificativa do N:** para tarefas binárias (sucesso/fracasso) o estimador de proporção com
@@ -98,15 +98,17 @@ casos registra-se "assistida" e a tarefa é contada como **falha** para efeito d
 > "Imagine que você teve uma crise hoje à tarde, por volta das 15h, do tipo **focal**. Registre
 > essa crise no app."
 
-**Métrica**: tempo até a mensagem de confirmação; número de toques; erros; besoin de ajuda.
-**Nota**: a hora **não** precisa ser digitada — é o que se está medindo.
+**Métrica**: tempo até a mensagem de confirmação; número de toques; erros; necessidade de ajuda.
+**Nota**: a hora **não** precisa ser digitada — é o que se está medindo. A descrição da crise é
+**opcional** e não deve ser exigida para concluir a tarefa; se o participante a preencher, isso
+não conta contra o tempo da SC-001.
 
 ### 5.3 Tarefa B — Criar tratamento e confirmar a dose (SC-002, < 2 min)
 
 > "Você toma um medicamento chamado **Aspirina 500 mg**, uma vez ao dia, pela **manhã**. Crie esse
 > tratamento no app e confirme a dose de hoje como **tomada**."
 
-**Métrica**: tempo total (criar + confirmar); erros na creation de horários; necessidade de ajuda.
+**Métrica**: tempo total (criar + confirmar); erros na criação de horários; necessidade de ajuda.
 **Nota**: se a pessoa travar no campo de horários, é **falha da interface** — registrar a
 barreira exata ("não sei como colocar 08:00").
 
@@ -132,7 +134,7 @@ seções — a leitura em voz alta é o critério.
 
 **Métrica**: presença do registro após reabertura, **sem** conexão.
 
-### 5.7 Perguntas de saída ( qualitativas)
+### 5.7 Perguntas de saída (qualitativas)
 
 1. "Em algum momento você sentiu que o app era **complicado**? Onde?"
 2. "Se um familiar tivesse que registrar uma crise por você, **o que** ele precisaria fazer?"
@@ -155,6 +157,7 @@ O teste **não pode** começar com a base vazia — a Tarefa C exige dados.
 | 4 gatilhos | causas variadas (sono, estresse, rotina, medicação) |
 | 3 doses confirmadas | 2 `TAKEN`, 1 `MISSED` → adesão 66,7% |
 | 1 tratamento | "Aspirina 500 mg", 1× ao dia, 08:00 |
+| Contato de confiança | Nome e telefone **fictícios**; nunca dados reais de terceiros |
 
 ⚠️ A semente de 3 convulsões existe **de propósito**: com 3 convulsões na semana, a regra
 `SEIZURE_FREQUENCY` dispara e o profissional **tem** um alerta para encontrar na Tarefa C. Sem
@@ -175,7 +178,7 @@ exatamente o mesmo cenário. Registrar o procedimento no diário de campo.
 | **Taxa de sucesso** | Concluiu sem ajuda e sem erro de rota |
 | **Taxa de erro** | Ações que precisaram desfazer (erro de toque, valor errado, campo rejeitado) |
 | **SUS** | System Usability Scale (10 itens, escala 0–100) |
-| **Satisfacção por tarefa** | Escala de 5 pontos após cada tarefa |
+| **Satisfação por tarefa** | Escala de 5 pontos após cada tarefa |
 
 ### 7.2 Análise
 
@@ -226,11 +229,14 @@ vira correção com prioridade alta — acessibilidade é um princípio da const
 >
 > Você está sendo convidado(a) a participar de um estudo de usabilidade do aplicativo MySeizures,
 > um protótipo acadêmico de registro de informações de cuidado em epilepsia. A participação é
-> **voluntária** e **não interfere** sobre qualquer assistência em saúde.
+> **voluntária** e **não interfere** em qualquer assistência em saúde.
 >
-> **O quetas envolve:** você irá usar um aplicativo em um aparelho Android, registrando dados
-> **fictícios**, enquanto pensa em voz alta. A sessão dura cerca de 30 minutos e pode ser gravada
-> (vídeo e áudio) para fins acadêmicos.
+> **O que a participação envolve:** você irá usar um aplicativo em um aparelho Android,
+> registrando dados **fictícios**, enquanto pensa em voz alta. A sessão dura cerca de 30 minutos e
+> pode ser gravada (vídeo e áudio) para fins acadêmicos.
+>
+> **Contato de confiança:** durante o estudo, use apenas nome e telefone fictícios. Não insira
+> dados reais de uma pessoa de confiança; o contato fica apenas no aparelho de teste.
 >
 > **Riscos:** o risco é mínimo e equivalente ao de qualquer teste de usabilidade de software. Nenhum
 > dado real de saúde será usado. O aplicativo é um protótipo acadêmico e **não é** instrumento
@@ -243,8 +249,8 @@ vira correção com prioridade alta — acessibilidade é um princípio da const
 > usados apenas em contexto acadêmico. Gravações serão destruídas ao fim da pesquisa. Nenhuma
 > imagem ou trecho de vídeo identificável será publicado.
 >
-> **Voluntariedade e withdrawal:** você pode interromper a qualquer momento, sem justificativa e sem
-> qualquer prejuízo.
+> **Voluntariedade e desistência:** você pode interromper a qualquer momento, sem justificativa e
+> sem qualquer prejuízo.
 >
 > **Contato para dúvidas:** [orientador — nome e e-mail institucional]
 >
@@ -252,9 +258,9 @@ vira correção com prioridade alta — acessibilidade é um princípio da const
 >
 > Nome: ____________________  Data: ____/____/______  Assinatura: ____________________
 
-> ⚠️ **Atenção — o texto acima contém dois artefatos de revisão:** "não interfere" e "O que a participação envolve" são
-> erros de digitação a corrigir antes do uso. Substituir por "não interfere" e "O que a participação
-> envolve". Manter os marcadores `[orientador — nome e e-mail institucional]`.
+> ⚠️ **Atenção — modelo revisado em 05/11/2026.** Ainda é necessário revisar o texto com o comitê de
+> ética institucional e preencher os marcadores `[orientador — nome e e-mail institucional]` antes
+> de aplicar.
 
 ---
 
@@ -295,7 +301,8 @@ se previa.
 - [ ] API simulada acessível na rede do aparelho
 - [ ] Script de seed determinístico e testado
 - [ ] Roteiro impresso, uma folha por tarefa
-- [ ] TCLE impresso e revisado
+- [ ] TCLE impresso e revisado pelo comitê de ética
+- [ ] Contato de confiança preenchido apenas com dados fictícios
 - [ ] Gravador de tela e áudio testado, com armazenamento livre
 - [ ] SUS impresso
 - [ ] Quadro de anotação (tempo, toques, erros, assistências, citações) preparado

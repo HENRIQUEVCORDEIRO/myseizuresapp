@@ -1,0 +1,62 @@
+D9 — estado local observado no N4
+Aparelho: Samsung SM-A145M (RX8WA05SWBH)
+Data: 05/11/2026
+Banco: files/SQLite/myseizures.db
+
+Migrações aplicadas
+-------------------
+1, 2, 3, 4, 5, 6, 7, 8
+
+Contagens finais
+----------------
+seizure_records: 12
+form_drafts: 0
+support_contacts: 0
+access_grants (SQLite local): 0
+  (o grant do profissional 1 para o paciente 1 ficou ativo na API durante o N4)
+
+Crises com descrição (últimas linhas)
+-------------------------------------
+id=15 | 2026-11-05T21:32:06.580Z | GENERALIZED | aura=0
+       description = "Durante a crise tive perda de consciencia e confusao ao acordar."
+id=14 | 2026-11-05T21:18:53.674Z | GENERALIZED | aura=0
+       description = "Rascunho D9 com texto de teste."
+id=13 | 2026-11-05T02:12:24.117Z | GENERALIZED | aura=0
+       description = "Perda de consciencia breve, seguida de confusao."
+id=11 | 2026-11-04T01:31:58.942Z | FOCAL | aura=0
+       description = NULL
+
+Rascunho (form_drafts)
+----------------------
+Estado final: vazio.
+Durante a validação, o rascunho foi gravado com:
+  {"description":"Rascunho D9 com texto de teste.","feltAura":false,
+   "occurredAt":"2026-11-05T21:18:53.674Z","occurrenceType":null}
+Ao reabrir o formulário, o app mostrou "Rascunho restaurado. Continue o preenchimento."
+e restaurou a descrição. Após salvar, form_drafts voltou a 0 linhas.
+
+Contato de confiança (support_contacts)
+---------------------------------------
+Durante a validação:
+  patient_id=1 | name="Maria Souza" | relationship="Mae" | phone="86999990000"
+Depois de editar o nome no app:
+  name="Maria Souza Lima"
+O contato foi recarregado ao trocar de aba e ao sair/entrar novamente como paciente.
+Em seguida foi removido pelo botão "Remover contato"; a tabela ficou com 0 linhas.
+
+Export JSON
+-----------
+Arquivo gerado no aparelho:
+  files/myseizures-report-patient-1-2026-11-05.json
+formatVersion: 1.0
+Crises exportadas no período: 8
+Descrições presentes:
+  2026-11-05T02:12:24.117Z GENERALIZED "Perda de consciencia breve, seguida de confusao."
+  2026-11-05T21:18:53.674Z GENERALIZED "Rascunho D9 com texto de teste."
+  2026-11-05T21:32:06.580Z GENERALIZED "Durante a crise tive perda de consciencia e confusao ao acordar."
+O JSON não contém "Maria", "Maria Souza Lima", "Mae" nem "86999990000".
+
+Relatório do profissional
+-------------------------
+A seção "Crises registradas" exibiu data/hora, tipo, aura e a descrição de cada crise.
+O contato de confiança não apareceu no relatório.

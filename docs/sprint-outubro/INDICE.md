@@ -40,7 +40,7 @@
 | **D6** | ter 27/10 | Home do profissional com lista de pacientes autorizados | ✅ | ✅ 292 | ✅ | ✅ | ✅ | — | — | [d6](2026-10-30-d6.md) |
 | **D7** | qua 28/10 | Relatório unificado com export, disclaimer e notas de rodapé | ✅ | ✅ 293 | ✅ | ✅ | ✅ | — | — | [d7](2026-11-02-d7.md) |
 | **D8** | qui 29/10 | Offline real, rascunho, `Undo`, métrica de auras | ✅ | ✅ 308 | ✅ | ✅ | ✅ | — | — | [d8](2026-11-03-d8.md) |
-| D9 | sex 30/10 | Acessibilidade, rede de apoio, evidência, entrega | | | | | | | | |
+| **D9** | sex 30/10 | Descrição de crises, contato de confiança, acessibilidade e entrega | ✅ | ✅ 322 | ✅ | ✅ | ✅ | — | 👤 | [d9](2026-11-04-d9.md) |
 
 **Legenda:** ✅ passou · ⏳ pendente · ⚠️ falhou · — não aplicável
 
@@ -48,14 +48,14 @@
 
 ## 3. Estado acumulado
 
-| Métrica | D1 | D2 | D3 | D7 | D8 | Alvo em 30/10 |
-|---|---|---|---|---|---|---|
-| Suítes de teste | 38 | 43 | 43 | 44 | **47** | 46 |
-| Testes | 241 | 260 | 267 | 293 | **308** | ~300 |
-| Primitivas de UI | 10 | 10 | 10 | 10 | 10 | 12 |
-| Linhas de código de apresentação | 6.670 | +420 | +30 | — | — | — |
-| Documentos | 11 | 13 | 14 | 18 | **19** | 16 |
-| Funcionalidades da matriz implementadas (parcial ou total) | 8/13 | 8/13 | 8/13 | 8/13 | **9/13** | 11/13 |
+| Métrica | D1 | D2 | D3 | D7 | D8 | D9 | Alvo em 30/10 |
+|---|---|---|---|---|---|---|---|
+| Suítes de teste | 38 | 43 | 43 | 44 | 47 | **49** | 46 |
+| Testes | 241 | 260 | 267 | 293 | 308 | **322** | ~300 |
+| Primitivas de UI | 10 | 10 | 10 | 10 | 10 | 10 | 12 |
+| Linhas de código de apresentação | 6.670 | +420 | +30 | — | — | — | — |
+| Documentos | 11 | 13 | 14 | 18 | 19 | **20** | 16 |
+| Funcionalidades da matriz implementadas (parcial ou total) | 8/13 | 8/13 | 8/13 | 8/13 | 9/13 | **10/13** | 11/13 |
 
 ---
 
@@ -94,66 +94,83 @@ home com lista de pacientes autorizados, alias sem ID, testes, documentação e 
 O D7 está no histórico (`abbc54f` e `ce614d0`), incluindo o relatório unificado, o export do período
 carregado, as notas por métrica, o disclaimer fixo, os testes, a documentação e as evidências.
 
-### 4.7 D8 — na árvore de trabalho
+### 4.7 D8 — commitado
+
+O D8 está no histórico (`6f0ba01` e `7071e7e`), incluindo rascunho persistente, `Undo`, métrica de
+auras, sessão offline, documentação e evidências. O TalkBack não foi repetido; permanece validado
+no D2.
+
+### 4.8 D9 — na árvore de trabalho
 
 | Área | Arquivos principais | Alterado | Motivo |
 |---|---|---|---|
-| Rascunho | `useFormDraft.js`, `ManageFormDraft.js`, `FormDraftRepository.js`, migração `006` | A/M | rascunho persistente por paciente e formulário |
-| Crise e gatilho | `seizures/new.js`, `triggers/new.js`, `DeleteSeizure.js`, `DeleteTrigger.js` | M/A | restauração, autosave, limpeza, `Undo` de 5 s e padding acima da nav bar |
-| Relatório | `reportingRules.js`, `GenerateReport.js`, `ProfessionalReport.js` | M | métrica de auras no relatório, sem alterar o JSON exportado |
-| Composição | `container.js` | M | liga rascunho e remoção aos fluxos do paciente |
-| Testes | `clinicalRecords`, `authSessionProvider`, `formDraftRepository`, `formDraftUseCases`, `clinicalUseCases`, `reportingRules`, `reportingUseCases`, `professionalReport`, `databaseBootstrap`, `us3-sharing-report-flow` | M/A | rascunho, `Undo`, aura, sessão offline e autoacesso sem API |
-| Documentação | `2026-11-03-d8.md`, `INDICE.md`, `evidencias/d8/` | A/M | D8 e N0–N4; capturas e estado local observado |
+| Descrição | `seizures/new.js`, `clinicalRecords.js`, `RecordSeizure.js`, migração `007` | A/M | campo opcional, `trim()`, persistência e rascunho |
+| Contato | `supportContact.js`, `ManageSupportContact.js`, `SupportContactRepository.js`, migração `008` | A | contato de confiança local por paciente |
+| UI | `sharing.js`, `SupportContactSection.js`, `FormField.js` | A/M | seção de contato, campo multilinha e padding |
+| Relatório e export | `ProfessionalReport.js`, `RndsExportMapper.js` | M | “Crises registradas” com descrição; JSON opcional |
+| Composição | `container.js` | M | `supportForPatient` e `ManageSupportContact` |
+| Testes | `clinicalRecords`, `sharingManagement`, `accessibility`, `professionalReport`, `supportContactRepository`, `supportUseCases`, `clinicalUseCases`, `exportMapping`, `container`, `databaseBootstrap`, `exportReport`, `us4-export-flow`, `components` | M/A | descrição, rascunho, contato, relatório, export e a11y |
+| Documentação | `2026-11-04-d9.md`, `INDICE.md`, `usability-study-protocol.md`, `evidencias/d9/` | A/M | D9, N0–N4, TCLE revisado e evidências |
 
 ```bash
-# Código do D8.
+# Código do D9.
 git add \
+  'mobile/app/(patient)/(tabs)/sharing.js' \
   'mobile/app/(patient)/seizures/new.js' \
-  'mobile/app/(patient)/triggers/new.js' \
-  mobile/src/application/use-cases/clinical/DeleteSeizure.js \
-  mobile/src/application/use-cases/clinical/DeleteTrigger.js \
-  mobile/src/application/use-cases/clinical/index.js \
-  mobile/src/application/use-cases/drafts/ManageFormDraft.js \
-  mobile/src/application/use-cases/drafts/index.js \
-  mobile/src/application/use-cases/reporting/GenerateReport.js \
+  mobile/src/application/use-cases/clinical/RecordSeizure.js \
+  mobile/src/application/use-cases/support/ManageSupportContact.js \
+  mobile/src/application/use-cases/support/index.js \
   mobile/src/composition/container.js \
-  mobile/src/domain/rules/reportingRules.js \
-  mobile/src/infrastructure/persistence/migrations/006_form_drafts.js \
+  mobile/src/domain/entities/clinicalRecords.js \
+  mobile/src/domain/entities/index.js \
+  mobile/src/domain/entities/supportContact.js \
+  mobile/src/infrastructure/export/RndsExportMapper.js \
+  mobile/src/infrastructure/persistence/migrations/007_seizure_description.js \
+  mobile/src/infrastructure/persistence/migrations/008_support_contact.js \
   mobile/src/infrastructure/persistence/migrations/index.js \
-  mobile/src/infrastructure/persistence/repositories/FormDraftRepository.js \
+  mobile/src/infrastructure/persistence/repositories/SeizureRepository.js \
+  mobile/src/infrastructure/persistence/repositories/SupportContactRepository.js \
   mobile/src/infrastructure/persistence/repositories/index.js \
+  mobile/src/presentation/components/FormField.js \
   mobile/src/presentation/features/reports/ProfessionalReport.js \
-  mobile/src/presentation/hooks/useFormDraft.js \
+  mobile/src/presentation/features/sharing/SupportContactSection.js \
+  mobile/src/presentation/features/sharing/index.js \
+  mobile/tests/integration/clinicalRecordRepository.test.js \
   mobile/tests/integration/databaseBootstrap.test.js \
-  mobile/tests/integration/formDraftRepository.test.js \
-  mobile/tests/integration/us3-sharing-report-flow.test.js \
-  mobile/tests/presentation/authSessionProvider.test.js \
+  mobile/tests/integration/exportReport.test.js \
+  mobile/tests/integration/supportContactRepository.test.js \
+  mobile/tests/integration/us4-export-flow.test.js \
+  mobile/tests/presentation/accessibility.test.js \
   mobile/tests/presentation/clinicalRecords.test.js \
   mobile/tests/presentation/professionalReport.test.js \
+  mobile/tests/presentation/sharingManagement.test.js \
   mobile/tests/unit/application/clinical/clinicalUseCases.test.js \
-  mobile/tests/unit/application/drafts/formDraftUseCases.test.js \
-  mobile/tests/unit/application/reportingUseCases.test.js \
-  mobile/tests/unit/domain/reportingRules.test.js
-git commit -m "feat: add offline drafts, undo and aura reporting"
+  mobile/tests/unit/application/supportUseCases.test.js \
+  mobile/tests/unit/composition/container.test.js \
+  mobile/tests/unit/domain/clinicalRecords.test.js \
+  mobile/tests/unit/domain/exportMapping.test.js \
+  mobile/tests/unit/presentation/components.test.js
+git commit -m "feat: add seizure description and support contact"
 
-# Evidências e resultado do N4.
+# Protocolo, evidências e resultado do N4.
 git add \
-  docs/sprint-outubro/2026-11-03-d8.md \
+  docs/sprint-outubro/2026-11-04-d9.md \
   docs/sprint-outubro/INDICE.md \
-  docs/sprint-outubro/evidencias/d8
-git commit -m "docs(sprint): record D8 device checks"
+  docs/sprint-outubro/evidencias/d9 \
+  docs/usability-study-protocol.md
+git commit -m "docs(sprint): record D9 device checks"
 ```
 
 **Fora dos commits:** `.specify/`, `prompts/`, `docs/instructions/`, `docs/fix_pesquisa_TCC.pdf`.
 
-### 4.8 Próximo
+### 4.9 Próximo
 
-O D8 está concluído em N0–N4 e pronto para o commit manual. Seguir para **D9** (acessibilidade,
-“descrição de crises”, pessoa de contato, evidências e protocolo de usabilidade/TCLE). Quando
-`react-native-web` estiver disponível, retomar a trilha web (N5). A tradução PT-BR não é uma
-pendência separada; identificadores, domínio, API e testes de domínio permanecem em inglês. O safe
-area do botão **Confirmar** da `SelectSheet` e a atualização automática do fim do período em
-**Registros** continuam como melhorias de UX herdadas do D4.
+O D9 está concluído em N0–N4 e pronto para o commit manual. A próxima frente é a trilha web (N5),
+quando `react-native-web` estiver disponível. A tradução PT-BR não é uma pendência separada;
+identificadores, domínio, API e testes de domínio permanecem em inglês. O safe area do botão
+**Confirmar** da `SelectSheet` e a atualização automática do fim do período em **Registros**
+continuam como melhorias de UX herdadas do D4. A checagem manual de fonte dinâmica e contraste é
+N6 do autor; o TalkBack não deve ser repetido.
 
 **A** = adicionado · **M** = modificado · **R** = renomeado · **D** = removido
 
