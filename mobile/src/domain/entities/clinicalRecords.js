@@ -41,12 +41,21 @@ function requireTriggerCauses({ causes, commonCause }) {
 }
 
 export class SeizureRecord {
-  constructor({ id, patientId, occurredAt, occurrenceType, feltAura = false, createdAt }) {
+  constructor({
+    id,
+    patientId,
+    occurredAt,
+    occurrenceType,
+    feltAura = false,
+    description = null,
+    createdAt,
+  }) {
     this.id = optionalEntityId(id);
     this.patientId = requireEntityId(patientId, 'patientId');
     this.occurredAt = requireTimestamp(occurredAt, 'occurredAt', { allowFuture: false });
     this.occurrenceType = requireEnum(occurrenceType, SeizureOccurrenceType, 'occurrenceType');
     this.feltAura = requireBoolean(feltAura ?? false, 'feltAura');
+    this.description = optionalString(description, 'description');
     this.createdAt = requireTimestamp(createdAt, 'createdAt', { allowFuture: false });
     Object.freeze(this);
   }

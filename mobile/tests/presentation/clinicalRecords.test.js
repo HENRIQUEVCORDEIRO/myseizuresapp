@@ -117,10 +117,39 @@ describe('patient clinical-record entry flows', () => {
     );
   });
 
+  test('seizure entry saves an optional description in the patient words', async () => {
+    const recordSeizure = createCommand({ id: 102 });
+    render(
+      <SeizureEntryScreen
+        initialOccurredAt="2026-07-10T08:30:00.000Z"
+        patientId={PATIENT_ID}
+        recordSeizure={recordSeizure}
+      />,
+    );
+
+    fireEvent.press(screen.getByRole('radio', { name: 'Focal' }));
+    fireEvent.changeText(
+      screen.getByLabelText('Descrição da crise (opcional)'),
+      '  Formigamento no braço esquerdo e visão embaçada  ',
+    );
+    fireEvent.press(screen.getByRole('button', { name: 'Salvar crise' }));
+
+    await waitFor(() =>
+      expect(recordSeizure.execute).toHaveBeenCalledWith({
+        patientId: PATIENT_ID,
+        occurredAt: '2026-07-10T08:30:00.000Z',
+        occurrenceType: 'FOCAL',
+        feltAura: false,
+        description: '  Formigamento no braço esquerdo e visão embaçada  ',
+      }),
+    );
+  });
+
   test('restores and clears a saved seizure draft after a successful save', async () => {
     const manageFormDraft = createDraftStore({
       formType: FormDraftType.SEIZURE,
       payload: {
+        description: 'Perda de consciência por cerca de um minuto',
         feltAura: true,
         occurredAt: '2026-07-10T08:30:00.000Z',
         occurrenceType: 'GENERALIZED',
@@ -144,6 +173,9 @@ describe('patient clinical-record entry flows', () => {
     expect(screen.getByRole('radio', { name: 'Sim' }).props.accessibilityState).toMatchObject({
       checked: true,
     });
+    expect(screen.getByLabelText('Descrição da crise (opcional)').props.value).toBe(
+      'Perda de consciência por cerca de um minuto',
+    );
 
     fireEvent.press(screen.getByRole('button', { name: 'Salvar crise' }));
 
@@ -153,6 +185,7 @@ describe('patient clinical-record entry flows', () => {
         occurredAt: '2026-07-10T08:30:00.000Z',
         occurrenceType: 'GENERALIZED',
         feltAura: true,
+        description: 'Perda de consciência por cerca de um minuto',
       }),
     );
     await waitFor(() =>
@@ -182,12 +215,19 @@ describe('patient clinical-record entry flows', () => {
 
     await screen.findByText('Rascunho restaurado. Continue o preenchimento.');
     fireEvent.press(screen.getByRole('radio', { name: 'Generalizada' }));
+    fireEvent.changeText(
+      screen.getByLabelText('Descrição da crise (opcional)'),
+      'Duração de aproximadamente dois minutos',
+    );
 
     await waitFor(() =>
       expect(manageFormDraft.save).toHaveBeenCalledWith({
         patientId: PATIENT_ID,
         formType: FormDraftType.SEIZURE,
-        payload: expect.objectContaining({ occurrenceType: 'GENERALIZED' }),
+        payload: expect.objectContaining({
+          description: 'Duração de aproximadamente dois minutos',
+          occurrenceType: 'GENERALIZED',
+        }),
       }),
     );
   });

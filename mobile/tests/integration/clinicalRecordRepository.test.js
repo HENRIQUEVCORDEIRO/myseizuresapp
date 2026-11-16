@@ -93,12 +93,17 @@ describe('clinical record SQLite repositories', () => {
     const triggerRepository = new TriggerRepository({ databaseProvider: firstLaunch.provider });
 
     const savedSeizure = await seizureRepository.saveSeizure(
-      seizure({ occurrenceType: SeizureOccurrenceType.GENERALIZED, feltAura: true }),
+      seizure({
+        occurrenceType: SeizureOccurrenceType.GENERALIZED,
+        feltAura: true,
+        description: '  Perda de consciência por cerca de um minuto  ',
+      }),
     );
     const savedTrigger = await triggerRepository.saveTrigger(trigger());
 
     expect(savedSeizure.id).toEqual(expect.any(Number));
     expect(savedSeizure.feltAura).toBe(true);
+    expect(savedSeizure.description).toBe('Perda de consciência por cerca de um minuto');
     expect(savedTrigger.id).toEqual(expect.any(Number));
     await database.closeAsync();
     database = null;
@@ -217,6 +222,7 @@ describe('clinical record SQLite repositories', () => {
       ...savedSeizure,
       occurrenceType: SeizureOccurrenceType.GENERALIZED,
       feltAura: true,
+      description: '  Movimentos involuntários no braço direito  ',
     });
     const updatedTrigger = new TriggerRecord({
       ...savedTrigger,

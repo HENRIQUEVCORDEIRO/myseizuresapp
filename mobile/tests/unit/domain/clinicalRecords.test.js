@@ -61,6 +61,20 @@ describe('clinical record domain rules', () => {
       expect(createSeizure({ feltAura: false }).feltAura).toBe(false);
     });
 
+    test('normalizes the optional seizure description', () => {
+      expect(createSeizure().description).toBeNull();
+      expect(createSeizure({ description: '  Braço esquerdo formigando  ' }).description).toBe(
+        'Braço esquerdo formigando',
+      );
+      expect(createSeizure({ description: '' }).description).toBeNull();
+    });
+
+    test('rejects a non-string seizure description', () => {
+      expect(() => createSeizure({ description: 123 })).toThrow(
+        expect.objectContaining({ name: 'DomainValidationError', field: 'description' }),
+      );
+    });
+
     test.each([
       ['a string aura value', { feltAura: 'true' }],
       ['a numeric aura value', { feltAura: 1 }],

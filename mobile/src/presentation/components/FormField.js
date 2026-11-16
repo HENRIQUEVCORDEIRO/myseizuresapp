@@ -1,6 +1,6 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
-export function FormField({ accessibilityHint, error, label, ...inputProps }) {
+export function FormField({ accessibilityHint, error, inputStyle, label, ...inputProps }) {
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
@@ -9,7 +9,7 @@ export function FormField({ accessibilityHint, error, label, ...inputProps }) {
         accessibilityLabel={label}
         accessibilityState={{ invalid: Boolean(error) }}
         placeholderTextColor="#64748B"
-        style={[styles.input, error && styles.invalidInput]}
+        style={[styles.input, inputStyle, error && styles.invalidInput]}
         {...inputProps}
       />
       {error ? (
